@@ -1,0 +1,16 @@
+[
+  {
+    "dateTime": {
+      "date": "2024-11-30T15:00:00.000Z",
+      "time": "13:30"
+    },
+    "petInfo": {
+      "petName": "멍멍이",
+      "weight": "10.2",
+      "phoneNumber": "01076620146"
+    },
+    "services": [],
+    "inquiry": "문의사항",
+    "createdAt": "2024-11-16T16:01:27.900Z"
+  }
+]
