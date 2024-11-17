@@ -6,7 +6,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useBooking } from '../context/bookingContext';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -21,19 +20,35 @@ import {
 
 export default function IrionBooking() {
   const [currentStep, setCurrentStep] = useState(1);
-  const {
-    bookingData,
-    updateDateTime,
-    updatePetInfo,
-    updateServices,
-    updateInquiry,
-  } = useBooking();
+  
+  // Move booking state from context to component
+  const [bookingData, setBookingData] = useState({
+    dateTime: { date: undefined as Date | undefined, time: undefined as string | undefined },
+    petInfo: { petName: '', weight: '', phoneNumber: '' },
+    services: [] as string[],
+    inquiry: '',
+  });
 
-  // Step 1: DateTime Selection
+  // Create state update functions
+  const updateDateTime = (date: Date | undefined, time: string | undefined) => {
+    setBookingData(prev => ({ ...prev, dateTime: { date, time } }));
+  };
+
+  const updatePetInfo = (info: { petName: string; weight: string; phoneNumber: string }) => {
+    setBookingData(prev => ({ ...prev, petInfo: info }));
+  };
+
+  const updateServices = (services: string[]) => {
+    setBookingData(prev => ({ ...prev, services }));
+  };
+
+  const updateInquiry = (text: string) => {
+    setBookingData(prev => ({ ...prev, inquiry: text }));
+  };
+
+  // Replace existing state declarations with values from bookingData
   const [date, setDate] = useState<Date | undefined>(bookingData.dateTime.date);
-  const [selectedTime, setSelectedTime] = useState<string | undefined>(
-    bookingData.dateTime.time
-  );
+  const [selectedTime, setSelectedTime] = useState<string | undefined>(bookingData.dateTime.time);
 
   // Step 2: Pet Info Form Schema
   const formSchema = z.object({
