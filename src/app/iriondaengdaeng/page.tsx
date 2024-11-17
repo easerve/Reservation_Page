@@ -67,7 +67,8 @@ export default function IrionBooking() {
   });
 
   // Step 3: Services Selection
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [selectedMainServices, setSelectedMainServices] = useState<string[]>([]);
+  const [selectedSubOptions, setSelectedSubOptions] = useState<string[]>([]);
 
   // Step 4: Inquiry
   const [inquiry, setInquiry] = useState(bookingData.inquiry);
@@ -80,8 +81,8 @@ export default function IrionBooking() {
         name: '위생미용+목욕',
         price: '25,000원',
         subOptions: [
-          { id: 'shampoo', name: '샴푸 업그레이드', price: '10,000원' },
-          { id: 'perfume', name: '향수 추가', price: '5,000원' },
+          { id: 'shampoo', name: '샴푸 업그레이드', price: '+ 10,000원' },
+          { id: 'perfume', name: '향수 추가', price: '+ 5,000원' },
         ],
       },
       {
@@ -89,8 +90,8 @@ export default function IrionBooking() {
         name: '클리핑',
         price: '25,000원',
         subOptions: [
-          { id: 'nailTrim', name: '발톱 정리', price: '5,000원' },
-          { id: 'earCleaning', name: '귀 청소', price: '8,000원' },
+          { id: 'nailTrim', name: '발톱 정리', price: '+ 5,000원' },
+          { id: 'earCleaning', name: '귀 청소', price: '+ 8,000원' },
         ],
       },
       {
@@ -122,16 +123,21 @@ export default function IrionBooking() {
     });
   };
 
-  const getServiceNames = (serviceIds: string[]) => {
+  const getServiceNames = (mainServices: string[], subOptions: string[]) => {
+    const allServices = [...mainServices, ...subOptions];
     const serviceMap: { [key: string]: string } = {
       grooming: '위생미용+목욕',
       clipping: '클리핑',
       sporting: '스포팅',
       scissorCut: '가위컷',
       instep: '발등',
-      tangle: '엉킴'
+      tangle: '엉킴',
+      shampoo: '샴푸 업그레이드',
+      perfume: '향수 추가',
+      nailTrim: '발톱 정리',
+      earCleaning: '귀 청소',
     };
-    return serviceIds.map(id => serviceMap[id] || id).join(', ');
+    return allServices.map(id => serviceMap[id] || id).join(', ');
   };
 
   const renderStep = () => {
@@ -244,26 +250,60 @@ export default function IrionBooking() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {services.main.map((service) => (
-                  <Button
-                    key={service.id}
-                    variant="outline"
-                    className={`w-full justify-between h-auto py-4 ${
-                      selectedServices.includes(service.id)
-                        ? 'border-[#415036] bg-[#415036]/10'
-                        : ''
-                    }`}
-                    onClick={() => {
-                      const newServices = selectedServices.includes(service.id)
-                        ? selectedServices.filter((id) => id !== service.id)
-                        : [...selectedServices, service.id];
-                      setSelectedServices(newServices);
-                    }}
-                  >
-                    <span>{service.name}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {service.price}
-                    </span>
-                  </Button>
+                  <div key={service.id} className="space-y-2">
+                    <Button
+                      variant="outline"
+                      className={`w-full justify-between h-auto py-4 ${
+                        selectedMainServices.includes(service.id)
+                          ? 'border-[#415036] bg-[#415036]/10'
+                          : ''
+                      }`}
+                      onClick={() => {
+                        const newServices = selectedMainServices.includes(service.id)
+                          ? selectedMainServices.filter((id) => id !== service.id)
+                          : [...selectedMainServices, service.id];
+                        setSelectedMainServices(newServices);
+                        // Clear subOptions of this service when deselecting
+                        if (!newServices.includes(service.id)) {
+                          setSelectedSubOptions(prev => 
+                            prev.filter(opt => !service.subOptions.some(sub => sub.id === opt))
+                          );
+                        }
+                      }}
+                    >
+                      <span>{service.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {service.price}
+                      </span>
+                    </Button>
+                    
+                    {selectedMainServices.includes(service.id) && service.subOptions.length > 0 && (
+                      <div className="ml-4 space-y-2">
+                        {service.subOptions.map((subOption) => (
+                          <Button
+                            key={subOption.id}
+                            variant="outline"
+                            className={`w-full justify-between h-auto py-3 ${
+                              selectedSubOptions.includes(subOption.id)
+                                ? 'border-[#415036] bg-[#415036]/10'
+                                : ''
+                            }`}
+                            onClick={() => {
+                              const newSubOptions = selectedSubOptions.includes(subOption.id)
+                                ? selectedSubOptions.filter((id) => id !== subOption.id)
+                                : [...selectedSubOptions, subOption.id];
+                              setSelectedSubOptions(newSubOptions);
+                            }}
+                          >
+                            <span className="text-sm">{subOption.name}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {subOption.price}
+                            </span>
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
               </CardContent>
             </Card>
@@ -277,15 +317,15 @@ export default function IrionBooking() {
                     key={service.id}
                     variant="outline"
                     className={`w-full justify-between h-auto py-4 ${
-                      selectedServices.includes(service.id)
+                      selectedMainServices.includes(service.id)
                         ? 'border-[#415036] bg-[#415036]/10'
                         : ''
                     }`}
                     onClick={() => {
-                      const newServices = selectedServices.includes(service.id)
-                        ? selectedServices.filter((id) => id !== service.id)
-                        : [...selectedServices, service.id];
-                      setSelectedServices(newServices);
+                      const newServices = selectedMainServices.includes(service.id)
+                        ? selectedMainServices.filter((id) => id !== service.id)
+                        : [...selectedMainServices, service.id];
+                      setSelectedMainServices(newServices);
                     }}
                   >
                     <span>{service.name}</span>
@@ -303,10 +343,10 @@ export default function IrionBooking() {
               <Button
                 className="flex-1 bg-[#415036]"
                 onClick={() => {
-                  updateServices(selectedServices);
+                  updateServices([...selectedMainServices, ...selectedSubOptions]);
                   setCurrentStep(4);
                 }}
-                disabled={selectedServices.length === 0}
+                disabled={selectedMainServices.length === 0}
               >
                 다음
               </Button>
@@ -335,8 +375,8 @@ export default function IrionBooking() {
                 </div>
 
                 <div>
-                  <h3 className="font-medium text-gray-600">선택한 서비스</h3>
-                  <p>{getServiceNames(selectedServices)}</p>
+                  <h3 className="font-medium text-gray-600">��택한 서비스</h3>
+                  <p>{getServiceNames(selectedMainServices, selectedSubOptions)}</p>
                 </div>
 
                 <div>
@@ -369,7 +409,7 @@ export default function IrionBooking() {
                           ...bookingData.dateTime,
                           date: date?.toISOString(),
                         },
-                        services: selectedServices,
+                        services: [...selectedMainServices, ...selectedSubOptions],
                         inquiry,
                         createdAt: new Date().toISOString(),
                       }),
