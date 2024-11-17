@@ -1,87 +1,19 @@
 [
   {
     "dateTime": {
-      "date": "2024-11-01T15:00:00.000Z",
-      "time": "09:00"
-    },
-    "petInfo": {
-      "petName": "댕댕이",
-      "weight": "12",
-      "phoneNumber": "123123123123"
-    },
-    "services": [
-      "grooming",
-      "spa"
-    ],
-    "inquiry": "문의사항 없어용",
-    "createdAt": "2024-11-17T03:59:36.453Z"
-  },
-  {
-    "dateTime": {
-      "date": "2024-11-20T15:00:00.000Z",
-      "time": "09:30"
-    },
-    "petInfo": {
-      "petName": "강아지1",
-      "weight": "12",
-      "phoneNumber": "01012345678"
-    },
-    "services": [
-      "hotel",
-      "training"
-    ],
-    "inquiry": "",
-    "createdAt": "2024-11-17T05:26:35.747Z"
-  },
-  {
-    "dateTime": {
-      "date": "2024-11-07T15:00:00.000Z",
-      "time": "09:30"
-    },
-    "petInfo": {
-      "petName": "공아지",
-      "weight": "12",
-      "phoneNumber": "1231232131232"
-    },
-    "services": [
-      "hotel",
-      "walking"
-    ],
-    "inquiry": "문의사항123",
-    "createdAt": "2024-11-17T06:13:14.936Z"
-  },
-  {
-    "dateTime": {
-      "date": "2024-11-16T15:00:00.000Z",
+      "date": "2024-11-17T03:00:00.000Z",
       "time": "11:00"
     },
     "petInfo": {
-      "petName": "공아지",
-      "weight": "12",
-      "phoneNumber": "1231232131232"
-    },
-    "services": [
-      "pickup",
-      "walking"
-    ],
-    "inquiry": "문의사항123",
-    "createdAt": "2024-11-17T06:13:41.086Z"
-  },
-  {
-    "dateTime": {
-      "date": "2024-11-14T15:00:00.000Z",
-      "time": "09:00"
-    },
-    "petInfo": {
-      "petName": "강아지",
-      "weight": "12",
-      "phoneNumber": "01076620146"
+      "petName": "63213123122321",
+      "weight": "567",
+      "phoneNumber": "5671231231231"
     },
     "services": [
       "grooming",
-      "walking"
+      "instep"
     ],
-    "inquiry": "문의사항이당~",
-    "createdAt": "2024-11-17T06:19:37.471Z"
+    "inquiry": "",
+    "createdAt": "2024-11-17T07:16:02.754Z"
   }
 ]
