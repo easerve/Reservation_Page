@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 import OptionBar from "@/containers/reservation/components/option_bar";
+import Calendar from "@/containers/reservation/components/calendar";
 
 // Sample data
 const appointments = [
@@ -60,11 +60,12 @@ export default function Reservation() {
         <TabsContent value="list" className="mt-0"></TabsContent>
 
         <TabsContent value="calendar" className="mt-0">
-          <Calendar
+          <Calendar />
+          {/* <Calendar
             mode="single"
             className="rounded-md border"
             captionLayout="dropdown-buttons" // 월/년 드롭다운 추가
-          />
+          /> */}
         </TabsContent>
       </Tabs>
     </div>
