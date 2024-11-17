@@ -73,16 +73,42 @@ export default function IrionBooking() {
   const [inquiry, setInquiry] = useState(bookingData.inquiry);
 
   // Services data
-  const services = {
+    const services = {
     main: [
-      { id: 'grooming', name: '미용', price: '50,000원' },
-      { id: 'hotel', name: '호텔', price: '40,000원' },
-      { id: 'pickup', name: '픽업', price: '15,000원' },
+      {
+        id: 'grooming',
+        name: '위생미용+목욕',
+        price: '25,000원',
+        subOptions: [
+          { id: 'shampoo', name: '샴푸 업그레이드', price: '10,000원' },
+          { id: 'perfume', name: '향수 추가', price: '5,000원' },
+        ],
+      },
+      {
+        id: 'clipping',
+        name: '클리핑',
+        price: '25,000원',
+        subOptions: [
+          { id: 'nailTrim', name: '발톱 정리', price: '5,000원' },
+          { id: 'earCleaning', name: '귀 청소', price: '8,000원' },
+        ],
+      },
+      {
+        id: 'sporting',
+        name: '스포팅',
+        price: '15,000원',
+        subOptions: [],
+      },
+      {
+        id: 'scissorCut',
+        name: '가위컷',
+        price: '15,000원',
+        subOptions: [],
+      },
     ],
     additional: [
-      { id: 'spa', name: '스파', price: '30,000원' },
-      { id: 'training', name: '훈련', price: '45,000원' },
-      { id: 'walking', name: '산책', price: '20,000원' },
+      { id: 'instep', name: '발등', price: '5,000원' },
+      { id: 'tangle', name: '엉킴', price: '10,000원' },
     ],
   };
 
@@ -98,12 +124,12 @@ export default function IrionBooking() {
 
   const getServiceNames = (serviceIds: string[]) => {
     const serviceMap: { [key: string]: string } = {
-      grooming: '미용',
-      hotel: '호텔',
-      pickup: '픽업',
-      spa: '스파',
-      training: '훈련',
-      walking: '산책',
+      grooming: '위생미용+목욕',
+      clipping: '클리핑',
+      sporting: '스포팅',
+      scissorCut: '가위컷',
+      instep: '발등',
+      tangle: '엉킴'
     };
     return serviceIds.map(id => serviceMap[id] || id).join(', ');
   };
