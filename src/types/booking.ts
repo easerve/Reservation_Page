@@ -1,7 +1,7 @@
 export interface BookingData {
   dateTime: BookingDateTime,
   petInfo: PetInfo,
-  mainService: BookingService[],
+  mainService: BookingService,
   additionalServices: BookingService[],
   price: number,
   inquiry: string,
