@@ -11,12 +11,25 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import { Copy } from "lucide-react";
+
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
+  DialogTrigger,
   DialogContent,
+  DialogClose,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
+
+import "@/styles/calendar/style.css";
+import ReservationForm, { formSchema } from "./reservation_form";
+import { z } from "zod";
 
 const Calendar: React.FC = () => {
   const [currentEvents, setCurrentEvents] = useState<EventApi[]>([]);
@@ -62,20 +75,22 @@ const Calendar: React.FC = () => {
     setNewEventTitle("");
   };
 
-  const handleAddEvent = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newEventTitle && selectedDate) {
+  const handleAddEvent = (data: z.infer<typeof formSchema>) => {
+    // e.preventDefault();
+    console.log(data, newEventTitle, selectedDate);
+    if (selectedDate) {
       const calendarApi = selectedDate.view.calendar; // Get the calendar API instance.
       calendarApi.unselect(); // Unselect the date range.
 
+      console.log(data.reservationTime.toISOString());
       const newEvent = {
-        id: `${selectedDate.start.toISOString()}-${newEventTitle}`,
-        title: newEventTitle,
-        start: selectedDate.start,
-        end: selectedDate.end,
-        allDay: selectedDate.allDay,
+        id: `${data.reservationTime.toISOString()}-${newEventTitle}`,
+        title: data.breed,
+        start: data.reservationTime.toISOString(),
+        end: data.reservationTime.toISOString(),
       };
 
+      console.log(newEvent);
       calendarApi.addEvent(newEvent);
       handleCloseDialog();
     }
@@ -83,7 +98,7 @@ const Calendar: React.FC = () => {
 
   return (
     <div>
-      <div className="flex w-full px-10 py-10 justify-start items-start gap-8">
+      <div className="full-calendar flex w-full px-10 py-10 justify-start items-start gap-8">
         <FullCalendar
           height={"auto"}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]} // Initialize calendar with required plugins.
@@ -110,6 +125,27 @@ const Calendar: React.FC = () => {
 
       {/* Dialog for adding new events */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        {/* <DialogTrigger asChild>
+          <Button variant="outline">Share</Button>
+        </DialogTrigger> */}
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>예약 추가하기</DialogTitle>
+            <DialogDescription>
+              Anyone who has this link will be able to view this.
+            </DialogDescription>
+          </DialogHeader>
+          <ReservationForm onSubmit={handleAddEvent} />
+          <DialogFooter className="sm:justify-start">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary">
+                Close
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Event Details</DialogTitle>
@@ -129,10 +165,9 @@ const Calendar: React.FC = () => {
             >
               Add
             </button>{" "}
-            {/* Button to submit new event */}
           </form>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 };
