@@ -1,19 +1,46 @@
 [
   {
     "dateTime": {
-      "date": "2024-11-17T03:00:00.000Z",
-      "time": "11:00"
+      "date": "2024-11-30T03:00:00.000Z",
+      "time": "17:00"
     },
     "petInfo": {
-      "petName": "63213123122321",
-      "weight": "567",
-      "phoneNumber": "5671231231231"
+      "petName": "개냥이",
+      "weight": 12,
+      "phoneNumber": "01076620146"
     },
-    "services": [
-      "grooming",
-      "instep"
+    "mainService": {
+      "id": "clipping",
+      "name": "클리핑",
+      "price": 25000,
+      "options": [
+        {
+          "id": "nailTrim",
+          "name": "발톱 정리",
+          "addPrice": 5000
+        },
+        {
+          "id": "earCleaning",
+          "name": "귀 청소",
+          "addPrice": 8000
+        }
+      ]
+    },
+    "additionalServices": [
+      {
+        "id": "instep",
+        "name": "발등",
+        "price": 5000,
+        "options": []
+      },
+      {
+        "id": "tangle",
+        "name": "엉킴",
+        "price": 10000,
+        "options": []
+      }
     ],
     "inquiry": "",
-    "createdAt": "2024-11-17T07:16:02.754Z"
+    "price": 53000
   }
 ]
