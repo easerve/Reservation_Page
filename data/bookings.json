@@ -1,36 +1,19 @@
 [
   {
     "dateTime": {
-      "date": "2024-11-01T15:00:00.000Z",
-      "time": "09:00"
+      "date": "2024-11-17T03:00:00.000Z",
+      "time": "11:00"
     },
     "petInfo": {
-      "petName": "댕댕이",
-      "weight": "12",
-      "phoneNumber": "123123123123"
+      "petName": "63213123122321",
+      "weight": "567",
+      "phoneNumber": "5671231231231"
     },
     "services": [
       "grooming",
-      "spa"
-    ],
-    "inquiry": "문의사항 없어용",
-    "createdAt": "2024-11-17T03:59:36.453Z"
-  },
-  {
-    "dateTime": {
-      "date": "2024-11-20T15:00:00.000Z",
-      "time": "09:30"
-    },
-    "petInfo": {
-      "petName": "강아지1",
-      "weight": "12",
-      "phoneNumber": "01012345678"
-    },
-    "services": [
-      "hotel",
-      "training"
+      "instep"
     ],
     "inquiry": "",
-    "createdAt": "2024-11-17T05:26:35.747Z"
+    "createdAt": "2024-11-17T07:16:02.754Z"
   }
 ]
