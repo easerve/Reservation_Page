@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 import OptionBar from "@/containers/reservation/components/option_bar";
 import Calendar from "@/containers/reservation/components/calendar";
+import ReservationList from "./components/reservation_list";
 
 // Sample data
 const appointments = [
@@ -57,7 +58,9 @@ export default function Reservation() {
 
       <Tabs value={view} onValueChange={setView} className="w-full">
         <OptionBar />
-        <TabsContent value="list" className="mt-0"></TabsContent>
+        <TabsContent value="list" className="mt-0">
+          <ReservationList />
+        </TabsContent>
 
         <TabsContent value="calendar" className="mt-0">
           <Calendar />
