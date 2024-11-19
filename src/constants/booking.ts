@@ -23,8 +23,22 @@ export const mainServices: BookingService[] = [
     name: '위생미용 + 목욕',
     price: 25000,
     options: [
-      { id: 'shampoo', name: '샴푸 업그레이드', addPrice: 10000 },
-      { id: 'perfume', name: '향수 추가', addPrice: 5000 },
+      { id: 'none', name: '선택안함', price: 0, options: [] },
+      {
+        id: 'faceCut',
+        name: '얼굴컷',
+        price: 0,
+        options: [
+          { id: 'bear', name: '곰돌이', price: 10000, options: [] },
+          { id: 'ear', name: '귀툭튀, 하이바', price: 15000, options: [] },
+        ],
+      },
+      {
+        id: 'brushing',
+        name: '양치 (개인 칫솔 지참)',
+        price: 2000,
+        options: [],
+      },
     ],
   },
   {
@@ -32,8 +46,31 @@ export const mainServices: BookingService[] = [
     name: '클리핑',
     price: 25000,
     options: [
-      { id: 'nailTrim', name: '발톱 정리', addPrice: 5000 },
-      { id: 'earCleaning', name: '귀 청소', addPrice: 8000 },
+      {
+        id: 'length',
+        name: '미리수',
+        price: 0,
+        options: [
+          { id: '6mm', name: '6mm', price: 5000, options: [] },
+          { id: '1cm', name: '1cm', price: 10000, options: [] },
+          { id: '2cm', name: '2cm', price: 15000, options: [] },
+        ],
+      },
+      {
+        id: 'faceCut',
+        name: '얼굴컷',
+        price: 0,
+        options: [
+          { id: 'bear', name: '곰돌이', price: 10000, options: [] },
+          { id: 'ear', name: '귀툭튀, 하이바', price: 10000, options: [] },
+        ],
+      },
+      {
+        id: 'brushing',
+        name: '양치 (개인 칫솔 지참)',
+        price: 2000,
+        options: [],
+      },
     ],
   },
   {

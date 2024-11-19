@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Form,
@@ -15,7 +15,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { BookingData, BookingService, OptionInfo } from '@/types/booking';
+import { BookingData, BookingService, PetInfo } from '@/types/booking';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { mainServices, additionalServices } from '@/constants/booking';
@@ -36,11 +36,7 @@ export default function Booking() {
     setBookingData((prev) => ({ ...prev, dateTime: { date, time } }));
   };
 
-  const updatePetInfo = (info: {
-    petName: string;
-    weight: number | undefined;
-    phoneNumber: string;
-  }) => {
+  const updatePetInfo = (info: PetInfo) => {
     setBookingData((prev) => ({ ...prev, petInfo: info }));
   };
 
@@ -73,37 +69,127 @@ export default function Booking() {
     },
   });
 
-  // 날짜 및 시간 선택을 위한 상태
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    bookingData.dateTime.date
+  useEffect(() => {
+    form.reset({
+      petName: bookingData.petInfo.petName,
+      weight: String(bookingData.petInfo.weight || ''),
+      phoneNumber: bookingData.petInfo.phoneNumber,
+    });
+  }, [bookingData.petInfo, form]);
+
+  /*  */
+  const ServiceOptionButton = ({
+    service,
+    isSelected,
+    onClick,
+    depth = 0,
+  }: {
+    service: BookingService;
+    isSelected: boolean;
+    onClick: () => void;
+    depth?: number;
+  }) => (
+    <Button
+      variant="outline"
+      className={`w-full justify-between h-auto py-3 ${
+        isSelected ? 'border-primary bg-primary/10' : ''
+      }`}
+      onClick={onClick}
+      disabled={service.price == 0}
+    >
+      <span className="text-sm">{service.name}</span>
+      <span className="text-sm text-muted-foreground">
+        {service.price == 0 ? '' : `+ ${service.price.toLocaleString()}원`}
+      </span>
+    </Button>
   );
-  const [selectedTime, setSelectedTime] = useState<string | undefined>(
-    bookingData.dateTime.time
-  );
+
+  const RecursiveOptions = ({
+    options,
+    selectedOptions,
+    onToggle,
+    depth = 0,
+    parentId,
+  }: {
+    options: BookingService[];
+    selectedOptions: BookingService[];
+    onToggle: (option: BookingService, parentId?: string) => void;
+    depth?: number;
+    parentId?: string;
+  }) => {
+    return (
+      <div className={`space-y-2 ${depth > 0 ? 'ml-4' : ''}`}>
+        {options.map((option) => (
+          <div key={option.id} className="space-y-2">
+            <ServiceOptionButton
+              service={option}
+              isSelected={selectedOptions.some((opt) => opt.id === option.id)}
+              onClick={() => onToggle(option, parentId)}
+              depth={depth}
+            />
+
+            {option.options?.length > 0 && (
+              <RecursiveOptions
+                options={option.options}
+                selectedOptions={selectedOptions}
+                onToggle={onToggle}
+                depth={depth + 1}
+                parentId={option.id}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+  /*  */
+
+  const calculateServicePrice = (
+    service: BookingService,
+    selectedOptions: BookingService[]
+  ): number => {
+    let price = service.price;
+
+    // 하위 옵션들 중 선택된 것들만 가격 계산
+    if (service.options && service.options.length > 0) {
+      const selectedChildOptions = service.options.filter((option) =>
+        selectedOptions.some((selected) => selected.id === option.id)
+      );
+
+      price += selectedChildOptions.reduce(
+        (sum, option) => sum + calculateServicePrice(option, selectedOptions),
+        0
+      );
+    }
+
+    return price;
+  };
 
   // 가격 계산
   const price = useMemo(() => {
     let totalPrice = 0;
 
     if (bookingData.mainService) {
+      // 메인 서비스 가격
       totalPrice += bookingData.mainService.price;
 
-      bookingData.mainService.options.forEach((option) => {
-        totalPrice += option.addPrice;
-      });
+      // 선택된 옵션들의 가격만 계산
+      totalPrice += bookingData.mainService.options.reduce(
+        (sum, option) =>
+          sum +
+          calculateServicePrice(option, bookingData.mainService?.options || []),
+        0
+      );
     }
 
+    // 추가 서비스 가격
     bookingData.additionalServices.forEach((service) => {
       totalPrice += service.price;
     });
 
     return totalPrice;
-  }, [bookingData]);
+  }, [bookingData.mainService, bookingData.additionalServices]);
 
-  // 문의사항 상태
-  const [inquiry, setInquiry] = useState(bookingData.inquiry);
-
-  // 서비스 선택 핸들러
   const handleMainServiceSelect = (service: BookingService) => {
     setBookingData((prev) => ({
       ...prev,
@@ -111,20 +197,74 @@ export default function Booking() {
     }));
   };
 
-  const handleSubOptionToggle = (option: OptionInfo) => {
+  const handleSubOptionToggle = (option: BookingService, parentId?: string) => {
     if (!bookingData.mainService) return;
 
     setBookingData((prev) => {
-      const isSelected = prev.mainService?.options.some(
+      if (!prev.mainService) return prev;
+
+      // Check if option is already selected
+      const isSelected = prev.mainService.options.some(
         (opt) => opt.id === option.id
       );
+
+      // If selected, remove the option
+      if (isSelected) {
+        return {
+          ...prev,
+          mainService: {
+            ...prev.mainService,
+            options: prev.mainService.options.filter(
+              (opt) => opt.id !== option.id
+            ),
+          },
+        };
+      }
+
+      // If not selected, handle new selection
+      const findSiblingOptions = (
+        options: BookingService[],
+        targetId: string,
+        parentId?: string
+      ): BookingService[] => {
+        for (const opt of options) {
+          if (opt.id === parentId) {
+            return opt.options;
+          }
+          if (opt.options.length > 0) {
+            const found = findSiblingOptions(opt.options, targetId, parentId);
+            if (found.length > 0) return found;
+          }
+        }
+        return [];
+      };
+
+      // Get siblings of the current option
+      const siblings = parentId
+        ? findSiblingOptions(prev.mainService.options, option.id, parentId)
+        : prev.mainService.options;
+
+      // Remove any existing selections at the same depth for required options
+      const removeExistingSelections = (
+        options: BookingService[]
+      ): BookingService[] =>
+        options.filter(
+          (opt) =>
+            !siblings.some(
+              (sibling) => sibling.id === opt.id && sibling.isRequired
+            )
+        );
+
+      const newOptions = removeExistingSelections(prev.mainService.options);
+
+      // Add new selection
+      newOptions.push(option);
+
       return {
         ...prev,
         mainService: {
-          ...prev.mainService!,
-          options: isSelected
-            ? prev.mainService!.options.filter((opt) => opt.id !== option.id)
-            : [...prev.mainService!.options, option],
+          ...prev.mainService,
+          options: newOptions,
         },
       };
     });
@@ -158,15 +298,13 @@ export default function Booking() {
 
     if (bookingData.mainService) {
       names.push(bookingData.mainService.name);
-    }
-
-    if (bookingData.mainService)
       names.push(
         ...bookingData.mainService.options.map((option) => option.name)
       );
-    names.push(
-      ...bookingData.additionalServices.map((service) => service.name)
-    );
+    }
+
+    if (bookingData.additionalServices.length > 0)
+      names.push(bookingData.additionalServices.map((service) => service.name));
 
     return names.join(', ');
   };
@@ -184,17 +322,28 @@ export default function Booking() {
               <CardContent>
                 <Calendar
                   mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
+                  selected={bookingData.dateTime.date}
+                  onSelect={(date) =>
+                    updateDateTime(date, bookingData.dateTime.time)
+                  }
                   className="rounded-md border"
                 />
+
                 <div className="grid grid-cols-3 gap-2 mt-4">
                   {['10:00', '14:00', '17:00'].map((time) => (
                     <Button
                       key={time}
-                      variant={selectedTime === time ? 'default' : 'outline'}
-                      className={selectedTime === time ? 'bg-primary' : ''}
-                      onClick={() => setSelectedTime(time)}
+                      variant={
+                        bookingData.dateTime.time === time
+                          ? 'default'
+                          : 'outline'
+                      }
+                      className={
+                        bookingData.dateTime.time === time ? 'bg-primary' : ''
+                      }
+                      onClick={() =>
+                        updateDateTime(bookingData.dateTime.date, time)
+                      }
                     >
                       {time}
                     </Button>
@@ -205,10 +354,11 @@ export default function Booking() {
             <Button
               className="w-full bg-primary"
               onClick={() => {
-                updateDateTime(selectedDate, selectedTime);
                 setCurrentStep(2);
               }}
-              disabled={!selectedDate || !selectedTime}
+              disabled={
+                !bookingData.dateTime.date || !bookingData.dateTime.time
+              }
             >
               다음
             </Button>
@@ -290,46 +440,20 @@ export default function Booking() {
               <CardContent className="space-y-2">
                 {mainServices.map((service) => (
                   <div key={service.id} className="space-y-2">
-                    <Button
-                      variant="outline"
-                      className={`w-full justify-between h-auto py-4 ${
-                        bookingData.mainService &&
-                        bookingData.mainService.id === service.id
-                          ? 'border-primary bg-primary/10'
-                          : ''
-                      }`}
+                    <ServiceOptionButton
+                      service={service}
+                      isSelected={bookingData.mainService?.id === service.id}
                       onClick={() => handleMainServiceSelect(service)}
-                    >
-                      <span>{service.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {service.price.toLocaleString()}원
-                      </span>
-                    </Button>
+                    />
 
-                    {bookingData.mainService &&
-                      bookingData.mainService.id === service.id &&
-                      service.options.length > 0 && (
-                        <div className="ml-4 space-y-2">
-                          {service.options.map((option) => (
-                            <Button
-                              key={option.id}
-                              variant="outline"
-                              className={`w-full justify-between h-auto py-3 ${
-                                bookingData.mainService?.options.some(
-                                  (opt) => opt.id === option.id
-                                )
-                                  ? 'border-primary bg-primary/10'
-                                  : ''
-                              }`}
-                              onClick={() => handleSubOptionToggle(option)}
-                            >
-                              <span className="text-sm">{option.name}</span>
-                              <span className="text-sm text-muted-foreground">
-                                + {option.addPrice.toLocaleString()}원
-                              </span>
-                            </Button>
-                          ))}
-                        </div>
+                    {bookingData.mainService?.id === service.id &&
+                      service.options?.length > 0 && (
+                        <RecursiveOptions
+                          options={service.options}
+                          selectedOptions={bookingData.mainService.options}
+                          onToggle={handleSubOptionToggle}
+                          depth={1}
+                        />
                       )}
                   </div>
                 ))}
@@ -357,7 +481,9 @@ export default function Booking() {
                   >
                     <span>{service.name}</span>
                     <span className="text-sm text-muted-foreground">
-                      + {service.price.toLocaleString()}원
+                      {service.price == 0
+                        ? ''
+                        : `+ ${service.price.toLocaleString()}원`}
                     </span>
                   </Button>
                 ))}
@@ -434,8 +560,8 @@ export default function Booking() {
                   <Textarea
                     placeholder="문의사항이 있으시다면 입력해주세요"
                     className="min-h-[100px] mt-2"
-                    value={inquiry}
-                    onChange={(e) => setInquiry(e.target.value)}
+                    value={bookingData.inquiry}
+                    onChange={(e) => updateInquiry(e.target.value)}
                   />
                 </div>
               </CardContent>
@@ -448,7 +574,6 @@ export default function Booking() {
               <Button
                 className="flex-1 bg-primary"
                 onClick={async () => {
-                  updateInquiry(inquiry);
                   try {
                     const response = await fetch('/api/bookings', {
                       method: 'POST',

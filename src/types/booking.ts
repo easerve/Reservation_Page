@@ -21,11 +21,6 @@ export interface BookingService {
   id: string;
   name: string;
   price: number;
-  options: OptionInfo[];
-}
-
-export interface OptionInfo {
-  id: string;
-  name: string;
-  addPrice: number;
+  isRequired?: boolean;
+  options: BookingService[];
 }
