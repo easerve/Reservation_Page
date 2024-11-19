@@ -7,7 +7,7 @@ export interface BookingData {
 }
 
 export interface BookingDateTime {
-  date?: Date;
+  date: Date;
   time?: string;
 }
 
@@ -21,6 +21,5 @@ export interface BookingService {
   id: string;
   name: string;
   price: number;
-  isRequired?: boolean;
   options: BookingService[];
 }

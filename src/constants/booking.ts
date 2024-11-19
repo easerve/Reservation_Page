@@ -2,7 +2,7 @@ import { BookingData, BookingService } from '../types/booking';
 
 export const INITIAL_BOOKING_STATE: BookingData = {
   dateTime: {
-    date: undefined as Date | undefined,
+    date: new Date() as Date,
     time: undefined as string | undefined,
   },
   petInfo: {
@@ -90,4 +90,10 @@ export const mainServices: BookingService[] = [
 export const additionalServices: BookingService[] = [
   { id: 'instep', name: '발등', price: 5000, options: [] },
   { id: 'tangle', name: '엉킴', price: 10000, options: [] },
+];
+
+export const bookedDates = [
+  { date: new Date('2024-11-20'), times: ['10:00', '14:00'] },
+  { date: new Date('2024-11-21'), times: ['10:00', '17:00'] },
+  { date: new Date('2024-11-22'), times: ['10:00', '14:00', '17:00'] },
 ];

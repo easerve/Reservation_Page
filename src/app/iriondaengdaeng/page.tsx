@@ -18,8 +18,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { BookingData, BookingService, PetInfo } from '@/types/booking';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { mainServices, additionalServices } from '@/constants/booking';
-import { INITIAL_BOOKING_STATE } from '@/constants/booking';
+import {
+  INITIAL_BOOKING_STATE,
+  mainServices,
+  additionalServices,
+  bookedDates,
+} from '@/constants/booking';
 
 export default function Booking() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -32,7 +36,7 @@ export default function Booking() {
     setCurrentStep(1);
   };
 
-  const updateDateTime = (date: Date | undefined, time: string | undefined) => {
+  const updateDateTime = (date: Date, time: string | undefined) => {
     setBookingData((prev) => ({ ...prev, dateTime: { date, time } }));
   };
 
@@ -77,7 +81,6 @@ export default function Booking() {
     });
   }, [bookingData.petInfo, form]);
 
-  /*  */
   const ServiceOptionButton = ({
     service,
     isSelected,
@@ -99,7 +102,9 @@ export default function Booking() {
     >
       <span className="text-sm">{service.name}</span>
       <span className="text-sm text-muted-foreground">
-        {service.price == 0 ? '' : `+ ${service.price.toLocaleString()}원`}
+        {service.price === 0
+          ? ''
+          : `${depth === 0 ? '' : '+ '}${service.price.toLocaleString()}원`}
       </span>
     </Button>
   );
@@ -249,10 +254,7 @@ export default function Booking() {
         options: BookingService[]
       ): BookingService[] =>
         options.filter(
-          (opt) =>
-            !siblings.some(
-              (sibling) => sibling.id === opt.id && sibling.isRequired
-            )
+          (opt) => !siblings.some((sibling) => sibling.id === opt.id)
         );
 
       const newOptions = removeExistingSelections(prev.mainService.options);
@@ -309,6 +311,20 @@ export default function Booking() {
     return names.join(', ');
   };
 
+  const allTimeSlots = ['10:00', '14:00', '17:00'];
+
+  const fullyBookedDates = bookedDates
+    .filter((booking) => booking.times.length >= allTimeSlots.length)
+    .map((booking) => booking.date);
+
+  // 선택된 날짜의 예약된 시간대 가져오기
+  const getBookedTimesForDate = (date: Date | undefined): string[] => {
+    const booking = bookedDates.find(
+      (booking) => booking.date.toDateString() === date?.toDateString()
+    );
+    return booking ? booking.times : [];
+  };
+
   const renderStep = () => {
     switch (currentStep) {
       // Step 1: 날짜 및 시간 선택
@@ -323,39 +339,67 @@ export default function Booking() {
                 <Calendar
                   mode="single"
                   selected={bookingData.dateTime.date}
-                  onSelect={(date) =>
-                    updateDateTime(date, bookingData.dateTime.time)
-                  }
-                  className="rounded-md border"
+                  onSelect={(date) => {
+                    if (date) {
+                      updateDateTime(date, undefined);
+                    }
+                  }}
+                  disabled={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return (
+                      date < today ||
+                      fullyBookedDates.some(
+                        (bookedDate) =>
+                          bookedDate.toDateString() === date.toDateString()
+                      )
+                    );
+                  }}
                 />
+                {bookingData.dateTime.date && (
+                  <div className="grid grid-cols-3 gap-2 mt-4">
+                    {allTimeSlots.map((time) => {
+                      const today = new Date();
+                      const selectedDate = new Date(bookingData.dateTime.date);
 
-                <div className="grid grid-cols-3 gap-2 mt-4">
-                  {['10:00', '14:00', '17:00'].map((time) => (
-                    <Button
-                      key={time}
-                      variant={
-                        bookingData.dateTime.time === time
-                          ? 'default'
-                          : 'outline'
-                      }
-                      className={
-                        bookingData.dateTime.time === time ? 'bg-primary' : ''
-                      }
-                      onClick={() =>
-                        updateDateTime(bookingData.dateTime.date, time)
-                      }
-                    >
-                      {time}
-                    </Button>
-                  ))}
-                </div>
+                      const [hours, minutes] = time.split(':').map(Number);
+                      selectedDate.setHours(hours, minutes, 0, 0);
+
+                      const isDisabled =
+                        selectedDate < today ||
+                        getBookedTimesForDate(
+                          bookingData.dateTime.date
+                        ).includes(time);
+
+                      return (
+                        <Button
+                          key={time}
+                          variant={
+                            bookingData.dateTime.time === time
+                              ? 'default'
+                              : 'outline'
+                          }
+                          className={
+                            bookingData.dateTime.time === time
+                              ? 'bg-primary'
+                              : ''
+                          }
+                          disabled={isDisabled}
+                          onClick={() =>
+                            updateDateTime(bookingData.dateTime.date, time)
+                          }
+                        >
+                          {time}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
             <Button
               className="w-full bg-primary"
-              onClick={() => {
-                setCurrentStep(2);
-              }}
+              onClick={() => setCurrentStep(2)}
               disabled={
                 !bookingData.dateTime.date || !bookingData.dateTime.time
               }
@@ -364,7 +408,6 @@ export default function Booking() {
             </Button>
           </div>
         );
-
       // Step 2: 반려견 정보 입력
       case 2:
         return (

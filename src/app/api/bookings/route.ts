@@ -5,7 +5,11 @@ import path from 'path';
 export async function POST(request: Request) {
   try {
     const booking = await request.json();
-    
+
+    // Update the price key to totalPrice
+    booking.totalPrice = booking.price;
+    delete booking.price;
+
     // Get the data directory path
     const dataDir = path.join(process.cwd(), 'data');
     const filePath = path.join(dataDir, 'bookings.json');

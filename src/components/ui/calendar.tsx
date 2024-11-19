@@ -1,32 +1,26 @@
-'use client';
-
 import * as React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { DayPicker, DayPickerSingleProps } from 'react-day-picker';
-
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export type CalendarProps = DayPickerSingleProps;
+export type CalendarProps = DayPickerSingleProps & {
+  disabledDates?: Date[];
+  className?: string;
+};
 
-function Calendar({
+export function Calendar({
+  disabledDates = [],
   className,
-  classNames,
-  showOutsideDays = true,
   selected,
   onSelect,
   ...props
 }: CalendarProps) {
-  const handleSelect = (day: Date | undefined) => {
-    if (!day || !onSelect) return;
-    // 선택된 날짜를 한국 시간 정오로 설정
-    const koreaDate = new Date(day.setHours(12, 0, 0, 0));
-    onSelect(koreaDate);
-  };
-
   return (
     <DayPicker
-      showOutsideDays={showOutsideDays}
+      selected={selected}
+      onSelect={onSelect}
+      disabled={disabledDates}
       className={cn('p-3 flex justify-center', className)}
       classNames={{
         months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
@@ -45,7 +39,7 @@ function Calendar({
         head_cell:
           'text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]',
         row: 'flex w-full mt-2',
-        cell: 'h-9 w-9 text-center text-sm p-0 relative',
+        cell: 'text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
         day: cn(
           buttonVariants({ variant: 'ghost' }),
           'h-9 w-9 p-0 font-normal aria-selected:opacity-100'
@@ -55,19 +49,15 @@ function Calendar({
         day_today: 'bg-accent text-accent-foreground',
         day_outside: 'text-muted-foreground opacity-50',
         day_disabled: 'text-muted-foreground opacity-50',
+        day_range_middle:
+          'aria-selected:bg-accent aria-selected:text-accent-foreground',
         day_hidden: 'invisible',
-        ...classNames,
       }}
       components={{
-        IconLeft: ({ ...props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ...props }) => <ChevronRight className="h-4 w-4" />,
+        IconLeft: () => <ChevronLeft className="h-4 w-4" />,
+        IconRight: () => <ChevronRight className="h-4 w-4" />,
       }}
-      selected={selected}
-      onSelect={handleSelect}
       {...props}
     />
   );
 }
-Calendar.displayName = 'Calendar';
-
-export { Calendar };
