@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import Select from "react-select";
-import * as z from "zod";
+import React, { useState, useMemo, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import Select from 'react-select';
 import {
   Form,
   FormControl,
@@ -17,40 +17,44 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { BookingData, BookingService, OptionInfo } from "@/types/booking";
-// import { fetchBreeds } from "@/api/pets/breed"; // Assume this API call fetches breed data
+} from '@/components/ui/form';
+import {
+  BookingData,
+  BookingService,
+  PetInfo,
+  Dog,
+  Customer,
+  UserDogsData,
+} from '@/types/booking';
+import {
+  INITIAL_BOOKING_STATE,
+  mainServices,
+  additionalServices,
+  bookedDates,
+  breedDummyData,
+} from '@/constants/booking';
 
-export default function IrionBooking() {
+export default function Booking() {
   const [currentStep, setCurrentStep] = useState(1);
+  const [bookingData, setBookingData] = useState<BookingData>(
+    INITIAL_BOOKING_STATE
+  );
 
-  // Move booking state from context to component
-  const [bookingData, setBookingData] = useState<BookingData>({
-    dateTime: {
-      date: undefined as Date | undefined,
-      time: undefined as string | undefined,
-    },
-    petInfo: { petName: "", weight: 0, phoneNumber: "", age: 0, breed: "" },
-    mainService: [],
-    additionalServices: [],
-    price: 0,
-    inquiry: "",
-  });
+  const resetBookingData = () => {
+    setBookingData(INITIAL_BOOKING_STATE);
+    setCurrentStep(1);
+  };
 
-  const [userDogsData, setUserDogsData] = useState(null);
-
-  // Create state update functions
-  const updateDateTime = (date: Date | undefined, time: string | undefined) => {
+  const updateDateTime = (date: Date, time: string | undefined) => {
     setBookingData((prev) => ({ ...prev, dateTime: { date, time } }));
   };
 
-  const updatePetInfo = (info: {
-    petName?: string;
-    weight?: number;
-    phoneNumber?: string;
-    age?: number;
-    breed?: string;
-  }) => {
+  const [userDogsData, setUserDogsData] = useState<UserDogsData>({
+    status: '' as string,
+    customers: { dogs: [] as Dog[] } as Customer,
+  });
+
+  const updatePetInfo = (info: PetInfo) => {
     setBookingData((prev) => ({
       ...prev,
       petInfo: {
@@ -60,45 +64,32 @@ export default function IrionBooking() {
     }));
   };
 
-  const updateMainServices = (mainService: BookingService) => {
-    setBookingData((prev) => ({ ...prev, mainService }));
-  };
-
-  const updateAdditionalService = (additionalServices: BookingService[]) => {
-    setBookingData((prev) => ({ ...prev, additionalServices }));
-  };
-
   const updateInquiry = (text: string) => {
     setBookingData((prev) => ({ ...prev, inquiry: text }));
   };
 
-  // Replace existing state declarations with values from bookingData
-  const [date, setDate] = useState<Date | undefined>(bookingData.dateTime.date);
-  const [selectedTime, setSelectedTime] = useState<string | undefined>(
-    bookingData.dateTime.time
-  );
-
-  // Step 2: Phone Number Form Schema
   const phoneNumberSchema = z.object({
-    phoneNumber: z.string().min(10, "올바른 전화번호를 입력해주세요"),
+    phoneNumber: z
+      .string()
+      .regex(
+        /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/,
+        '올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)'
+      ),
   });
 
-  // Step 3: Pet Info Form Schema
   const petInfoSchema = z.object({
-    petName: z.string().min(1, "반려견의 이름을 입력해주세요"),
-    weight: z
+    petName: z.string().min(1, '반려견의 이름을 입력해주세요'),
+    weight: z.string().refine((val) => {
+      const num = parseFloat(val);
+      return (
+        !isNaN(num) && num > 0 && num <= 20 && /^\d+(\.\d{0,1})?$/.test(val)
+      );
+    }, '0부터 20 사이의 숫자를 소수점 첫째 자리까지 입력해주세요.'),
+    birth: z
       .string()
-      .min(1, "반려견의 체중을 입력해주세요")
-      .refine((value) => Number(value) >= 0, {
-        message: "체중은 0 이상이어야 합니다",
-      }),
-    age: z
-      .string()
-      .min(1, "반려견의 나이를 입력해주세요")
-      .refine((value) => Number(value) >= 0, {
-        message: "나이는 0 이상이어야 합니다",
-      }),
-    breed: z.string().min(1, "반려견의 견종을 선택해주세요"),
+      .nonempty('반려견의 생년월일을 입력해주세요')
+      .refine((val) => !isNaN(Date.parse(val)), '올바른 날짜 형식이 아닙니다.'),
+    breed: z.string().min(1, '반려견의 견종을 선택해주세요'),
   });
 
   const phoneNumberForm = useForm<z.infer<typeof phoneNumberSchema>>({
@@ -113,7 +104,7 @@ export default function IrionBooking() {
     defaultValues: {
       petName: bookingData.petInfo.petName,
       weight: String(bookingData.petInfo.weight),
-      age: String(bookingData.petInfo.age),
+      birth: String(bookingData.petInfo.birth),
       breed: bookingData.petInfo.breed,
     },
   });
@@ -124,12 +115,6 @@ export default function IrionBooking() {
     breed: string;
   } | null>(null);
 
-  const getDogsData = async (): Promise<any> => {
-    const res = await fetch("http://localhost:3000/api/auth/profile");
-    const data = await res.json();
-    return data;
-  };
-
   useEffect(() => {
     const loadBreeds = async () => {
       try {
@@ -137,117 +122,258 @@ export default function IrionBooking() {
         const breedOptions = breedDummyData.breed;
         setBreeds(breedOptions);
       } catch (error) {
-        console.error("Error fetching breeds:", error);
+        console.error('Error fetching breeds:', error);
       }
     };
     loadBreeds();
   }, []);
 
-  // Step 3: Services Selection
-  const [selectedMainService, setSelectedMainService] = useState<
-    BookingService | undefined
-  >();
-  const [selectedSubOptions, setSelectedSubOptions] = useState<OptionInfo[]>(
-    []
+  const ServiceOptionButton = ({
+    service,
+    isSelected,
+    onClick,
+    depth = 0,
+  }: {
+    service: BookingService;
+    isSelected: boolean;
+    onClick: () => void;
+    depth?: number;
+  }) => (
+    <Button
+      variant="outline"
+      className={`w-full justify-between h-auto py-3 ${
+        isSelected ? 'border-primary bg-primary/10' : ''
+      }`}
+      onClick={onClick}
+      disabled={service.price == 0}
+    >
+      <span className="text-sm">{service.name}</span>
+      <span className="text-sm text-muted-foreground">
+        {service.price === 0
+          ? ''
+          : `${depth === 0 ? '' : '+ '}${service.price.toLocaleString()}원`}
+      </span>
+    </Button>
   );
-  const [selectedAdditionalOptions, setSelectedAdditionalOptions] = useState<
-    BookingService[]
-  >([]);
-  const [selectedAdditionalSubOptions, setSelectedAdditionalSubOptions] =
-    useState<OptionInfo[]>([]);
 
-  // Step 4: Inquiry
-  const [inquiry, setInquiry] = useState(bookingData.inquiry);
+  const RecursiveOptions = ({
+    options,
+    selectedOptions,
+    onToggle,
+    depth = 0,
+    parentId,
+  }: {
+    options: BookingService[];
+    selectedOptions: BookingService[];
+    onToggle: (option: BookingService, parentId?: string) => void;
+    depth?: number;
+    parentId?: string;
+  }) => {
+    return (
+      <div className={`space-y-2 ${depth > 0 ? 'ml-4' : ''}`}>
+        {options.map((option) => (
+          <div key={option.id} className="space-y-2">
+            <ServiceOptionButton
+              service={option}
+              isSelected={selectedOptions.some((opt) => opt.id === option.id)}
+              onClick={() => onToggle(option, parentId)}
+              depth={depth}
+            />
 
-  // Services data
-  const mainServices: BookingService[] = [
-    {
-      id: "grooming",
-      name: "위생미용+목욕",
-      price: 25000,
-      options: [
-        { id: "shampoo", name: "샴푸 업그레이드", addPrice: 10000 },
-        { id: "perfume", name: "향수 추가", addPrice: 5000 },
-      ],
-    },
-    {
-      id: "clipping",
-      name: "클리핑",
-      price: 25000,
-      options: [
-        { id: "nailTrim", name: "발톱 정리", addPrice: 5000 },
-        { id: "earCleaning", name: "귀 청소", addPrice: 8000 },
-      ],
-    },
-    {
-      id: "sporting",
-      name: "스포팅",
-      price: 15000,
-      options: [],
-    },
-    {
-      id: "scissorCut",
-      name: "가위컷",
-      price: 15000,
-      options: [],
-    },
-  ];
+            {option.options?.length > 0 && (
+              <RecursiveOptions
+                options={option.options}
+                selectedOptions={selectedOptions}
+                onToggle={onToggle}
+                depth={depth + 1}
+                parentId={option.id}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
-  const additionalServices: BookingService[] = [
-    { id: "instep", name: "발등", price: 5000, options: [] },
-    { id: "tangle", name: "엉킴", price: 10000, options: [] },
-  ];
+  const calculateServicePrice = (
+    service: BookingService,
+    selectedOptions: BookingService[]
+  ): number => {
+    let price = service.price;
 
-  // Add helper functions for confirmation page
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return "날짜 미선택";
-    return new Date(date).toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    // 하위 옵션들 중 선택된 것들만 가격 계산
+    if (service.options && service.options.length > 0) {
+      const selectedChildOptions = service.options.filter((option) =>
+        selectedOptions.some((selected) => selected.id === option.id)
+      );
+
+      price += selectedChildOptions.reduce(
+        (sum, option) => sum + calculateServicePrice(option, selectedOptions),
+        0
+      );
+    }
+
+    return price;
+  };
+
+  // 가격 계산
+  const price = useMemo(() => {
+    let totalPrice = 0;
+
+    if (bookingData.mainService) {
+      // 메인 서비스 가격
+      totalPrice += bookingData.mainService.price;
+
+      // 선택된 옵션들의 가격만 계산
+      totalPrice += bookingData.mainService.options.reduce(
+        (sum, option) =>
+          sum +
+          calculateServicePrice(option, bookingData.mainService?.options || []),
+        0
+      );
+    }
+
+    // 추가 서비스 가격
+    bookingData.additionalServices.forEach((service) => {
+      totalPrice += service.price;
+    });
+
+    return totalPrice;
+  }, [bookingData.mainService, bookingData.additionalServices]);
+
+  const handleMainServiceSelect = (service: BookingService) => {
+    setBookingData((prev) => ({
+      ...prev,
+      mainService: { ...service, options: [] },
+    }));
+  };
+
+  const handleSubOptionToggle = (option: BookingService, parentId?: string) => {
+    if (!bookingData.mainService) return;
+
+    setBookingData((prev) => {
+      if (!prev.mainService) return prev;
+
+      // Check if option is already selected
+      const isSelected = prev.mainService.options.some(
+        (opt) => opt.id === option.id
+      );
+
+      // If selected, remove the option
+      if (isSelected) {
+        return {
+          ...prev,
+          mainService: {
+            ...prev.mainService,
+            options: prev.mainService.options.filter(
+              (opt) => opt.id !== option.id
+            ),
+          },
+        };
+      }
+
+      // If not selected, handle new selection
+      const findSiblingOptions = (
+        options: BookingService[],
+        targetId: string,
+        parentId?: string
+      ): BookingService[] => {
+        for (const opt of options) {
+          if (opt.id === parentId) {
+            return opt.options;
+          }
+          if (opt.options.length > 0) {
+            const found = findSiblingOptions(opt.options, targetId, parentId);
+            if (found.length > 0) return found;
+          }
+        }
+        return [];
+      };
+
+      // Get siblings of the current option
+      const siblings = parentId
+        ? findSiblingOptions(prev.mainService.options, option.id, parentId)
+        : prev.mainService.options;
+
+      // Remove any existing selections at the same depth for required options
+      const removeExistingSelections = (
+        options: BookingService[]
+      ): BookingService[] =>
+        options.filter(
+          (opt) => !siblings.some((sibling) => sibling.id === opt.id)
+        );
+
+      const newOptions = removeExistingSelections(prev.mainService.options);
+
+      // Add new selection
+      newOptions.push(option);
+
+      return {
+        ...prev,
+        mainService: {
+          ...prev.mainService,
+          options: newOptions,
+        },
+      };
     });
   };
 
-  const getServiceNames = (
-    mainService: string,
-    subOptions: string[],
-    additionalOptions: string[]
-  ) => {
-    const allServices = [mainService, ...subOptions, ...additionalOptions];
-    const serviceMap: { [key: string]: string } = {
-      grooming: "위생미용+목욕",
-      clipping: "클리핑",
-      sporting: "스포팅",
-      scissorCut: "가위컷",
-      instep: "발등",
-      tangle: "엉킴",
-      shampoo: "샴푸 업그레이드",
-      perfume: "향수 추가",
-      nailTrim: "발톱 정리",
-      earCleaning: "귀 청소",
-    };
-    return allServices.map((id) => serviceMap[id] || id).join(", ");
+  const handleAdditionalServiceToggle = (service: BookingService) => {
+    setBookingData((prev) => {
+      const isSelected = prev.additionalServices.some(
+        (s) => s.id === service.id
+      );
+      const newAdditionalServices = isSelected
+        ? prev.additionalServices.filter((s) => s.id !== service.id)
+        : [...prev.additionalServices, service];
+      return { ...prev, additionalServices: newAdditionalServices };
+    });
   };
 
-  const breedDummyData = {
-    breed: [
-      {
-        id: 1,
-        breed: "포메",
-      },
-      {
-        id: 2,
-        breed: "비숑",
-      },
-      {
-        id: 3,
-        breed: "진돗개",
-      },
-    ],
+  // 날짜 포맷팅
+  const formatDate = (date: Date | undefined) => {
+    if (!date) return '날짜 미선택';
+    return new Date(date).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  // 선택된 서비스 이름 가져오기
+  const getServiceNames = () => {
+    const names = [];
+
+    if (bookingData.mainService) {
+      names.push(bookingData.mainService.name);
+      names.push(
+        ...bookingData.mainService.options.map((option) => option.name)
+      );
+    }
+
+    if (bookingData.additionalServices.length > 0)
+      names.push(bookingData.additionalServices.map((service) => service.name));
+
+    return names.join(', ');
+  };
+
+  const allTimeSlots = ['10:00', '14:00', '17:00'];
+
+  const fullyBookedDates = bookedDates
+    .filter((booking) => booking.times.length >= allTimeSlots.length)
+    .map((booking) => booking.date);
+
+  // 선택된 날짜의 예약된 시간대 가져오기
+  const getBookedTimesForDate = (date: Date | undefined): string[] => {
+    const booking = bookedDates.find(
+      (booking) => booking.date.toDateString() === date?.toDateString()
+    );
+    return booking ? booking.times : [];
   };
 
   const renderStep = () => {
     switch (currentStep) {
+      // Step 1: 날짜 및 시간 선택
       case 1:
         return (
           <div className="space-y-6">
@@ -258,31 +384,71 @@ export default function IrionBooking() {
               <CardContent>
                 <Calendar
                   mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  className="rounded-md border"
+                  selected={bookingData.dateTime.date}
+                  onSelect={(date) => {
+                    if (date) {
+                      updateDateTime(date, undefined);
+                    }
+                  }}
+                  disabled={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return (
+                      date < today ||
+                      fullyBookedDates.some(
+                        (bookedDate) =>
+                          bookedDate.toDateString() === date.toDateString()
+                      )
+                    );
+                  }}
                 />
-                <div className="grid grid-cols-3 gap-2 mt-4">
-                  {["09:00", "09:30", "10:00", "10:30", "11:00"].map((time) => (
-                    <Button
-                      key={time}
-                      variant={selectedTime === time ? "default" : "outline"}
-                      className={selectedTime === time ? "bg-[#415036]" : ""}
-                      onClick={() => setSelectedTime(time)}
-                    >
-                      {time}
-                    </Button>
-                  ))}
-                </div>
+                {bookingData.dateTime.date && (
+                  <div className="grid grid-cols-3 gap-2 mt-4">
+                    {allTimeSlots.map((time) => {
+                      const today = new Date();
+                      const selectedDate = new Date(bookingData.dateTime.date);
+
+                      const [hours, minutes] = time.split(':').map(Number);
+                      selectedDate.setHours(hours, minutes, 0, 0);
+
+                      const isDisabled =
+                        selectedDate < today ||
+                        getBookedTimesForDate(
+                          bookingData.dateTime.date
+                        ).includes(time);
+
+                      return (
+                        <Button
+                          key={time}
+                          variant={
+                            bookingData.dateTime.time === time
+                              ? 'default'
+                              : 'outline'
+                          }
+                          className={
+                            bookingData.dateTime.time === time
+                              ? 'bg-primary'
+                              : ''
+                          }
+                          disabled={isDisabled}
+                          onClick={() =>
+                            updateDateTime(bookingData.dateTime.date, time)
+                          }
+                        >
+                          {time}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
             <Button
-              className="w-full bg-[#415036]"
-              onClick={() => {
-                updateDateTime(date, selectedTime);
-                setCurrentStep(2);
-              }}
-              disabled={!date || !selectedTime}
+              className="w-full bg-primary"
+              onClick={() => setCurrentStep(2)}
+              disabled={
+                !bookingData.dateTime.date || !bookingData.dateTime.time
+              }
             >
               다음
             </Button>
@@ -293,16 +459,20 @@ export default function IrionBooking() {
           <Form {...phoneNumberForm}>
             <form
               onSubmit={phoneNumberForm.handleSubmit(async (values) => {
-                updatePetInfo({ phoneNumber: values.phoneNumber });
+                updatePetInfo({
+                  ...bookingData.petInfo,
+                  phoneNumber: values.phoneNumber,
+                });
                 try {
                   const res = await fetch(
-                    "http://localhost:3000/api/auth/profile?phone=" +
+                    'http://localhost:3000/api/auth/profile?phone=' +
                       values.phoneNumber
                   );
                   const data = await res.json();
+
                   setUserDogsData(data);
-                } catch {
-                  console.log("fail");
+                } catch (error) {
+                  console.error(error);
                 }
                 setCurrentStep(3);
               })}
@@ -336,7 +506,7 @@ export default function IrionBooking() {
                 >
                   이전
                 </Button>
-                <Button type="submit" className="flex-1 bg-[#415036]">
+                <Button type="submit" className="flex-1 bg-primary">
                   다음
                 </Button>
               </div>
@@ -346,16 +516,16 @@ export default function IrionBooking() {
 
       case 3:
         const getFieldLabel = (field: string) => {
-          if (field === "petName") {
-            return "반려견 이름";
-          } else if (field === "weight") {
-            return "반려견 체중 (kg)";
-          } else if (field === "age") {
-            return "반려견 나이";
-          } else if (field === "breed") {
-            return "반려견 견종";
+          if (field === 'petName') {
+            return '반려견 이름';
+          } else if (field === 'weight') {
+            return '반려견 체중 (kg)';
+          } else if (field === 'age') {
+            return '반려견 나이';
+          } else if (field === 'breed') {
+            return '반려견 견종';
           }
-          return "";
+          return '';
         };
 
         return (
@@ -365,14 +535,15 @@ export default function IrionBooking() {
                 updatePetInfo({
                   petName: values.petName,
                   weight: Number(values.weight),
-                  age: Number(values.age),
-                  breed: selectedBreed ? selectedBreed.breed : "",
+                  phoneNumber: bookingData.petInfo.phoneNumber,
+                  birth: values.birth,
+                  breed: selectedBreed ? selectedBreed.breed : '',
                 });
                 setCurrentStep(4);
               })}
               className="space-y-6"
             >
-              {userDogsData.status === "success" ? (
+              {userDogsData.status === 'success' ? (
                 <div>
                   <Card>
                     <CardHeader>
@@ -385,14 +556,15 @@ export default function IrionBooking() {
                           variant="outline"
                           className={`w-full justify-between h-auto py-4 ${
                             bookingData.petInfo.petName === dog.name
-                              ? "border-[#415036] bg-[#415036]/10"
-                              : ""
+                              ? 'border-[bg-primary] bg-[bg-primary]/10'
+                              : ''
                           }`}
                           onClick={() => {
                             updatePetInfo({
                               petName: dog.name,
                               weight: dog.weight,
-                              age: dog.age,
+                              phoneNumber: bookingData.petInfo.phoneNumber,
+                              birth: dog.birth,
                               breed: dog.breed,
                             });
                           }}
@@ -400,7 +572,20 @@ export default function IrionBooking() {
                           <div>
                             <p>이름: {dog.name}</p>
                             <p>견종: {dog.breed}</p>
-                            <p>나이: {dog.age}살</p>
+                            <p>
+                              나이:{' '}
+                              {(() => {
+                                const birthDate = new Date(dog.birth);
+                                const today = new Date();
+                                const months =
+                                  (today.getFullYear() -
+                                    birthDate.getFullYear()) *
+                                    12 +
+                                  (today.getMonth() - birthDate.getMonth());
+                                return Math.floor(months / 12);
+                              })()}
+                              개월
+                            </p>
                             <p>체중: {dog.weight}kg</p>
                           </div>
                         </Button>
@@ -424,7 +609,7 @@ export default function IrionBooking() {
                     </Button>
                     <Button
                       onClick={() => setCurrentStep(4)}
-                      className="flex-1 bg-[#415036]"
+                      className="flex-1 bg-primary"
                     >
                       다음
                     </Button>
@@ -437,7 +622,7 @@ export default function IrionBooking() {
                       <CardTitle>반려견 선택</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {["petName", "weight", "age"].map((field) => (
+                      {['petName', 'weight', 'age'].map((field) => (
                         <FormField
                           key={field}
                           control={petInfoForm.control}
@@ -447,7 +632,7 @@ export default function IrionBooking() {
                               <FormLabel>{getFieldLabel(field)}</FormLabel>
                               <FormControl>
                                 <Input
-                                  type={field === "petName" ? "text" : "number"}
+                                  type={field === 'petName' ? 'text' : 'number'}
                                   {...fieldProps}
                                 />
                               </FormControl>
@@ -476,7 +661,7 @@ export default function IrionBooking() {
                                     option
                                       ? breeds.find(
                                           (breed) => breed.id === option.value
-                                        )
+                                        ) ?? null
                                       : null
                                   );
                                   fieldProps.onChange(option?.label);
@@ -506,7 +691,7 @@ export default function IrionBooking() {
                     >
                       이전
                     </Button>
-                    <Button type="submit" className="flex-1 bg-[#415036]">
+                    <Button type="submit" className="flex-1 bg-primary">
                       다음
                     </Button>
                   </div>
@@ -526,69 +711,26 @@ export default function IrionBooking() {
               <CardContent className="space-y-2">
                 {mainServices.map((service) => (
                   <div key={service.id} className="space-y-2">
-                    <Button
-                      variant="outline"
-                      className={`w-full justify-between h-auto py-4 ${
-                        selectedMainService &&
-                        selectedMainService.id === service.id
-                          ? "border-[#415036] bg-[#415036]/10"
-                          : ""
-                      }`}
-                      onClick={() => {
-                        if (
-                          !selectedMainService ||
-                          selectedMainService.id !== service.id
-                        ) {
-                          setSelectedMainService(service);
-                          setSelectedSubOptions([]);
-                        }
-                      }}
-                    >
-                      <span>{service.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {service.price}
-                      </span>
-                    </Button>
+                    <ServiceOptionButton
+                      service={service}
+                      isSelected={bookingData.mainService?.id === service.id}
+                      onClick={() => handleMainServiceSelect(service)}
+                    />
 
-                    {selectedMainService &&
-                      selectedMainService.id === service.id &&
-                      service.options.length > 0 && (
-                        <div className="ml-4 space-y-2">
-                          {service.options.map((option) => (
-                            <Button
-                              key={option.id}
-                              variant="outline"
-                              className={`w-full justify-between h-auto py-3 ${
-                                selectedSubOptions.some(
-                                  (optionInfo) => optionInfo.id === option.id
-                                )
-                                  ? "border-[#415036] bg-[#415036]/10"
-                                  : ""
-                              }`}
-                              onClick={() => {
-                                const newSubOptions = selectedSubOptions.some(
-                                  (optionInfo) => optionInfo.id === option.id
-                                )
-                                  ? selectedSubOptions.filter(
-                                      (optionInfo) =>
-                                        optionInfo.id !== option.id
-                                    )
-                                  : [...selectedSubOptions, option];
-                                setSelectedSubOptions(newSubOptions);
-                              }}
-                            >
-                              <span className="text-sm">{option.name}</span>
-                              <span className="text-sm text-muted-foreground">
-                                {option.addPrice}
-                              </span>
-                            </Button>
-                          ))}
-                        </div>
+                    {bookingData.mainService?.id === service.id &&
+                      service.options?.length > 0 && (
+                        <RecursiveOptions
+                          options={service.options}
+                          selectedOptions={bookingData.mainService.options}
+                          onToggle={handleSubOptionToggle}
+                          depth={1}
+                        />
                       )}
                   </div>
                 ))}
               </CardContent>
             </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>추가 서비스</CardTitle>
@@ -599,46 +741,49 @@ export default function IrionBooking() {
                     key={service.id}
                     variant="outline"
                     className={`w-full justify-between h-auto py-4 ${
-                      selectedAdditionalOptions.some(
-                        (serviceInfo) => serviceInfo.id === service.id
+                      bookingData.additionalServices.some(
+                        (s) => s.id === service.id
                       )
-                        ? "border-[#415036] bg-[#415036]/10"
-                        : ""
+                        ? 'border-primary bg-primary/10'
+                        : ''
                     }`}
-                    onClick={() => {
-                      const newServices = selectedAdditionalOptions.some(
-                        (serviceInfo) => serviceInfo.id === service.id
-                      )
-                        ? selectedAdditionalOptions.filter(
-                            (serviceInfo) => serviceInfo.id !== service.id
-                          )
-                        : [...selectedAdditionalOptions, service];
-                      setSelectedAdditionalOptions(newServices);
-                    }}
+                    onClick={() => handleAdditionalServiceToggle(service)}
                   >
                     <span>{service.name}</span>
                     <span className="text-sm text-muted-foreground">
-                      {service.price}
+                      {service.price == 0
+                        ? ''
+                        : `+ ${service.price.toLocaleString()}원`}
                     </span>
                   </Button>
                 ))}
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>결제 금액</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-primary text-right">
+                  {price.toLocaleString()}원
+                </div>
+              </CardContent>
+            </Card>
+
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => setCurrentStep(3)}>
                 이전
               </Button>
               <Button
-                className="flex-1 bg-[#415036]"
+                className="flex-1 bg-primary"
                 onClick={() => {
-                  if (!selectedMainService) {
+                  if (!bookingData.mainService) {
                     return;
                   }
-                  updateMainServices(selectedMainService);
-                  updateAdditionalService([...selectedAdditionalOptions]);
                   setCurrentStep(5);
                 }}
-                disabled={!selectedMainService}
+                disabled={!bookingData.mainService}
               >
                 다음
               </Button>
@@ -657,7 +802,8 @@ export default function IrionBooking() {
                 <div>
                   <h3 className="font-medium text-gray-600">날짜 및 시간</h3>
                   <p>
-                    {formatDate(date)} {selectedTime}
+                    {formatDate(bookingData.dateTime.date)}{' '}
+                    {bookingData.dateTime.time}
                   </p>
                 </div>
 
@@ -670,22 +816,20 @@ export default function IrionBooking() {
 
                 <div>
                   <h3 className="font-medium text-gray-600">선택한 서비스</h3>
-                  <p>
-                    {getServiceNames(
-                      selectedMainService ? selectedMainService.name : "",
-                      selectedSubOptions.map((option) => option.name),
-                      selectedAdditionalOptions.map((option) => option.name)
-                    )}
-                  </p>
+                  <p>{getServiceNames()}</p>
                 </div>
 
+                <div>
+                  <h3 className="font-medium text-gray-600">결제 금액</h3>
+                  <p>{price.toLocaleString()}원</p>
+                </div>
                 <div>
                   <h3 className="font-medium text-gray-600">추가 문의사항</h3>
                   <Textarea
                     placeholder="문의사항이 있으시다면 입력해주세요"
                     className="min-h-[100px] mt-2"
-                    value={inquiry}
-                    onChange={(e) => setInquiry(e.target.value)}
+                    value={bookingData.inquiry}
+                    onChange={(e) => updateInquiry(e.target.value)}
                   />
                 </div>
               </CardContent>
@@ -696,32 +840,25 @@ export default function IrionBooking() {
                 이전
               </Button>
               <Button
-                className="flex-1 bg-[#415036]"
-                disabled={!selectedMainService}
+                className="flex-1 bg-primary"
                 onClick={async () => {
-                  updateInquiry(inquiry);
                   try {
-                    const response = await fetch("/api/bookings", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
+                    const response = await fetch('/api/bookings', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
                         ...bookingData,
-                        dateTime: {
-                          ...bookingData.dateTime,
-                          date: date?.toISOString(),
-                        },
-                        mainService: bookingData.mainService,
-                        additionalServices: bookingData.additionalServices,
-                        inquiry,
-                        createdAt: new Date().toISOString(),
+                        price,
                       }),
                     });
-                    if (!response.ok)
-                      throw new Error("예약 저장에 실패했습니다.");
-                    alert("예약이 완료되었습니다!");
+                    if (!response.ok) {
+                      throw new Error('예약 저장에 실패했습니다.');
+                    }
+                    alert('예약이 완료되었습니다.');
+                    resetBookingData();
                   } catch (error) {
-                    console.error("Error saving booking:", error);
-                    alert("예약 저장 중 오류가 발생했습니다.");
+                    console.error('Error saving booking:', error);
+                    alert('예약 저장 중 오류가 발생했습니다.');
                   }
                 }}
               >
@@ -736,13 +873,13 @@ export default function IrionBooking() {
   return (
     <div className="container max-w-md mx-auto p-4">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#415036]">이리온댕댕 예약</h1>
+        <h1 className="text-2xl font-bold text-primary">이리온댕댕 예약</h1>
         <div className="flex justify-between mt-2">
           {[1, 2, 3, 4, 5].map((step) => (
             <div
               key={step}
               className={`h-2 flex-1 mx-1 rounded ${
-                step <= currentStep ? "bg-[#415036]" : "bg-gray-200"
+                step <= currentStep ? 'bg-primary' : 'bg-gray-200'
               }`}
             />
           ))}
