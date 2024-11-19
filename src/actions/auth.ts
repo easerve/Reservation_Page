@@ -50,7 +50,7 @@ export async function getUserDogs(phone: String) {
 		id: pet.uuid,
 		name: pet.name,
 		breed: pet.breeds?.name,
-		age: pet.age,
+		birth: pet.birth,
 		weight: pet.weight,
 	}));
 
