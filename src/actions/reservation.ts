@@ -22,6 +22,45 @@ function handleError(error: Error) {
   throw new Error('Internal server error');
 }
 
+
+export async function getReservations(scope: number) {
+	const supabase = await createServerSupabaseClient();
+
+	const today = new Date();
+	const endDate = new Date();
+	endDate.setMonth(today.getMonth() + scope);
+
+	const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+	const { data: reservationsData, error: reservationsError } = await supabase
+		.from('reservations')
+		.select('*')
+		.gte('reservation_date', today.toISOString())
+		.lte('reservation_date', endDate.toISOString());
+
+	if (reservationsError) {
+		handleError(reservationsError);
+	}
+
+	const reservationsMap: { [key: string]: string[] } = {};
+
+	reservationsData?.forEach((reservation) => {
+		const [date, time] = reservation.reservation_date!.split('T');
+		const formattedTime = time.slice(0, 5);
+
+		if (!reservationsMap[date]) {
+			reservationsMap[date] = [];
+		}
+		reservationsMap[date].push(formattedTime);
+	});
+
+	const formattedReservations = Object.entries(reservationsMap).map(([date, times]) => ({
+		date,
+		times,
+	}));
+	return formattedReservations;
+}
+
 export async function addReservation(reservationInfo: ReservationInfo) {
 	const supabase = await createServerSupabaseClient();
 
