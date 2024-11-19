@@ -28,8 +28,26 @@ import {
 } from "@/components/ui/dialog";
 
 import "@/styles/calendar/style.css";
-import ReservationForm, { formSchema } from "./reservation_form";
+import OuterReservationForm, {
+  formSchema,
+} from "@/containers/reservation/components/outer_reservation_form";
+import InnerReservationForm, {
+  innerFormSchema,
+} from "./inner_reservation_form";
 import { z } from "zod";
+import DefaultDialog from "@/components/default_dialog/default_dialog";
+
+function updateTimeInDate(date: Date, time: string): Date {
+  const [hours, minutes] = time.split(":").map(Number);
+
+  const updatedDate = new Date(date);
+
+  updatedDate.setHours(hours);
+  updatedDate.setMinutes(minutes);
+  updatedDate.setSeconds(0); // 초는 0으로 설정 (선택사항)
+
+  return updatedDate;
+}
 
 const Calendar: React.FC = () => {
   const [currentEvents, setCurrentEvents] = useState<EventApi[]>([]);
@@ -61,6 +79,7 @@ const Calendar: React.FC = () => {
 
   const handleEventClick = (selected: EventClickArg) => {
     // Prompt user for confirmation before deleting an event
+    console.log(selected.event);
     if (
       window.confirm(
         `Are you sure you want to delete the event "${selected.event.title}"?`
@@ -75,24 +94,28 @@ const Calendar: React.FC = () => {
     setNewEventTitle("");
   };
 
-  const handleAddEvent = (data: z.infer<typeof formSchema>) => {
+  const handleAddEvent = (data: z.infer<typeof innerFormSchema>) => {
     // e.preventDefault();
-    console.log(data, newEventTitle, selectedDate);
+    console.log(data, newEventTitle, selectedDate); // debug
     if (selectedDate) {
       const calendarApi = selectedDate.view.calendar; // Get the calendar API instance.
       calendarApi.unselect(); // Unselect the date range.
 
-      console.log(data.reservationTime.toISOString());
+      const startTime = updateTimeInDate(
+        selectedDate.start,
+        data.reservationTime
+      );
       const newEvent = {
-        id: `${data.reservationTime.toISOString()}-${newEventTitle}`,
-        title: data.breed,
-        start: data.reservationTime.toISOString(),
-        end: data.reservationTime.toISOString(),
+        id: `${startTime.toISOString()}-${data.phoneNumber}`,
+        title: `${data.petName}(${data.breed})`,
+        phoneNumber: data.phoneNumber,
+        start: startTime.toISOString(),
+        end: startTime.toISOString(),
       };
 
       console.log(newEvent);
       calendarApi.addEvent(newEvent);
-      handleCloseDialog();
+      // handleCloseDialog();
     }
   };
 
@@ -124,27 +147,16 @@ const Calendar: React.FC = () => {
       </div>
 
       {/* Dialog for adding new events */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        {/* <DialogTrigger asChild>
-          <Button variant="outline">Share</Button>
-        </DialogTrigger> */}
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>예약 추가하기</DialogTitle>
-            <DialogDescription>
-              Anyone who has this link will be able to view this.
-            </DialogDescription>
-          </DialogHeader>
-          <ReservationForm onSubmit={handleAddEvent} />
-          <DialogFooter className="sm:justify-start">
-            <DialogClose asChild>
-              <Button type="button" variant="secondary">
-                Close
-              </Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DefaultDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        title="예약 추가하기"
+      >
+        <InnerReservationForm
+          onSubmit={handleAddEvent}
+          onCloseDialog={handleCloseDialog}
+        />
+      </DefaultDialog>
       {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>

@@ -10,13 +10,6 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Form,
   FormControl,
   FormField,
@@ -39,9 +32,9 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-export const formSchema = z.object({
-  reservationTime: z.date({
-    required_error: "예약 시간을 선택해주세요.",
+export const innerFormSchema = z.object({
+  reservationTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, {
+    message: "올바른 시간 형식을 입력해주세요 (HH:MM).",
   }),
   phoneNumber: z.string().regex(/^[0-9]{11}$/, {
     message: "올바른 전화번호 형식을 입력해주세요 (11자리 숫자).",
@@ -61,13 +54,14 @@ export const formSchema = z.object({
   specialNotes: z.string().optional(),
 });
 
-export default function ReservationForm(props: {
-  onSubmit: (data: z.infer<typeof formSchema>) => void;
+export default function InnerReservationForm(props: {
+  onSubmit: (data: z.infer<typeof innerFormSchema>) => void;
+  onCloseDialog: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof innerFormSchema>>({
+    resolver: zodResolver(innerFormSchema),
     defaultValues: {
+      reservationTime: "",
       phoneNumber: "",
       petName: "",
       groomingDetails: "",
@@ -82,47 +76,11 @@ export default function ReservationForm(props: {
           control={form.control}
           name="reservationTime"
           render={({ field }) => (
-            <FormItem className="flex flex-col">
+            <FormItem>
               <FormLabel>예약 시간</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "yyyy년 MM월 dd일 HH:mm")
-                      ) : (
-                        <span>날짜와 시간을 선택하세요</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    initialFocus
-                  />
-                  <div className="p-3 border-t">
-                    <Input
-                      type="time"
-                      onChange={(e) => {
-                        const date = field.value || new Date();
-                        const [hours, minutes] = e.target.value.split(":");
-                        date.setHours(parseInt(hours), parseInt(minutes));
-                        field.onChange(date);
-                      }}
-                    />
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <FormControl>
+                <Input type="time" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -228,9 +186,19 @@ export default function ReservationForm(props: {
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full">
-          예약하기
-        </Button>
+        <div className="flex justify-end">
+          <Button type="submit" className="w-4/5 mr-2">
+            예약하기
+          </Button>
+          <Button
+            type="button"
+            onClick={props.onCloseDialog}
+            variant="secondary"
+            className="w-1/5"
+          >
+            닫기
+          </Button>
+        </div>
       </form>
     </Form>
   );
