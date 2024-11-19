@@ -28,7 +28,14 @@ export async function getUserDogs(phone: String) {
 	}
 
 	if (!userData) {
-		return { status: "error", message: "User not found" };
+		return {
+			status: "fail",
+			customers: {
+				name: "",
+				phone: "",
+				dogs: [],
+			}
+		};
 	}
 
 	// Fetch user's dogs
