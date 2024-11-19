@@ -606,7 +606,7 @@ export default function Booking() {
                     </Button>
                     <Button
                       onClick={() => setCurrentStep(4)}
-                      className="flex-1 bg-[bg-primary]"
+                      className="flex-1 bg-primary"
                     >
                       다음
                     </Button>
@@ -688,7 +688,7 @@ export default function Booking() {
                     >
                       이전
                     </Button>
-                    <Button type="submit" className="flex-1 bg-[bg-primary]">
+                    <Button type="submit" className="flex-1 bg-primary">
                       다음
                     </Button>
                   </div>
