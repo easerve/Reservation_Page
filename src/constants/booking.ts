@@ -6,9 +6,11 @@ export const INITIAL_BOOKING_STATE: BookingData = {
     time: undefined as string | undefined,
   },
   petInfo: {
-    petName: '',
-    weight: undefined as number | undefined,
-    phoneNumber: '',
+    petName: '' as string,
+    weight: 0 as number,
+    phoneNumber: '' as string,
+    birth: '' as string,
+    breed: '' as string,
   },
   mainService: undefined as BookingService | undefined,
   additionalServices: [],
@@ -97,3 +99,16 @@ export const bookedDates = [
   { date: new Date('2024-11-21'), times: ['10:00', '17:00'] },
   { date: new Date('2024-11-22'), times: ['10:00', '14:00', '17:00'] },
 ];
+
+export const breedDummyData = {
+  breed: [
+    {
+      id: 1,
+      breed: '푸들',
+    },
+    {
+      id: 2,
+      breed: '말티즈',
+    },
+  ],
+};

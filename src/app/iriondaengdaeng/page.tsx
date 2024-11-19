@@ -1,14 +1,15 @@
-"use client";
+'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { zodResolver } from "@hookform/resolvers/zod";
-import Select from "react-select";
+import * as z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import Select from 'react-select';
 import {
   Form,
   FormControl,
@@ -17,13 +18,20 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { BookingData, BookingService, PetInfo } from '@/types/booking';
-import * as z from 'zod';
+import {
+  BookingData,
+  BookingService,
+  PetInfo,
+  Dog,
+  Customer,
+  UserDogsData,
+} from '@/types/booking';
 import {
   INITIAL_BOOKING_STATE,
   mainServices,
   additionalServices,
   bookedDates,
+  breedDummyData,
 } from '@/constants/booking';
 
 export default function Booking() {
@@ -41,15 +49,12 @@ export default function Booking() {
     setBookingData((prev) => ({ ...prev, dateTime: { date, time } }));
   };
 
-  const [userDogsData, setUserDogsData] = useState({});
+  const [userDogsData, setUserDogsData] = useState<UserDogsData>({
+    status: '' as string,
+    customers: { dogs: [] as Dog[] } as Customer,
+  });
 
-  const updatePetInfo = (info: {
-    petName?: string;
-    weight?: number;
-    phoneNumber?: string;
-    age?: number;
-    breed?: string;
-  }) => {
+  const updatePetInfo = (info: PetInfo) => {
     setBookingData((prev) => ({
       ...prev,
       petInfo: {
@@ -65,28 +70,26 @@ export default function Booking() {
 
   const phoneNumberSchema = z.object({
     phoneNumber: z
-    .string()
-    .regex(
-      /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/,
-      '올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)'
-    ),
+      .string()
+      .regex(
+        /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/,
+        '올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)'
+      ),
   });
 
   const petInfoSchema = z.object({
-    petName: z.string().min(1, "반려견의 이름을 입력해주세요"),
+    petName: z.string().min(1, '반려견의 이름을 입력해주세요'),
     weight: z.string().refine((val) => {
       const num = parseFloat(val);
       return (
         !isNaN(num) && num > 0 && num <= 20 && /^\d+(\.\d{0,1})?$/.test(val)
       );
     }, '0부터 20 사이의 숫자를 소수점 첫째 자리까지 입력해주세요.'),
-    age: z
+    birth: z
       .string()
-      .min(1, "반려견의 나이를 입력해주세요")
-      .refine((value) => Number(value) >= 0, {
-        message: "나이는 0 이상이어야 합니다",
-      }),
-    breed: z.string().min(1, "반려견의 견종을 선택해주세요"),
+      .nonempty('반려견의 생년월일을 입력해주세요')
+      .refine((val) => !isNaN(Date.parse(val)), '올바른 날짜 형식이 아닙니다.'),
+    breed: z.string().min(1, '반려견의 견종을 선택해주세요'),
   });
 
   const phoneNumberForm = useForm<z.infer<typeof phoneNumberSchema>>({
@@ -101,7 +104,7 @@ export default function Booking() {
     defaultValues: {
       petName: bookingData.petInfo.petName,
       weight: String(bookingData.petInfo.weight),
-      age: String(bookingData.petInfo.age),
+      birth: String(bookingData.petInfo.birth),
       breed: bookingData.petInfo.breed,
     },
   });
@@ -112,12 +115,6 @@ export default function Booking() {
     breed: string;
   } | null>(null);
 
-  const getDogsData = async (): Promise<any> => {
-    const res = await fetch("http://localhost:3000/api/auth/profile");
-    const data = await res.json();
-    return data;
-  };
-
   useEffect(() => {
     const loadBreeds = async () => {
       try {
@@ -125,24 +122,11 @@ export default function Booking() {
         const breedOptions = breedDummyData.breed;
         setBreeds(breedOptions);
       } catch (error) {
-        console.error("Error fetching breeds:", error);
+        console.error('Error fetching breeds:', error);
       }
     };
     loadBreeds();
   }, []);
-
-  // Step 3: Services Selection
-  const [selectedMainService, setSelectedMainService] = useState<
-    BookingService | undefined
-  >();
-  const [selectedSubOptions, setSelectedSubOptions] = useState<OptionInfo[]>(
-    []
-  );
-  const [selectedAdditionalOptions, setSelectedAdditionalOptions] = useState<
-    BookingService[]
-  >([]);
-  const [selectedAdditionalSubOptions, setSelectedAdditionalSubOptions] =
-    useState<OptionInfo[]>([]);
 
   const ServiceOptionButton = ({
     service,
@@ -348,11 +332,11 @@ export default function Booking() {
 
   // 날짜 포맷팅
   const formatDate = (date: Date | undefined) => {
-    if (!date) return "날짜 미선택";
-    return new Date(date).toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
+    if (!date) return '날짜 미선택';
+    return new Date(date).toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
   };
 
@@ -475,16 +459,20 @@ export default function Booking() {
           <Form {...phoneNumberForm}>
             <form
               onSubmit={phoneNumberForm.handleSubmit(async (values) => {
-                updatePetInfo({ phoneNumber: values.phoneNumber });
+                updatePetInfo({
+                  ...bookingData.petInfo,
+                  phoneNumber: values.phoneNumber,
+                });
                 try {
                   const res = await fetch(
-                    "http://localhost:3000/api/auth/profile?phone=" +
+                    'http://localhost:3000/api/auth/profile?phone=' +
                       values.phoneNumber
                   );
                   const data = await res.json();
+
                   setUserDogsData(data);
-                } catch {
-                  console.log("fail");
+                } catch (error) {
+                  console.error(error);
                 }
                 setCurrentStep(3);
               })}
@@ -528,16 +516,16 @@ export default function Booking() {
 
       case 3:
         const getFieldLabel = (field: string) => {
-          if (field === "petName") {
-            return "반려견 이름";
-          } else if (field === "weight") {
-            return "반려견 체중 (kg)";
-          } else if (field === "age") {
-            return "반려견 나이";
-          } else if (field === "breed") {
-            return "반려견 견종";
+          if (field === 'petName') {
+            return '반려견 이름';
+          } else if (field === 'weight') {
+            return '반려견 체중 (kg)';
+          } else if (field === 'age') {
+            return '반려견 나이';
+          } else if (field === 'breed') {
+            return '반려견 견종';
           }
-          return "";
+          return '';
         };
 
         return (
@@ -547,14 +535,15 @@ export default function Booking() {
                 updatePetInfo({
                   petName: values.petName,
                   weight: Number(values.weight),
-                  age: Number(values.age),
-                  breed: selectedBreed ? selectedBreed.breed : "",
+                  phoneNumber: bookingData.petInfo.phoneNumber,
+                  birth: values.birth,
+                  breed: selectedBreed ? selectedBreed.breed : '',
                 });
                 setCurrentStep(4);
               })}
               className="space-y-6"
             >
-              {userDogsData.status === "success" ? (
+              {userDogsData.status === 'success' ? (
                 <div>
                   <Card>
                     <CardHeader>
@@ -567,14 +556,15 @@ export default function Booking() {
                           variant="outline"
                           className={`w-full justify-between h-auto py-4 ${
                             bookingData.petInfo.petName === dog.name
-                              ? "border-[bg-primary] bg-[bg-primary]/10"
-                              : ""
+                              ? 'border-[bg-primary] bg-[bg-primary]/10'
+                              : ''
                           }`}
                           onClick={() => {
                             updatePetInfo({
                               petName: dog.name,
                               weight: dog.weight,
-                              age: dog.age,
+                              phoneNumber: bookingData.petInfo.phoneNumber,
+                              birth: dog.birth,
                               breed: dog.breed,
                             });
                           }}
@@ -582,7 +572,20 @@ export default function Booking() {
                           <div>
                             <p>이름: {dog.name}</p>
                             <p>견종: {dog.breed}</p>
-                            <p>나이: {dog.age}살</p>
+                            <p>
+                              나이:{' '}
+                              {(() => {
+                                const birthDate = new Date(dog.birth);
+                                const today = new Date();
+                                const months =
+                                  (today.getFullYear() -
+                                    birthDate.getFullYear()) *
+                                    12 +
+                                  (today.getMonth() - birthDate.getMonth());
+                                return Math.floor(months / 12);
+                              })()}
+                              개월
+                            </p>
                             <p>체중: {dog.weight}kg</p>
                           </div>
                         </Button>
@@ -619,7 +622,7 @@ export default function Booking() {
                       <CardTitle>반려견 선택</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {["petName", "weight", "age"].map((field) => (
+                      {['petName', 'weight', 'age'].map((field) => (
                         <FormField
                           key={field}
                           control={petInfoForm.control}
@@ -629,7 +632,7 @@ export default function Booking() {
                               <FormLabel>{getFieldLabel(field)}</FormLabel>
                               <FormControl>
                                 <Input
-                                  type={field === "petName" ? "text" : "number"}
+                                  type={field === 'petName' ? 'text' : 'number'}
                                   {...fieldProps}
                                 />
                               </FormControl>
@@ -658,7 +661,7 @@ export default function Booking() {
                                     option
                                       ? breeds.find(
                                           (breed) => breed.id === option.value
-                                        )
+                                        ) ?? null
                                       : null
                                   );
                                   fieldProps.onChange(option?.label);
@@ -701,7 +704,6 @@ export default function Booking() {
       case 4:
         return (
           <div className="space-y-6">
-            {/* 메인 서비스 */}
             <Card>
               <CardHeader>
                 <CardTitle>메인 서비스</CardTitle>
@@ -758,7 +760,6 @@ export default function Booking() {
               </CardContent>
             </Card>
 
-            {/* 가격 표시 */}
             <Card>
               <CardHeader>
                 <CardTitle>결제 금액</CardTitle>
@@ -842,9 +843,9 @@ export default function Booking() {
                 className="flex-1 bg-primary"
                 onClick={async () => {
                   try {
-                    const response = await fetch("/api/bookings", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
+                    const response = await fetch('/api/bookings', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({
                         ...bookingData,
                         price,
@@ -856,8 +857,8 @@ export default function Booking() {
                     alert('예약이 완료되었습니다.');
                     resetBookingData();
                   } catch (error) {
-                    console.error("Error saving booking:", error);
-                    alert("예약 저장 중 오류가 발생했습니다.");
+                    console.error('Error saving booking:', error);
+                    alert('예약 저장 중 오류가 발생했습니다.');
                   }
                 }}
               >
