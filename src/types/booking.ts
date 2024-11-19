@@ -16,6 +16,8 @@ export interface PetInfo {
   petName: string,
   weight: number,
   phoneNumber: string,
+  age: number,
+  breed: string,
 }
 
 export interface BookingService {
