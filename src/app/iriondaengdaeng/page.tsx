@@ -37,6 +37,8 @@ export default function IrionBooking() {
     inquiry: "",
   });
 
+  const [userDogsData, setUserDogsData] = useState(null);
+
   // Create state update functions
   const updateDateTime = (date: Date | undefined, time: string | undefined) => {
     setBookingData((prev) => ({ ...prev, dateTime: { date, time } }));
@@ -121,6 +123,12 @@ export default function IrionBooking() {
     id: number;
     breed: string;
   } | null>(null);
+
+  const getDogsData = async (): Promise<any> => {
+    const res = await fetch("http://localhost:3000/api/auth/profile");
+    const data = await res.json();
+    return data;
+  };
 
   useEffect(() => {
     const loadBreeds = async () => {
@@ -221,31 +229,6 @@ export default function IrionBooking() {
     return allServices.map((id) => serviceMap[id] || id).join(", ");
   };
 
-  const userDogsData = {
-    //dummy data
-    status: "success",
-    customer: {
-      name: "홍길동",
-      phone: "010-1234-5678",
-      dogs: [
-        {
-          id: 1,
-          name: "바둑이",
-          breed: "진돗개",
-          age: 3,
-          weight: 20.5,
-        },
-        {
-          id: 2,
-          name: "초코",
-          breed: "푸들",
-          age: 2,
-          weight: 4,
-        },
-      ],
-    },
-  };
-
   const breedDummyData = {
     breed: [
       {
@@ -309,8 +292,18 @@ export default function IrionBooking() {
         return (
           <Form {...phoneNumberForm}>
             <form
-              onSubmit={phoneNumberForm.handleSubmit((values) => {
+              onSubmit={phoneNumberForm.handleSubmit(async (values) => {
                 updatePetInfo({ phoneNumber: values.phoneNumber });
+                try {
+                  const res = await fetch(
+                    "http://localhost:3000/api/auth/profile?phone=" +
+                      values.phoneNumber
+                  );
+                  const data = await res.json();
+                  setUserDogsData(data);
+                } catch {
+                  console.log("fail");
+                }
                 setCurrentStep(3);
               })}
               className="space-y-6"
@@ -365,25 +358,6 @@ export default function IrionBooking() {
           return "";
         };
 
-        const getFeildForm = (field: string) => {
-          if (field === "petName") {
-            return (
-              <Input
-                type={field === "petName" ? "text" : "number"}
-                {...fieldProps}
-              />
-            );
-          } else if (field === "weight") {
-            return "반려견 체중 (kg)";
-          } else if (field === "age") {
-            return "반려견 나이";
-          } else if (field === "breed") {
-            return "반려견 견종";
-          }
-          return "";
-        };
-
-        const hasPetInfo = false;
         return (
           <Form {...petInfoForm}>
             <form
@@ -398,14 +372,14 @@ export default function IrionBooking() {
               })}
               className="space-y-6"
             >
-              {hasPetInfo ? (
+              {userDogsData.status === "success" ? (
                 <div>
                   <Card>
                     <CardHeader>
                       <CardTitle>반려견 선택</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {userDogsData.customer.dogs.map((dog) => (
+                      {userDogsData.customers.dogs.map((dog) => (
                         <Button
                           key={dog.id}
                           variant="outline"
@@ -431,6 +405,13 @@ export default function IrionBooking() {
                           </div>
                         </Button>
                       ))}
+                      <Button
+                        variant="outline"
+                        className={`w-full justify-between h-auto py-4`}
+                        // onClick={}
+                      >
+                        <div>강아지 추가하기</div>
+                      </Button>
                     </CardContent>
                   </Card>
                   <div className="flex gap-2">
@@ -653,7 +634,6 @@ export default function IrionBooking() {
                   if (!selectedMainService) {
                     return;
                   }
-                  console.log("a");
                   updateMainServices(selectedMainService);
                   updateAdditionalService([...selectedAdditionalOptions]);
                   setCurrentStep(5);
