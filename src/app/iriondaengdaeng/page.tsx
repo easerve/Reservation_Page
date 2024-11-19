@@ -74,7 +74,7 @@ export default function Booking() {
     phoneNumber: z
       .string()
       .regex(
-        /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/,
+        /^01([0|1|6|7|8|9])([0-9]{3,4})([0-9]{4})$/,
         "올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)"
       ),
   });
@@ -384,88 +384,7 @@ export default function Booking() {
 
   const renderStep = () => {
     switch (currentStep) {
-      // Step 1: 날짜 및 시간 선택
       case 1:
-        return (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>날짜 및 시간 선택</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Calendar
-                  mode="single"
-                  selected={bookingData.dateTime.date}
-                  onSelect={(date) => {
-                    if (date) {
-                      updateDateTime(date, undefined);
-                    }
-                  }}
-                  disabled={(date) => {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    return (
-                      date < today ||
-                      fullyBookedDates.some(
-                        (bookedDate) =>
-                          bookedDate.toDateString() === date.toDateString()
-                      )
-                    );
-                  }}
-                />
-                {bookingData.dateTime.date && (
-                  <div className="grid grid-cols-3 gap-2 mt-4">
-                    {allTimeSlots.map((time) => {
-                      const today = new Date();
-                      const selectedDate = new Date(bookingData.dateTime.date);
-
-                      const [hours, minutes] = time.split(":").map(Number);
-                      selectedDate.setHours(hours, minutes, 0, 0);
-
-                      const isDisabled =
-                        selectedDate < today ||
-                        getBookedTimesForDate(
-                          bookingData.dateTime.date
-                        ).includes(time);
-
-                      return (
-                        <Button
-                          key={time}
-                          variant={
-                            bookingData.dateTime.time === time
-                              ? "default"
-                              : "outline"
-                          }
-                          className={
-                            bookingData.dateTime.time === time
-                              ? "bg-primary"
-                              : ""
-                          }
-                          disabled={isDisabled}
-                          onClick={() =>
-                            updateDateTime(bookingData.dateTime.date, time)
-                          }
-                        >
-                          {time}
-                        </Button>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            <Button
-              className="w-full bg-primary"
-              onClick={() => setCurrentStep(2)}
-              disabled={
-                !bookingData.dateTime.date || !bookingData.dateTime.time
-              }
-            >
-              다음
-            </Button>
-          </div>
-        );
-      case 2:
         return (
           <Form {...phoneNumberForm}>
             <form
@@ -485,7 +404,7 @@ export default function Booking() {
                 } catch (error) {
                   console.error(error);
                 }
-                setCurrentStep(3);
+                setCurrentStep(2);
               })}
               className="space-y-6"
             >
@@ -509,23 +428,17 @@ export default function Booking() {
                   />
                 </CardContent>
               </Card>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCurrentStep(1)}
-                >
-                  이전
-                </Button>
-                <Button type="submit" className="flex-1 bg-primary">
-                  다음
-                </Button>
-              </div>
+              <Button
+                className="w-full bg-primary"
+                disabled={!phoneNumberForm.formState.isValid}
+              >
+                다음
+              </Button>
             </form>
           </Form>
         );
 
-      case 3:
+      case 2:
         const getFieldLabel = (field: string) => {
           if (field === "petName") {
             return "반려견 이름";
@@ -550,12 +463,11 @@ export default function Booking() {
                   birth: values.birth,
                   breed: selectedBreed ? selectedBreed.breed : "",
                 });
-                setCurrentStep(4);
+                setCurrentStep(3);
               })}
-              className="space-y-6"
             >
               {userDogsData.status === "success" ? (
-                <div>
+                <div className="space-y-6">
                   <Card>
                     <CardHeader>
                       <CardTitle>반려견 선택</CardTitle>
@@ -567,7 +479,7 @@ export default function Booking() {
                           variant="outline"
                           className={`w-full justify-between h-auto py-4 ${
                             bookingData.petInfo.petName === dog.name
-                              ? "border-[bg-primary] bg-[bg-primary]/10"
+                              ? "border-primary] bg-primary/10"
                               : ""
                           }`}
                           onClick={() => {
@@ -618,12 +530,12 @@ export default function Booking() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setCurrentStep(2)}
+                      onClick={() => setCurrentStep(1)}
                     >
                       이전
                     </Button>
                     <Button
-                      onClick={() => setCurrentStep(4)}
+                      onClick={() => setCurrentStep(3)}
                       className="flex-1 bg-primary"
                     >
                       다음
@@ -702,7 +614,7 @@ export default function Booking() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setCurrentStep(2)}
+                      onClick={() => setCurrentStep(1)}
                     >
                       이전
                     </Button>
@@ -714,6 +626,97 @@ export default function Booking() {
               )}
             </form>
           </Form>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>날짜 및 시간 선택</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Calendar
+                  mode="single"
+                  selected={bookingData.dateTime.date}
+                  onSelect={(date) => {
+                    if (date) {
+                      updateDateTime(date, undefined);
+                    }
+                  }}
+                  disabled={(date) => {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return (
+                      date < today ||
+                      fullyBookedDates.some(
+                        (bookedDate) =>
+                          bookedDate.toDateString() === date.toDateString()
+                      )
+                    );
+                  }}
+                />
+                {bookingData.dateTime.date && (
+                  <div className="grid grid-cols-3 gap-2 mt-4">
+                    {allTimeSlots.map((time) => {
+                      const today = new Date();
+                      const selectedDate = new Date(bookingData.dateTime.date);
+
+                      const [hours, minutes] = time.split(":").map(Number);
+                      selectedDate.setHours(hours, minutes, 0, 0);
+
+                      const isDisabled =
+                        selectedDate < today ||
+                        getBookedTimesForDate(
+                          bookingData.dateTime.date
+                        ).includes(time);
+
+                      return (
+                        <Button
+                          key={time}
+                          variant={
+                            bookingData.dateTime.time === time
+                              ? "default"
+                              : "outline"
+                          }
+                          className={
+                            bookingData.dateTime.time === time
+                              ? "bg-primary"
+                              : ""
+                          }
+                          disabled={isDisabled}
+                          onClick={() =>
+                            updateDateTime(bookingData.dateTime.date, time)
+                          }
+                        >
+                          {time}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCurrentStep(2)}
+              >
+                이전
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 bg-primary"
+                disabled={
+                  !bookingData.dateTime.date || !bookingData.dateTime.time
+                }
+                onClick={() => setCurrentStep(4)}
+              >
+                다음
+              </Button>
+            </div>
+          </div>
         );
 
       case 4:

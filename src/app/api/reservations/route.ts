@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addReservation } from "@/actions/reservation";
+import { getReservations } from "@/actions/reservation";
 
 interface RequestBody {
 	ReservationInfo: {
@@ -11,6 +12,26 @@ interface RequestBody {
 	  services: number[];
 	  additional_services: number[];
 	  total_price: number;
+	}
+}
+
+export async function GET(request: NextRequest) {
+	try {
+		const { searchParams } = new URL(request.url);
+		const scopeParam = searchParams.get("scope");
+		const scope = scopeParam ? parseInt(scopeParam, 10) : 1;
+
+		if (isNaN(scope) || scope < 1) {
+			return NextResponse.json(
+				{ error: "Invalid scope parameter" },
+				{ status: 400 }
+			);
+		}
+		const reservations = await getReservations(scope);
+		return NextResponse.json({ status: 'success', data: reservations });
+	} catch (error) {
+		console.error("Error in /reservations:", error);
+		return NextResponse.json({ error: "Internal server error" }, { status: 500 });
 	}
 }
 
