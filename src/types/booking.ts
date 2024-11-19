@@ -12,9 +12,11 @@ export interface BookingDateTime {
 }
 
 export interface PetInfo {
-  petName: string;
-  weight: number | undefined;
-  phoneNumber: string;
+  petName: string,
+  weight: number,
+  phoneNumber: string,
+  age: number,
+  breed: string,
 }
 
 export interface BookingService {

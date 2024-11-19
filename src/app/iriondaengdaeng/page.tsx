@@ -1,7 +1,14 @@
-'use client';
+"use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Select from "react-select";
 import {
   Form,
   FormControl,
@@ -10,14 +17,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { BookingData, BookingService, PetInfo } from '@/types/booking';
 import * as z from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   INITIAL_BOOKING_STATE,
   mainServices,
@@ -40,46 +41,108 @@ export default function Booking() {
     setBookingData((prev) => ({ ...prev, dateTime: { date, time } }));
   };
 
-  const updatePetInfo = (info: PetInfo) => {
-    setBookingData((prev) => ({ ...prev, petInfo: info }));
+  const [userDogsData, setUserDogsData] = useState({});
+
+  const updatePetInfo = (info: {
+    petName?: string;
+    weight?: number;
+    phoneNumber?: string;
+    age?: number;
+    breed?: string;
+  }) => {
+    setBookingData((prev) => ({
+      ...prev,
+      petInfo: {
+        ...prev.petInfo,
+        ...info,
+      },
+    }));
   };
 
   const updateInquiry = (text: string) => {
     setBookingData((prev) => ({ ...prev, inquiry: text }));
   };
 
-  const formSchema = z.object({
-    petName: z.string().min(1, '반려견의 이름을 입력해주세요.'),
+  const phoneNumberSchema = z.object({
+    phoneNumber: z
+    .string()
+    .regex(
+      /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/,
+      '올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)'
+    ),
+  });
+
+  const petInfoSchema = z.object({
+    petName: z.string().min(1, "반려견의 이름을 입력해주세요"),
     weight: z.string().refine((val) => {
       const num = parseFloat(val);
       return (
         !isNaN(num) && num > 0 && num <= 20 && /^\d+(\.\d{0,1})?$/.test(val)
       );
     }, '0부터 20 사이의 숫자를 소수점 첫째 자리까지 입력해주세요.'),
-    phoneNumber: z
+    age: z
       .string()
-      .regex(
-        /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/,
-        '올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)'
-      ),
+      .min(1, "반려견의 나이를 입력해주세요")
+      .refine((value) => Number(value) >= 0, {
+        message: "나이는 0 이상이어야 합니다",
+      }),
+    breed: z.string().min(1, "반려견의 견종을 선택해주세요"),
   });
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const phoneNumberForm = useForm<z.infer<typeof phoneNumberSchema>>({
+    resolver: zodResolver(phoneNumberSchema),
     defaultValues: {
-      petName: bookingData.petInfo.petName,
-      weight: String(bookingData.petInfo.weight || ''),
       phoneNumber: bookingData.petInfo.phoneNumber,
     },
   });
 
-  useEffect(() => {
-    form.reset({
+  const petInfoForm = useForm<z.infer<typeof petInfoSchema>>({
+    resolver: zodResolver(petInfoSchema),
+    defaultValues: {
       petName: bookingData.petInfo.petName,
-      weight: String(bookingData.petInfo.weight || ''),
-      phoneNumber: bookingData.petInfo.phoneNumber,
-    });
-  }, [bookingData.petInfo, form]);
+      weight: String(bookingData.petInfo.weight),
+      age: String(bookingData.petInfo.age),
+      breed: bookingData.petInfo.breed,
+    },
+  });
+
+  const [breeds, setBreeds] = useState<{ id: number; breed: string }[]>([]);
+  const [selectedBreed, setSelectedBreed] = useState<{
+    id: number;
+    breed: string;
+  } | null>(null);
+
+  const getDogsData = async (): Promise<any> => {
+    const res = await fetch("http://localhost:3000/api/auth/profile");
+    const data = await res.json();
+    return data;
+  };
+
+  useEffect(() => {
+    const loadBreeds = async () => {
+      try {
+        // const breedData = await fetchBreeds(); //temp
+        const breedOptions = breedDummyData.breed;
+        setBreeds(breedOptions);
+      } catch (error) {
+        console.error("Error fetching breeds:", error);
+      }
+    };
+    loadBreeds();
+  }, []);
+
+  // Step 3: Services Selection
+  const [selectedMainService, setSelectedMainService] = useState<
+    BookingService | undefined
+  >();
+  const [selectedSubOptions, setSelectedSubOptions] = useState<OptionInfo[]>(
+    []
+  );
+  const [selectedAdditionalOptions, setSelectedAdditionalOptions] = useState<
+    BookingService[]
+  >([]);
+  const [selectedAdditionalSubOptions, setSelectedAdditionalSubOptions] =
+    useState<OptionInfo[]>([]);
 
   const ServiceOptionButton = ({
     service,
@@ -147,7 +210,6 @@ export default function Booking() {
       </div>
     );
   };
-  /*  */
 
   const calculateServicePrice = (
     service: BookingService,
@@ -286,11 +348,11 @@ export default function Booking() {
 
   // 날짜 포맷팅
   const formatDate = (date: Date | undefined) => {
-    if (!date) return '날짜 미선택';
-    return new Date(date).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    if (!date) return "날짜 미선택";
+    return new Date(date).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -408,51 +470,44 @@ export default function Booking() {
             </Button>
           </div>
         );
-      // Step 2: 반려견 정보 입력
       case 2:
         return (
-          <Form {...form}>
+          <Form {...phoneNumberForm}>
             <form
-              onSubmit={form.handleSubmit((values) => {
-                updatePetInfo({
-                  petName: values.petName,
-                  weight: parseFloat(values.weight),
-                  phoneNumber: values.phoneNumber,
-                });
+              onSubmit={phoneNumberForm.handleSubmit(async (values) => {
+                updatePetInfo({ phoneNumber: values.phoneNumber });
+                try {
+                  const res = await fetch(
+                    "http://localhost:3000/api/auth/profile?phone=" +
+                      values.phoneNumber
+                  );
+                  const data = await res.json();
+                  setUserDogsData(data);
+                } catch {
+                  console.log("fail");
+                }
                 setCurrentStep(3);
               })}
               className="space-y-6"
             >
               <Card>
                 <CardHeader>
-                  <CardTitle>반려견 정보</CardTitle>
+                  <CardTitle>보호자 전화번호</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {['petName', 'weight', 'phoneNumber'].map((field) => (
-                    <FormField
-                      key={field}
-                      control={form.control}
-                      name={field as any}
-                      render={({ field: fieldProps }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {field === 'petName'
-                              ? '반려견 이름'
-                              : field === 'weight'
-                              ? '반려견 체중 (kg)'
-                              : '보호자 전화번호'}
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type={field === 'weight' ? 'number' : 'text'}
-                              {...fieldProps}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
+                  <FormField
+                    control={phoneNumberForm.control}
+                    name="phoneNumber"
+                    render={({ field: fieldProps }) => (
+                      <FormItem>
+                        <FormLabel>전화번호</FormLabel>
+                        <FormControl>
+                          <Input type="text" {...fieldProps} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
               <div className="flex gap-2">
@@ -471,8 +526,179 @@ export default function Booking() {
           </Form>
         );
 
-      // Step 3: 서비스 선택
       case 3:
+        const getFieldLabel = (field: string) => {
+          if (field === "petName") {
+            return "반려견 이름";
+          } else if (field === "weight") {
+            return "반려견 체중 (kg)";
+          } else if (field === "age") {
+            return "반려견 나이";
+          } else if (field === "breed") {
+            return "반려견 견종";
+          }
+          return "";
+        };
+
+        return (
+          <Form {...petInfoForm}>
+            <form
+              onSubmit={petInfoForm.handleSubmit((values) => {
+                updatePetInfo({
+                  petName: values.petName,
+                  weight: Number(values.weight),
+                  age: Number(values.age),
+                  breed: selectedBreed ? selectedBreed.breed : "",
+                });
+                setCurrentStep(4);
+              })}
+              className="space-y-6"
+            >
+              {userDogsData.status === "success" ? (
+                <div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>반려견 선택</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {userDogsData.customers.dogs.map((dog) => (
+                        <Button
+                          key={dog.id}
+                          variant="outline"
+                          className={`w-full justify-between h-auto py-4 ${
+                            bookingData.petInfo.petName === dog.name
+                              ? "border-[bg-primary] bg-[bg-primary]/10"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            updatePetInfo({
+                              petName: dog.name,
+                              weight: dog.weight,
+                              age: dog.age,
+                              breed: dog.breed,
+                            });
+                          }}
+                        >
+                          <div>
+                            <p>이름: {dog.name}</p>
+                            <p>견종: {dog.breed}</p>
+                            <p>나이: {dog.age}살</p>
+                            <p>체중: {dog.weight}kg</p>
+                          </div>
+                        </Button>
+                      ))}
+                      <Button
+                        variant="outline"
+                        className={`w-full justify-between h-auto py-4`}
+                        // onClick={}
+                      >
+                        <div>강아지 추가하기</div>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCurrentStep(2)}
+                    >
+                      이전
+                    </Button>
+                    <Button
+                      onClick={() => setCurrentStep(4)}
+                      className="flex-1 bg-[bg-primary]"
+                    >
+                      다음
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>반려견 선택</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {["petName", "weight", "age"].map((field) => (
+                        <FormField
+                          key={field}
+                          control={petInfoForm.control}
+                          name={field as any}
+                          render={({ field: fieldProps }) => (
+                            <FormItem>
+                              <FormLabel>{getFieldLabel(field)}</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type={field === "petName" ? "text" : "number"}
+                                  {...fieldProps}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      ))}
+                      <FormField
+                        control={petInfoForm.control}
+                        name="breed"
+                        render={({ field: fieldProps }) => (
+                          <FormItem>
+                            <FormLabel>반려견 견종</FormLabel>
+                            <FormControl>
+                              <Select
+                                {...fieldProps}
+                                options={breeds.map((breed) => ({
+                                  value: breed.id,
+                                  label: breed.breed,
+                                }))}
+                                isSearchable
+                                isClearable
+                                onChange={(option) => {
+                                  setSelectedBreed(
+                                    option
+                                      ? breeds.find(
+                                          (breed) => breed.id === option.value
+                                        )
+                                      : null
+                                  );
+                                  fieldProps.onChange(option?.label);
+                                }}
+                                value={
+                                  selectedBreed
+                                    ? {
+                                        value: selectedBreed.id,
+                                        label: selectedBreed.breed,
+                                      }
+                                    : null
+                                }
+                                isDisabled={false}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </CardContent>
+                  </Card>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCurrentStep(2)}
+                    >
+                      이전
+                    </Button>
+                    <Button type="submit" className="flex-1 bg-[bg-primary]">
+                      다음
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </form>
+          </Form>
+        );
+
+      case 4:
         return (
           <div className="space-y-6">
             {/* 메인 서비스 */}
@@ -503,7 +729,6 @@ export default function Booking() {
               </CardContent>
             </Card>
 
-            {/* 추가 서비스 */}
             <Card>
               <CardHeader>
                 <CardTitle>추가 서비스</CardTitle>
@@ -546,7 +771,7 @@ export default function Booking() {
             </Card>
 
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setCurrentStep(2)}>
+              <Button variant="outline" onClick={() => setCurrentStep(3)}>
                 이전
               </Button>
               <Button
@@ -555,7 +780,7 @@ export default function Booking() {
                   if (!bookingData.mainService) {
                     return;
                   }
-                  setCurrentStep(4);
+                  setCurrentStep(5);
                 }}
                 disabled={!bookingData.mainService}
               >
@@ -565,8 +790,7 @@ export default function Booking() {
           </div>
         );
 
-      // Step 4: 예약 정보 확인
-      case 4:
+      case 5:
         return (
           <div className="space-y-6">
             <Card>
@@ -618,9 +842,9 @@ export default function Booking() {
                 className="flex-1 bg-primary"
                 onClick={async () => {
                   try {
-                    const response = await fetch('/api/bookings', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
+                    const response = await fetch("/api/bookings", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                         ...bookingData,
                         price,
@@ -632,8 +856,8 @@ export default function Booking() {
                     alert('예약이 완료되었습니다.');
                     resetBookingData();
                   } catch (error) {
-                    console.error('Error saving booking:', error);
-                    alert('예약 저장 중 오류가 발생했습니다.');
+                    console.error("Error saving booking:", error);
+                    alert("예약 저장 중 오류가 발생했습니다.");
                   }
                 }}
               >
@@ -650,7 +874,7 @@ export default function Booking() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-primary">이리온댕댕 예약</h1>
         <div className="flex justify-between mt-2">
-          {[1, 2, 3, 4].map((step) => (
+          {[1, 2, 3, 4, 5].map((step) => (
             <div
               key={step}
               className={`h-2 flex-1 mx-1 rounded ${

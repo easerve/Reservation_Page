@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-types": "npx supabase gen types typescript --project-id mimkzhydnmijxpgyocrp --schema public > ./src/types/definitions.ts"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.15",
@@ -15,6 +16,8 @@
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-slot": "^1.1.0",
+    "@supabase/ssr": "^0.5.2",
+    "@supabase/supabase-js": "^2.46.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
@@ -22,9 +25,11 @@
     "glob": "^11.0.0",
     "lucide-react": "^0.460.0",
     "next": "^14.2.18",
+    "punycode": "^2.3.1",
     "react": "18.2.0",
     "react-day-picker": "^8.10.1",
     "react-dom": "18.2.0",
+    "react-select": "^5.8.3",
     "rimraf": "^6.0.1",
     "shadcn-ui": "^0.2.3",
     "tailwind-merge": "^2.5.4",
@@ -33,9 +38,13 @@
   },
   "devDependencies": {
     "@shadcn/ui": "^0.0.4",
+    "@testing-library/jest-dom": "^6.6.3",
     "@types/node": "^20.17.6",
     "@types/react": "^18.0.30",
     "@types/react-dom": "^18.0.11",
+    "jest": "^29.7.0",
+    "jest-fetch-mock": "^3.0.3",
+    "next-test-api-route-handler": "^4.0.14",
     "postcss": "^8.4.26",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.2.2"
