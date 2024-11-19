@@ -146,38 +146,107 @@ export type Database = {
           },
         ]
       }
+      reservation_additional_services: {
+        Row: {
+          additional_option_id: number | null
+          id: number
+          reservation_id: string | null
+        }
+        Insert: {
+          additional_option_id?: number | null
+          id?: never
+          reservation_id?: string | null
+        }
+        Update: {
+          additional_option_id?: number | null
+          id?: never
+          reservation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_additional_services_additional_option_id_fkey"
+            columns: ["additional_option_id"]
+            isOneToOne: false
+            referencedRelation: "additional_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_additional_services_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["uuid"]
+          },
+        ]
+      }
+      reservation_services: {
+        Row: {
+          id: number
+          reservation_id: string | null
+          service_id: number | null
+        }
+        Insert: {
+          id?: never
+          reservation_id?: string | null
+          service_id?: number | null
+        }
+        Update: {
+          id?: never
+          reservation_id?: string | null
+          service_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_services_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "reservation_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reservations: {
         Row: {
-          add_option: string | null
-          add_price: number | null
+          additional_option: string | null
+          additional_price: number | null
           consent_form: boolean
           created_at: string | null
           memo: string | null
           pet_id: string | null
-          service_id: number | null
+          reservation_date: string | null
           status: string
+          total_price: number | null
           uuid: string
         }
         Insert: {
-          add_option?: string | null
-          add_price?: number | null
+          additional_option?: string | null
+          additional_price?: number | null
           consent_form: boolean
           created_at?: string | null
           memo?: string | null
           pet_id?: string | null
-          service_id?: number | null
+          reservation_date?: string | null
           status: string
+          total_price?: number | null
           uuid?: string
         }
         Update: {
-          add_option?: string | null
-          add_price?: number | null
+          additional_option?: string | null
+          additional_price?: number | null
           consent_form?: boolean
           created_at?: string | null
           memo?: string | null
           pet_id?: string | null
-          service_id?: number | null
+          reservation_date?: string | null
           status?: string
+          total_price?: number | null
           uuid?: string
         }
         Relationships: [
@@ -187,13 +256,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pets"
             referencedColumns: ["uuid"]
-          },
-          {
-            foreignKeyName: "reservations_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
           },
         ]
       }
