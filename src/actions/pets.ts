@@ -55,6 +55,9 @@ export async function addPet(petInfo: PetInfo) {
 			weight: petInfo.weight,
 			user_id: userData!.uuid,
 			breed_id: petInfo.breed,
+			neutering: petInfo.neutering,
+			sex: petInfo.sex,
+			reg_number: petInfo.regNumber,
 		});
 
 	if (insertError) {
