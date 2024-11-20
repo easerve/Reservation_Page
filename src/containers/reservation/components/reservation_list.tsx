@@ -43,6 +43,7 @@ import {
   DropdownMenuItem,
 } from "@radix-ui/react-dropdown-menu";
 import { DropdownMenuGroup } from "@/components/ui/dropdown-menu";
+import exp from "constants";
 
 type GroupedReservations = {
   [key: string]: Reservation[];
@@ -106,25 +107,31 @@ export default function ReservationList(props: {
     handleSave(editingReservation!.id, data);
   }
 
+  const headers = [
+    "예약 시간",
+    "견종",
+    "이름",
+    "몸무게",
+    "나이",
+    "전화번호",
+    "기본 미용",
+    "추가 미용",
+    "특이사항",
+    "예약 상태",
+    "기본 가격",
+    "추가 가격",
+    "총계",
+    "관리",
+  ];
+
   return (
     <div className="w-full h-[60vh] overflow-y-auto scrollbar-hide flex-grow">
       <Table>
         <TableHeader className="sticky top-0 z-10 bg-white">
           <TableRow className="whitespace-nowrap">
-            <TableHead>예약 시간</TableHead>
-            <TableHead>견종</TableHead>
-            <TableHead>이름</TableHead>
-            <TableHead>몸무게</TableHead>
-            <TableHead>나이</TableHead>
-            <TableHead>전화번호</TableHead>
-            <TableHead>기본 미용</TableHead>
-            <TableHead>추가 미용</TableHead>
-            <TableHead>특이사항</TableHead>
-            <TableHead>예약 상태</TableHead>
-            <TableHead>기본 가격</TableHead>
-            <TableHead>추가 가격</TableHead>
-            <TableHead>총계</TableHead>
-            <TableHead className="w-[100px]">관리</TableHead>
+            {headers.map((header) => (
+              <TableHead>{header}</TableHead>
+            ))}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -137,86 +144,97 @@ export default function ReservationList(props: {
                   </TableCell>
                 </TableRow>
                 {dateReservations.map((reservation) => (
-                  <TableRow
-                    key={reservation.id}
-                    className="whitespace-nowrap"
-                    onClick={() => handleRowClick(reservation.id)}
-                  >
-                    <TableCell>{getTimeString2(reservation.time)}</TableCell>
-                    <TableCell>{reservation.breed}</TableCell>
-                    <TableCell>{reservation.name}</TableCell>
-                    <TableCell>{`${reservation.weight}kg`}</TableCell>
-                    <TableCell>{`${getAge2(reservation.birth).years}년 ${
-                      getAge2(reservation.birth).months
-                    }개월`}</TableCell>
-                    <TableCell>{reservation.phone}</TableCell>
-                    <TableCell>{reservation.service_name.join(", ")}</TableCell>
-                    <TableCell>{reservation.additional_service}</TableCell>
-                    <TableCell>
-                      {reservation.memo.length < 10
-                        ? reservation.memo
-                        : `${reservation.memo.slice(0, 9)}...`}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                  <React.Fragment key={reservation.id}>
+                    <TableRow
+                      key={reservation.id}
+                      className="whitespace-nowrap"
+                      onClick={() => handleRowClick(reservation.id)}
+                    >
+                      <TableCell>{getTimeString2(reservation.time)}</TableCell>
+                      <TableCell>{reservation.breed}</TableCell>
+                      <TableCell>{reservation.name}</TableCell>
+                      <TableCell>{`${reservation.weight}kg`}</TableCell>
+                      <TableCell>{`${getAge2(reservation.birth).years}년 ${
+                        getAge2(reservation.birth).months
+                      }개월`}</TableCell>
+                      <TableCell>{reservation.phone}</TableCell>
+                      <TableCell>
+                        {reservation.service_name.join(", ")}
+                      </TableCell>
+                      <TableCell>{reservation.additional_service}</TableCell>
+                      <TableCell>
+                        {reservation.memo.length < 10
+                          ? reservation.memo
+                          : `${reservation.memo.slice(0, 9)}...`}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-full"
+                            >
+                              {reservation.status}
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="bg-white border border-solid p-2 rounded-sm mt-2">
+                            <DropdownMenuSeparator />
+                            <DropdownMenuRadioGroup>
+                              <DropdownMenuRadioItem
+                                value="top"
+                                className="hover: border-none"
+                              >
+                                Top
+                              </DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="bottom">
+                                Bottom
+                              </DropdownMenuRadioItem>
+                              <DropdownMenuRadioItem value="right">
+                                Right
+                              </DropdownMenuRadioItem>
+                            </DropdownMenuRadioGroup>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                      <TableCell>
+                        {reservation.price.toLocaleString()}원
+                      </TableCell>
+                      <TableCell>
+                        {reservation.additional_price.toLocaleString()}원
+                      </TableCell>
+                      <TableCell>
+                        {`${(
+                          reservation.price + reservation.additional_price
+                        ).toLocaleString()}원`}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-center items-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="rounded-full"
+                            onClick={() => handleEdit(reservation)}
                           >
-                            {reservation.status}
+                            수정
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-white border border-solid p-2 rounded-sm mt-2">
-                          <DropdownMenuSeparator />
-                          <DropdownMenuRadioGroup>
-                            <DropdownMenuRadioItem
-                              value="top"
-                              className="hover: border-none"
-                            >
-                              Top
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="bottom">
-                              Bottom
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="right">
-                              Right
-                            </DropdownMenuRadioItem>
-                          </DropdownMenuRadioGroup>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                    <TableCell>
-                      {reservation.price.toLocaleString()}원
-                    </TableCell>
-                    <TableCell>
-                      {reservation.additional_price.toLocaleString()}원
-                    </TableCell>
-                    <TableCell>
-                      {`${(
-                        reservation.price + reservation.additional_price
-                      ).toLocaleString()}원`}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-center items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(reservation)}
-                        >
-                          수정
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleClose(reservation.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleClose(reservation.id)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    {expandedRow === reservation.id && (
+                      <TableRow className="transition">
+                        <TableCell colSpan={headers.length}>
+                          <div>{`특이사항 : ${reservation.memo}`}</div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 ))}
               </React.Fragment>
             )

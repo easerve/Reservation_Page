@@ -98,3 +98,24 @@ body {
   }
 }
 
+/* ReservationList.css */
+.transition-row {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease-out;
+}
+
+.transition-row .details {
+  padding: 0;
+  opacity: 0;
+  transition: opacity 0.5s ease-out, padding 0.5s ease-out;
+}
+
+.transition-row.expanded {
+  max-height: 200px; /* 적절한 최대 높이로 설정 */
+}
+
+.transition-row.expanded .details {
+  padding: 16px;
+  opacity: 1;
+}
