@@ -115,7 +115,7 @@ const Calendar: React.FC = () => {
 
       console.log(newEvent);
       calendarApi.addEvent(newEvent);
-      // handleCloseDialog();
+      handleCloseDialog();
     }
   };
 
