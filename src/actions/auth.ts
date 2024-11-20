@@ -33,6 +33,8 @@ export async function getUserDogs(phone: String) {
 			customers: {
 				name: "",
 				phone: "",
+				address: "",
+				detailAddress: "",
 				dogs: [],
 			}
 		};
@@ -61,6 +63,9 @@ export async function getUserDogs(phone: String) {
 		type: pet.breeds?.type,
 		birth: pet.birth,
 		weight: pet.weight,
+		neutering: pet.neutering,
+		sex: pet.sex,
+		regNumber: pet.reg_number,
 	}));
 
 	return {
@@ -68,6 +73,8 @@ export async function getUserDogs(phone: String) {
 		customers: {
 			name: userData.name,
 			phone: userData.phone,
+			address: userData.address,
+			detailAddress: userData.detail_address,
 			dogs: dogs,
 		}
 	}
