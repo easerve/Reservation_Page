@@ -47,6 +47,9 @@ export interface Dog {
   weight: number;
   birth: string;
   breed: string;
+  neutering: boolean;
+  sex: string;
+  regNumber: string;
 }
 
 export interface Customer {
@@ -56,4 +59,11 @@ export interface Customer {
 export interface UserDogsData {
   status: string;
   customers: Customer;
+}
+
+export interface User {
+  name: string;
+  phone: string;
+  address: string;
+  detailAddress: string;
 }
