@@ -77,7 +77,7 @@ export const reservationData: Reservation[] = [
     additional_price: 25000,
   },
   {
-    id: "uuid4",
+    id: "uuid7",
     time: new Date("2024-11-01T10:00:00"),
     breed: "말티즈",
     name: "꼬숑",
@@ -92,7 +92,7 @@ export const reservationData: Reservation[] = [
     additional_price: 15000,
   },
   {
-    id: "uuid5",
+    id: "uuid8",
     time: new Date("2024-11-01T10:00:00"),
     breed: "비숑",
     name: "뽀송",
@@ -107,7 +107,7 @@ export const reservationData: Reservation[] = [
     additional_price: 25000,
   },
   {
-    id: "uuid1",
+    id: "uuid9",
     time: new Date("2024-12-01T10:00:00"),
     breed: "포메라니안",
     name: "둥이",
@@ -122,7 +122,7 @@ export const reservationData: Reservation[] = [
     additional_price: 25000,
   },
   {
-    id: "uuid2",
+    id: "uuid10",
     time: new Date("2024-12-01T10:00:00"),
     breed: "포메니안",
     name: "둥둥이",
@@ -137,7 +137,7 @@ export const reservationData: Reservation[] = [
     additional_price: 25000,
   },
   {
-    id: "uuid3",
+    id: "uuid11",
     time: new Date("2024-12-03T10:00:00"),
     breed: "포메라니안",
     name: "둥둥이",
