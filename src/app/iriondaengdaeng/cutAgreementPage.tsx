@@ -81,7 +81,6 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
 
   const handleUserSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(userInfo);
     setCurrentStep(2);
   };
 
@@ -91,7 +90,6 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
       ...dogInfo,
       phoneNumber: userInfo.phone,
     });
-    console.log(dogInfo);
     setCurrentStep(3);
   };
 
