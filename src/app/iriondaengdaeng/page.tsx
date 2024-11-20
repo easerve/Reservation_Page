@@ -392,12 +392,12 @@ export default function Booking() {
         //           />
         //         </CardContent>
         //       </Card>
-        //       <Button
-        //         className="w-full bg-primary"
-        //         disabled={!phoneNumberForm.formState.isValid}
-        //       >
-        //         다음
-        //       </Button>
+        // <Button
+        //   className="w-full bg-primary"
+        //   disabled={!phoneNumberForm.formState.isValid}
+        // >
+        //   다음
+        // </Button>
         //     </form>
         //   </Form>
         // );
@@ -405,10 +405,7 @@ export default function Booking() {
           <Form {...phoneNumberForm}>
             <form
               onSubmit={phoneNumberForm.handleSubmit(async (values) => {
-                updatePetInfo({
-                  ...bookingData.petInfo,
-                  phoneNumber: values.phoneNumber,
-                });
+                updatePhoneNumber(values.phoneNumber);
                 try {
                   const res = await fetch(
                     'http://localhost:3000/api/auth/profile?phone=' +
@@ -420,7 +417,7 @@ export default function Booking() {
                 } catch (error) {
                   console.error(error);
                 }
-                setCurrentStep(3);
+                setCurrentStep(2);
               })}
               className="space-y-6"
             >
@@ -444,18 +441,12 @@ export default function Booking() {
                   />
                 </CardContent>
               </Card>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCurrentStep(1)}
-                >
-                  이전
-                </Button>
-                <Button type="submit" className="flex-1 bg-primary">
-                  다음
-                </Button>
-              </div>
+              <Button
+                className="w-full bg-primary"
+                disabled={!phoneNumberForm.formState.isValid}
+              >
+                다음
+              </Button>
             </form>
           </Form>
         );
@@ -479,13 +470,12 @@ export default function Booking() {
             <form
               onSubmit={petInfoForm.handleSubmit((values) => {
                 updatePetInfo({
-                  petName: values.petName,
+                  name: values.name,
                   weight: Number(values.weight),
-                  phoneNumber: bookingData.petInfo.phoneNumber,
                   birth: values.birth,
                   breed: selectedBreed ? selectedBreed.name : '',
                 });
-                setCurrentStep(4);
+                setCurrentStep(3);
               })}
               className="space-y-6"
             >
@@ -501,15 +491,14 @@ export default function Booking() {
                           key={dog.id}
                           variant="outline"
                           className={`w-full justify-between h-auto py-4 ${
-                            bookingData.petInfo.petName === dog.name
-                              ? 'border-[bg-primary] bg-[bg-primary]/10'
+                            bookingData.petInfo.name === dog.name
+                              ? 'bg-primary bg-primary/10'
                               : ''
                           }`}
                           onClick={() => {
                             updatePetInfo({
-                              petName: dog.name,
+                              name: dog.name,
                               weight: dog.weight,
-                              phoneNumber: bookingData.petInfo.phoneNumber,
                               birth: dog.birth,
                               breed: dog.breed,
                             });
