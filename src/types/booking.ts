@@ -13,7 +13,7 @@ export interface BookingDateTime {
 }
 
 export interface PetInfo {
-  id: number;
+  id: string;
   name: string;
   weight: number;
   birth: string;
