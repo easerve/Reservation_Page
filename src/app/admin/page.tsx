@@ -1,5 +1,6 @@
-import Reservation from "@/containers/reservation/reservation";
+import ReservationPage from "@/containers/reservation/reservation_allfile";
+// import Reservation from "@/containers/reservation/reservation";
 
 export default function AdminPage() {
-  return <Reservation />;
+  return <ReservationPage />;
 }

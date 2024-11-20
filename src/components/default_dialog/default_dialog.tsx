@@ -15,7 +15,7 @@ export default function DefaultDialog(props: IDefaultDialog) {
       {/* <DialogTrigger asChild>
       <Button variant="outline">Share</Button>
     </DialogTrigger> */}
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto scrollbar-hide">
         <DialogHeader>
           <DialogTitle>{props.title}</DialogTitle>
         </DialogHeader>
