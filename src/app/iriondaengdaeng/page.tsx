@@ -158,8 +158,9 @@ export default function Booking() {
 
   useEffect(() => {
     if (isPuppyAdd) {
-      getUserData({ phoneNumber: userDogsData.customers.phone });
-      setIsPuppyAdd(!isPuppyAdd);
+      getUserData({ phoneNumber: userDogsData.customers.phone }).then(() => {
+        setIsPuppyAdd(!isPuppyAdd);
+      });
     }
   }, [isPuppyAdd, userDogsData]);
 
@@ -437,7 +438,7 @@ export default function Booking() {
                           });
                         }}
                       >
-                        <div>
+                        <div className="text-left">
                           <p>이름: {dog.name}</p>
                           <p>견종: {dog.breed}</p>
                           <p>
@@ -576,6 +577,7 @@ export default function Booking() {
               <Button
                 className="flex-1 bg-primary"
                 onClick={() => setCurrentStep(4)}
+                disabled={!bookingData.dateTime.time}
               >
                 다음
               </Button>
