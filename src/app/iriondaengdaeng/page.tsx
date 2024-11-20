@@ -36,11 +36,8 @@ import {
   MainService,
   Option,
   AdditionalService,
-  BookingDateTime,
 } from '@/types/booking';
-import { INITIAL_BOOKING_STATE, bookedDates } from '@/constants/booking';
-import { log } from 'console';
-import { set } from 'date-fns';
+import { INITIAL_BOOKING_STATE } from '@/constants/booking';
 
 export default function Booking() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -59,11 +56,6 @@ export default function Booking() {
       phoneNumber,
     }));
   };
-
-  const [userDogsData, setUserDogsData] = useState<UserDogsData>({
-    status: '' as string,
-    customers: { dogs: [] as Dog[] } as Customer,
-  });
 
   const updatePetInfo = (info: {
     name?: string;
@@ -92,7 +84,7 @@ export default function Booking() {
     phoneNumber: z
       .string()
       .regex(
-        /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/,
+        /^01([0|1|6|7|8|9])([0-9]{3,4})([0-9]{4})$/,
         '올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)'
       ),
   });
@@ -102,9 +94,9 @@ export default function Booking() {
     weight: z.string().refine((val) => {
       const num = parseFloat(val);
       return (
-        !isNaN(num) && num > 0 && num <= 20 && /^\d+(\.\d{0,1})?$/.test(val)
+        !isNaN(num) && num > 0 && num <= 30 && /^\d+(\.\d{0,1})?$/.test(val)
       );
-    }, '0부터 20 사이의 숫자를 소수점 첫째 자리까지 입력해주세요.'),
+    }, '0부터 30 사이의 숫자를 소수점 첫째 자리까지 입력해주세요.'),
     birth: z
       .string()
       .nonempty('반려견의 생년월일을 입력해주세요')
@@ -129,9 +121,15 @@ export default function Booking() {
     },
   });
 
+  const [userDogsData, setUserDogsData] = useState<UserDogsData>({
+    status: '' as string,
+    customers: { dogs: [] as Dog[] } as Customer,
+  });
+
   const [breeds, setBreeds] = useState<
     { id: number; name: string; type: Number }[]
   >([]);
+
   const [selectedBreed, setSelectedBreed] = useState<{
     id: number;
     name: string;
@@ -144,7 +142,6 @@ export default function Booking() {
         const breedData = await fetch('http://localhost:3000/api/pets/breed');
         const breedOptions = await breedData.json();
         setBreeds(breedOptions.data);
-        // console.log(breedOptions); //debug
       } catch (error) {
         console.error('Error fetching breeds:', error);
       }
@@ -162,14 +159,16 @@ export default function Booking() {
       });
     }
 
+    let totalPriceMax = totalPrice;
+
     bookingData.additionalServices.forEach((service) => {
-      totalPrice += service.price_min; // 필요에 따라 수정
+      totalPrice += service.price_min;
+      totalPriceMax += service.price_max;
     });
 
-    return totalPrice;
-  }, [bookingData]);
+    return [totalPrice, totalPriceMax];
+  }, [bookingData.mainService, bookingData.additionalServices]);
 
-  // 모달의 열림 상태를 useState로 관리
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tempOptions, setTempOptions] = useState<Option[]>([]); // 임시 옵션 저장
 
@@ -178,7 +177,6 @@ export default function Booking() {
       setBookingData((prev) => ({
         ...prev,
         mainService: { ...service, options: [] },
-        // 임시 옵션 초기화
       }));
       setTempOptions([]);
     }
@@ -187,21 +185,25 @@ export default function Booking() {
     }
   };
 
-  // 옵션 선택 토글 핸들러
   const handleModalOptionToggle = (option: Option) => {
     setTempOptions((prev) => {
       const isSelected = prev.some((opt) => opt.id === option.id);
+      const isSameCategory = prev.some(
+        (opt) => opt.category === option.category
+      );
       if (isSelected) {
         return prev.filter((opt) => opt.id !== option.id);
+      } else if (isSameCategory) {
+        return prev.map((opt) =>
+          opt.category === option.category ? option : opt
+        );
       } else {
         return [...prev, option];
       }
     });
   };
 
-  // 옵션 선택 완료 처리
   const confirmOptionSelection = () => {
-    // 선택된 옵션을 bookingData에 저장
     setBookingData((prev) => {
       if (!prev.mainService) return prev;
       return {
@@ -215,9 +217,7 @@ export default function Booking() {
     setIsModalOpen(false);
   };
 
-  // 옵션 선택 취소 처리
   const cancelOptionSelection = () => {
-    // 모달을 닫고 mainService를 초기화하여 선택 취소
     setBookingData((prev) => ({
       ...prev,
       mainService: undefined,
@@ -225,20 +225,6 @@ export default function Booking() {
     setIsModalOpen(false);
   };
 
-  // 옵션을 카테고리별로 그룹화
-  const groupedOptions = useMemo(() => {
-    if (!bookingData.mainService || !bookingData.mainService.options) return {};
-    return bookingData.mainService.options.reduce((groups, option) => {
-      const category = option.category || '기타';
-      if (!groups[category]) {
-        groups[category] = [];
-      }
-      groups[category].push(option);
-      return groups;
-    }, {} as { [key: string]: Option[] });
-  }, [bookingData.mainService]);
-
-  // 추가 서비스 토글 핸들러
   const handleAdditionalServiceToggle = (service: AdditionalService) => {
     setBookingData((prev) => {
       const isSelected = prev.additionalServices.some(
@@ -251,7 +237,6 @@ export default function Booking() {
     });
   };
 
-  // 날짜 포맷팅
   const formatDate = (date: Date | undefined) => {
     if (!date) return '날짜 미선택';
     return new Date(date).toLocaleDateString('ko-KR', {
@@ -261,7 +246,6 @@ export default function Booking() {
     });
   };
 
-  // 선택된 서비스 이름 가져오기
   const getServiceNames = () => {
     const names = [];
 
@@ -281,6 +265,12 @@ export default function Booking() {
   };
 
   const [servicesPricing, setServicesPricing] = useState<MainService[]>([]);
+  const [optionCategories, setOptionCategories] = useState<
+    {
+      category: string;
+      options: Option[];
+    }[]
+  >([]);
   const [additionalServicesPricing, setAdditionalServicesPricing] = useState<
     AdditionalService[]
   >([]);
@@ -294,6 +284,7 @@ export default function Booking() {
     return 5;
   };
 
+  // FIXME: 임시로 1을 반환하도록 했는데 수정 필요함
   const getTypeId = (breed: string) => {
     return 1;
   };
@@ -312,7 +303,34 @@ export default function Booking() {
 
       if (!response.ok) throw new Error('Failed to fetch prices');
 
+      const newOptionCategories: {
+        category: string;
+        options: Option[];
+      }[] = [];
+
       const data = await response.json();
+
+      data.data.mainServices.forEach((service: any) => {
+        service.options.forEach((option: any) => {
+          const category = option.category;
+          const existingCategory = newOptionCategories.find(
+            (opt) => opt.category === category
+          );
+
+          if (existingCategory) {
+            if (!existingCategory.options.some((opt) => opt.id === option.id)) {
+              existingCategory.options.push(option);
+            }
+          } else {
+            newOptionCategories.push({ category, options: [option] });
+          }
+        });
+      });
+
+      setOptionCategories(newOptionCategories);
+      console.log('TEST');
+      console.log(newOptionCategories);
+      console.log(optionCategories);
       setServicesPricing(data.data.mainServices);
       setAdditionalServicesPricing(data.data.additional_services);
     } catch (error) {
@@ -322,10 +340,12 @@ export default function Booking() {
     }
   };
 
-  const [bookedDates, setBookedDates] = useState<{
-    date: string;
-    times: string[];
-  }[]>([]);
+  const [bookedDates, setBookedDates] = useState<
+    {
+      date: string;
+      times: string[];
+    }[]
+  >([]);
 
   useEffect(() => {
     if (currentStep === 4) {
@@ -338,7 +358,6 @@ export default function Booking() {
       const res = await fetch('http://localhost:3000/api/reservations?scope=6');
       const data = await res.json();
       setBookedDates(data.data);
-      console.log(data.data);
     } catch (error) {
       console.error(error);
     }
@@ -353,15 +372,14 @@ export default function Booking() {
   const allTimeSlots = ['10:00', '14:00', '17:00'];
 
   const fullyBookedDates = useMemo(() => {
-    if (bookedDates.length === 0) return []; // 데이터가 없을 경우 빈 배열 반환
+    if (bookedDates.length === 0) return [];
     return bookedDates
       .filter((booking) => (booking.times ?? []).length >= allTimeSlots.length)
-      .map((booking) => new Date(booking.date)); // `date`를 Date 객체로 변환
+      .map((booking) => new Date(booking.date));
   }, [bookedDates, allTimeSlots]);
 
-  // 선택된 날짜의 예약된 시간대 가져오기
   const getBookedTimesForDate = (date: Date | undefined): string[] => {
-    if (!bookedDates.length || !date) return []; // 데이터가 없거나 날짜가 없을 경우 빈 배열 반환
+    if (!bookedDates.length || !date) return [];
     const booking = bookedDates.find(
       (booking) => new Date(booking.date).toDateString() === date.toDateString()
     );
@@ -455,10 +473,9 @@ export default function Booking() {
                 });
                 setCurrentStep(3);
               })}
-              className="space-y-6"
             >
               {userDogsData.status === 'success' ? (
-                <div>
+                <div className="space-y-6">
                   <Card>
                     <CardHeader>
                       <CardTitle>반려견 선택</CardTitle>
@@ -711,7 +728,6 @@ export default function Booking() {
         );
 
       case 4:
-        console.log(bookingData);
         return (
           <div className="space-y-6">
             <Card>
@@ -755,36 +771,30 @@ export default function Booking() {
                       <DialogClose onClick={cancelOptionSelection} />
                     </DialogHeader>
                     <div className="space-y-4">
-                      {servicesPricing
-                        .filter(
-                          (service) =>
-                            service.id === bookingData.mainService?.id
-                        )[0]
-                        ?.options.map((option) => (
-                          <Button
-                            key={option.id}
-                            variant={
-                              tempOptions.some((opt) => opt.id === option.id)
-                                ? 'default'
-                                : 'outline'
-                            }
-                            onClick={() => handleModalOptionToggle(option)}
-                            className={`w-full justify-between ${
-                              bookingData.mainService?.options.some(
-                                (opt) => opt.id === option.id
-                              )
-                                ? 'border-primary bg-primary/10'
-                                : ''
-                            }`}
-                          >
-                            <div className="flex justify-between w-full">
-                              <span>{option.name}</span>
-                              <span className="text-sm text-muted-foreground">
-                                + {option.price.toLocaleString()}원
-                              </span>
-                            </div>
-                          </Button>
-                        ))}
+                      {optionCategories.map(({ category, options }) => (
+                        <div key={category} className="space-y-2">
+                          <h3 className="font-bold mb-2">{category}</h3>
+                          {options.map((option) => (
+                            <Button
+                              key={option.id}
+                              variant="outline"
+                              onClick={() => handleModalOptionToggle(option)}
+                              className={`w-full justify-between ${
+                                tempOptions.some((opt) => opt.id === option.id)
+                                  ? 'border-primary bg-primary/10'
+                                  : ''
+                              }`}
+                            >
+                              <div className="flex justify-between w-full">
+                                <span>{option.name}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  +{option.price.toLocaleString()}원
+                                </span>
+                              </div>
+                            </Button>
+                          ))}
+                        </div>
+                      ))}
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={cancelOptionSelection}>
@@ -819,9 +829,10 @@ export default function Booking() {
                   >
                     <span>{service.service_name}</span>
                     <span className="text-sm text-muted-foreground">
-                      {service.price_min == 0
-                        ? ''
-                        : `+ ${service.price_min.toLocaleString()}원`}
+                      +
+                      {service.price_max
+                        ? `${service.price_min.toLocaleString()}~${service.price_max.toLocaleString()}원`
+                        : `${service.price_min.toLocaleString()}원`}
                     </span>
                   </Button>
                 ))}
@@ -834,7 +845,9 @@ export default function Booking() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-primary text-right">
-                  {price.toLocaleString()}원
+                  {price[0] === price[1]
+                    ? `${price[0].toLocaleString()}원`
+                    : `${price[0].toLocaleString()}~${price[1].toLocaleString()}원`}
                 </div>
               </CardContent>
             </Card>
@@ -889,7 +902,11 @@ export default function Booking() {
 
                 <div>
                   <h3 className="font-medium text-gray-600">결제 금액</h3>
-                  <p>{price.toLocaleString()}원</p>
+                  <p>
+                    {price[0] === price[1]
+                      ? `${price[0]}원`
+                      : `${price[0]}~${price[1]}원`}
+                  </p>
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-600">추가 문의사항</h3>
