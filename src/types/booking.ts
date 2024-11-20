@@ -42,7 +42,7 @@ export interface AdditionalService {
 }
 
 export interface Dog {
-  id: number;
+  id: String;
   name: string;
   weight: number;
   birth: string;
@@ -50,6 +50,7 @@ export interface Dog {
   neutering: boolean;
   sex: string;
   regNumber: string;
+  phoneNumber: string;
 }
 
 export interface Customer {

@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import Select from 'react-select';
-import * as z from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import React, { useState, useMemo, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import Select from "react-select";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -18,8 +18,8 @@ import {
   DialogDescription,
   DialogFooter,
   DialogClose,
-} from '@/components/ui/dialog';
-import CutAgreementPage from '@/app/iriondaengdaeng/cutAgreementPage';
+} from "@/components/ui/dialog";
+import CutAgreementPage from "@/app/iriondaengdaeng/cutAgreementPage";
 import {
   Form,
   FormControl,
@@ -27,7 +27,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
+} from "@/components/ui/form";
 import {
   BookingData,
   Dog,
@@ -36,13 +36,13 @@ import {
   MainService,
   Option,
   AdditionalService,
-} from '@/types/booking';
+} from "@/types/booking";
 import {
   INITIAL_BOOKING_STATE,
   mainServices,
   additionalServices,
   bookedDates,
-} from '@/constants/booking';
+} from "@/constants/booking";
 
 export default function Booking() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -63,7 +63,7 @@ export default function Booking() {
   };
 
   const [userDogsData, setUserDogsData] = useState<UserDogsData>({
-    status: '' as string,
+    status: "" as string,
     customers: { dogs: [] as Dog[] } as Customer,
   });
 
@@ -95,23 +95,23 @@ export default function Booking() {
       .string()
       .regex(
         /^01([0|1|6|7|8|9])-?([0-9]{3,4})-?([0-9]{4})$/,
-        '올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)'
+        "올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)"
       ),
   });
 
   const petInfoSchema = z.object({
-    name: z.string().min(1, '반려견의 이름을 입력해주세요'),
+    name: z.string().min(1, "반려견의 이름을 입력해주세요"),
     weight: z.string().refine((val) => {
       const num = parseFloat(val);
       return (
         !isNaN(num) && num > 0 && num <= 20 && /^\d+(\.\d{0,1})?$/.test(val)
       );
-    }, '0부터 20 사이의 숫자를 소수점 첫째 자리까지 입력해주세요.'),
+    }, "0부터 20 사이의 숫자를 소수점 첫째 자리까지 입력해주세요."),
     birth: z
       .string()
-      .nonempty('반려견의 생년월일을 입력해주세요')
-      .refine((val) => !isNaN(Date.parse(val)), '올바른 날짜 형식이 아닙니다.'),
-    breed: z.string().min(1, '반려견의 견종을 선택해주세요'),
+      .nonempty("반려견의 생년월일을 입력해주세요")
+      .refine((val) => !isNaN(Date.parse(val)), "올바른 날짜 형식이 아닙니다."),
+    breed: z.string().min(1, "반려견의 견종을 선택해주세요"),
   });
 
   const phoneNumberForm = useForm<z.infer<typeof phoneNumberSchema>>({
@@ -143,12 +143,12 @@ export default function Booking() {
   useEffect(() => {
     const loadBreeds = async () => {
       try {
-        const breedData = await fetch('http://localhost:3000/api/pets/breed');
+        const breedData = await fetch("http://localhost:3000/api/pets/breed");
         const breedOptions = await breedData.json();
         setBreeds(breedOptions.data);
         // console.log(breedOptions); //debug
       } catch (error) {
-        console.error('Error fetching breeds:', error);
+        console.error("Error fetching breeds:", error);
       }
     };
     loadBreeds();
@@ -231,7 +231,7 @@ export default function Booking() {
   const groupedOptions = useMemo(() => {
     if (!bookingData.mainService || !bookingData.mainService.options) return {};
     return bookingData.mainService.options.reduce((groups, option) => {
-      const category = option.category || '기타';
+      const category = option.category || "기타";
       if (!groups[category]) {
         groups[category] = [];
       }
@@ -255,11 +255,11 @@ export default function Booking() {
 
   // 날짜 포맷팅
   const formatDate = (date: Date | undefined) => {
-    if (!date) return '날짜 미선택';
-    return new Date(date).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    if (!date) return "날짜 미선택";
+    return new Date(date).toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -279,7 +279,7 @@ export default function Booking() {
         ...bookingData.additionalServices.map((service) => service.name)
       );
 
-    return names.join(', ');
+    return names.join(", ");
   };
 
   const [servicesPricing, setServicesPricing] = useState<MainService[]>([]);
@@ -309,13 +309,13 @@ export default function Booking() {
         `/api/services?weightRangeId=${weightRangeId}&typeId=${typeId}`
       );
 
-      if (!response.ok) throw new Error('Failed to fetch prices');
+      if (!response.ok) throw new Error("Failed to fetch prices");
 
       const data = await response.json();
       console.log(data);
       setServicesPricing(data.mainServices);
     } catch (error) {
-      console.error('Error fetching service prices:', error);
+      console.error("Error fetching service prices:", error);
     } finally {
       setIsLoadingPrices(false);
     }
@@ -327,7 +327,7 @@ export default function Booking() {
     }
   }, [currentStep]);
 
-  const allTimeSlots = ['10:00', '14:00', '17:00'];
+  const allTimeSlots = ["10:00", "14:00", "17:00"];
 
   const fullyBookedDates = bookedDates
     .filter((booking) => booking.times.length >= allTimeSlots.length)
@@ -406,17 +406,7 @@ export default function Booking() {
             <form
               onSubmit={phoneNumberForm.handleSubmit(async (values) => {
                 updatePhoneNumber(values.phoneNumber);
-                try {
-                  const res = await fetch(
-                    'http://localhost:3000/api/auth/profile?phone=' +
-                      values.phoneNumber
-                  );
-                  const data = await res.json();
-
-                  setUserDogsData(data);
-                } catch (error) {
-                  console.error(error);
-                }
+                await getUserData(values);
                 setCurrentStep(2);
               })}
               className="space-y-6"
@@ -453,16 +443,16 @@ export default function Booking() {
 
       case 2:
         const getFieldLabel = (field: string) => {
-          if (field === 'petName') {
-            return '반려견 이름';
-          } else if (field === 'weight') {
-            return '반려견 체중 (kg)';
-          } else if (field === 'age') {
-            return '반려견 나이';
-          } else if (field === 'breed') {
-            return '반려견 견종';
+          if (field === "petName") {
+            return "반려견 이름";
+          } else if (field === "weight") {
+            return "반려견 체중 (kg)";
+          } else if (field === "age") {
+            return "반려견 나이";
+          } else if (field === "breed") {
+            return "반려견 견종";
           }
-          return '';
+          return "";
         };
 
         return (
@@ -473,13 +463,13 @@ export default function Booking() {
                   name: values.name,
                   weight: Number(values.weight),
                   birth: values.birth,
-                  breed: selectedBreed ? selectedBreed.name : '',
+                  breed: selectedBreed ? selectedBreed.name : "",
                 });
                 setCurrentStep(3);
               })}
               className="space-y-6"
             >
-              {userDogsData.status === 'success' ? (
+              {userDogsData.status === "success" ? (
                 <div>
                   <Card>
                     <CardHeader>
@@ -492,8 +482,8 @@ export default function Booking() {
                           variant="outline"
                           className={`w-full justify-between h-auto py-4 ${
                             bookingData.petInfo.name === dog.name
-                              ? 'border-primary bg-primary/10'
-                              : ''
+                              ? "border-primary bg-primary/10"
+                              : ""
                           }`}
                           onClick={() => {
                             updatePetInfo({
@@ -508,7 +498,7 @@ export default function Booking() {
                             <p>이름: {dog.name}</p>
                             <p>견종: {dog.breed}</p>
                             <p>
-                              나이:{' '}
+                              나이:{" "}
                               {(() => {
                                 const birthDate = new Date(dog.birth);
                                 const today = new Date();
@@ -535,6 +525,7 @@ export default function Booking() {
                       <CutAgreementPage
                         isOpen={isModalOpen}
                         onClose={closeModal}
+                        breeds={breeds}
                       />
                     </CardContent>
                   </Card>
@@ -561,7 +552,7 @@ export default function Booking() {
                       <CardTitle>반려견 선택</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {['petName', 'weight', 'age'].map((field) => (
+                      {["petName", "weight", "age"].map((field) => (
                         <FormField
                           key={field}
                           control={petInfoForm.control}
@@ -571,7 +562,7 @@ export default function Booking() {
                               <FormLabel>{getFieldLabel(field)}</FormLabel>
                               <FormControl>
                                 <Input
-                                  type={field === 'petName' ? 'text' : 'number'}
+                                  type={field === "petName" ? "text" : "number"}
                                   {...fieldProps}
                                 />
                               </FormControl>
@@ -858,7 +849,7 @@ export default function Booking() {
                         bookingData.dateTime.date
                       );
 
-                      const [hours, minutes] = time.split(':').map(Number);
+                      const [hours, minutes] = time.split(":").map(Number);
                       selectedDateTime.setHours(hours, minutes, 0, 0);
 
                       const isDisabled =
@@ -872,13 +863,13 @@ export default function Booking() {
                           key={time}
                           variant={
                             bookingData.dateTime.time === time
-                              ? 'default'
-                              : 'outline'
+                              ? "default"
+                              : "outline"
                           }
                           className={
                             bookingData.dateTime.time === time
-                              ? 'bg-primary'
-                              : ''
+                              ? "bg-primary"
+                              : ""
                           }
                           disabled={isDisabled}
                           onClick={() =>
@@ -922,8 +913,8 @@ export default function Booking() {
                         variant="outline"
                         className={`w-full justify-between h-auto py-4 ${
                           bookingData.mainService?.id === service.id
-                            ? 'border-primary bg-primary/10'
-                            : ''
+                            ? "border-primary bg-primary/10"
+                            : ""
                         }`}
                         onClick={() => handleMainServiceSelect(service)}
                       >
@@ -960,16 +951,16 @@ export default function Booking() {
                             key={option.id}
                             variant={
                               tempOptions.some((opt) => opt.id === option.id)
-                                ? 'default'
-                                : 'outline'
+                                ? "default"
+                                : "outline"
                             }
                             onClick={() => handleModalOptionToggle(option)}
                             className={`w-full justify-between ${
                               bookingData.mainService?.options.some(
                                 (opt) => opt.id === option.id
                               )
-                                ? 'border-primary bg-primary/10'
-                                : ''
+                                ? "border-primary bg-primary/10"
+                                : ""
                             }`}
                           >
                             <div className="flex justify-between w-full">
@@ -1007,15 +998,15 @@ export default function Booking() {
                       bookingData.additionalServices.some(
                         (s) => s.id === service.id
                       )
-                        ? 'border-primary bg-primary/10'
-                        : ''
+                        ? "border-primary bg-primary/10"
+                        : ""
                     }`}
                     onClick={() => handleAdditionalServiceToggle(service)}
                   >
                     <span>{service.name}</span>
                     <span className="text-sm text-muted-foreground">
                       {service.price_min == 0
-                        ? ''
+                        ? ""
                         : `+ ${service.price_min.toLocaleString()}원`}
                     </span>
                   </Button>
@@ -1065,7 +1056,7 @@ export default function Booking() {
                 <div>
                   <h3 className="font-medium text-gray-600">날짜 및 시간</h3>
                   <p>
-                    {formatDate(bookingData.dateTime.date)}{' '}
+                    {formatDate(bookingData.dateTime.date)}{" "}
                     {bookingData.dateTime.time}
                   </p>
                 </div>
@@ -1106,22 +1097,22 @@ export default function Booking() {
                 className="flex-1 bg-primary"
                 onClick={async () => {
                   try {
-                    const response = await fetch('/api/bookings', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
+                    const response = await fetch("/api/bookings", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
                         ...bookingData,
                         price,
                       }),
                     });
                     if (!response.ok) {
-                      throw new Error('예약 저장에 실패했습니다.');
+                      throw new Error("예약 저장에 실패했습니다.");
                     }
-                    alert('예약이 완료되었습니다.');
+                    alert("예약이 완료되었습니다.");
                     resetBookingData();
                   } catch (error) {
-                    console.error('Error saving booking:', error);
-                    alert('예약 저장 중 오류가 발생했습니다.');
+                    console.error("Error saving booking:", error);
+                    alert("예약 저장 중 오류가 발생했습니다.");
                   }
                 }}
               >
@@ -1142,7 +1133,7 @@ export default function Booking() {
             <div
               key={step}
               className={`h-2 flex-1 mx-1 rounded ${
-                step <= currentStep ? 'bg-primary' : 'bg-gray-200'
+                step <= currentStep ? "bg-primary" : "bg-gray-200"
               }`}
             />
           ))}
@@ -1151,4 +1142,17 @@ export default function Booking() {
       {renderStep()}
     </div>
   );
+
+  async function getUserData(values: { phoneNumber: string }) {
+    try {
+      const res = await fetch(
+        "http://localhost:3000/api/auth/profile?phone=" + values.phoneNumber
+      );
+      const data = await res.json();
+
+      setUserDogsData(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
 }
