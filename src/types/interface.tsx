@@ -11,7 +11,7 @@ export interface Reservation {
   breed: string;
   name: string;
   weight: number;
-  birth: string,
+  birth: string;
   phone: string; // 11자리 숫자
   service_name: Array<string>; // Ex. ["스포팅", "발톱 깎기"]
   additional_service: string; // 추가 서비스

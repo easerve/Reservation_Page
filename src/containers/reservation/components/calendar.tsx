@@ -3,9 +3,11 @@
 import React, { useState, useEffect } from "react";
 import {
   formatDate,
+  DatesSetArg,
   DateSelectArg,
   EventClickArg,
   EventApi,
+  EventInput,
 } from "@fullcalendar/core";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -33,6 +35,10 @@ import InnerReservationForm, {
 } from "./inner_reservation_form";
 import { z } from "zod";
 import DefaultDialog from "@/components/default_dialog/default_dialog";
+import { Reservation } from "@/types/interface";
+import { reservationData } from "@/data/data";
+import InfoDialog from "@/containers/reservation/components/info_dialog";
+import EditReservationForm, { editFormSchema } from "./edit_reservation_form";
 
 function updateTimeInDate(date: Date, time: string): Date {
   const [hours, minutes] = time.split(":").map(Number);
@@ -49,8 +55,14 @@ function updateTimeInDate(date: Date, time: string): Date {
 const Calendar: React.FC = () => {
   const [currentEvents, setCurrentEvents] = useState<EventApi[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+  const [isInfoDialogOpen, setIsInfoDialogOpen] = useState<boolean>(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [newEventTitle, setNewEventTitle] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<DateSelectArg | null>(null);
+  const [selectedReservation, setSelectedReservation] =
+    useState<Reservation | null>(null);
+
+  const [reservations, setReservations] = useState<EventInput[]>([]);
 
   useEffect(() => {
     // Load events from local storage when the component mounts
@@ -76,20 +88,34 @@ const Calendar: React.FC = () => {
 
   const handleEventClick = (selected: EventClickArg) => {
     // Prompt user for confirmation before deleting an event
-    console.log(selected.event);
-    if (
-      window.confirm(
-        `Are you sure you want to delete the event "${selected.event.title}"?`
-      )
-    ) {
-      selected.event.remove();
-    }
+    console.log(selected.event.extendedProps);
+    setSelectedReservation(selected.event.extendedProps as Reservation);
+    setIsInfoDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setNewEventTitle("");
   };
+
+  const handleSave = (id: string, updatedData: Partial<Reservation>) => {
+    if (selectedReservation) {
+      setReservations(
+        reservations.map((reservation) =>
+          reservation.id === selectedReservation.id
+            ? { ...reservation, ...updatedData }
+            : reservation
+        )
+      );
+      setIsEditDialogOpen(false);
+      setSelectedReservation(null);
+    }
+  };
+
+  function handleSubmit(data: z.infer<typeof editFormSchema>) {
+    console.log("submit done: ", data);
+    handleSave(selectedReservation.id, data);
+  }
 
   const handleAddEvent = (data: z.infer<typeof innerFormSchema>) => {
     // e.preventDefault();
@@ -116,6 +142,28 @@ const Calendar: React.FC = () => {
     }
   };
 
+  function handleDateSet(info: DatesSetArg) {
+    const currentYear = info.view.currentStart.getFullYear(); // 현재 뷰의 시작 연도
+    const currentMonth = info.view.currentStart.getMonth() + 1; // 현재 뷰의 시작 월 (0부터 시작하므로 +1)
+
+    console.log(`Year: ${currentYear}, Month: ${currentMonth}`);
+    const currentMonthReservations = reservationData.filter((data) => {
+      return (
+        data.time.getFullYear() === currentYear &&
+        data.time.getMonth() + 1 === currentMonth
+      );
+    });
+    const monthReservations: EventInput[] = currentMonthReservations.map(
+      (data: Reservation) => ({
+        id: data.id,
+        title: `${data.name}(${data.breed})`,
+        start: data.time,
+        extendedProps: data,
+      })
+    );
+    setReservations(monthReservations);
+  }
+
   return (
     <div>
       <div className="full-calendar flex w-full px-10 py-10 justify-start items-start gap-8">
@@ -128,6 +176,7 @@ const Calendar: React.FC = () => {
             right: "next",
           }} // Set header toolbar options.
           initialView="dayGridMonth" // Initial view mode of the calendar.
+          datesSet={handleDateSet}
           editable={true} // Allow events to be edited.
           selectable={true} // Allow dates to be selectable.
           selectMirror={true} // Mirror selections visually.
@@ -135,6 +184,7 @@ const Calendar: React.FC = () => {
           select={handleDateClick} // Handle date selection to create new events.
           eventClick={handleEventClick} // Handle clicking on events (e.g., to delete them).
           eventsSet={(events) => setCurrentEvents(events)} // Update state with current events whenever they change.
+          events={reservations} // Events to display on the calendar.
           initialEvents={
             typeof window !== "undefined"
               ? JSON.parse(localStorage.getItem("events") || "[]")
@@ -154,29 +204,25 @@ const Calendar: React.FC = () => {
           onCloseDialog={handleCloseDialog}
         />
       </DefaultDialog>
-      {/* <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Event Details</DialogTitle>
-          </DialogHeader>
-          <form className="space-x-5 mb-4" onSubmit={handleAddEvent}>
-            <input
-              type="text"
-              placeholder="Event Title"
-              value={newEventTitle}
-              onChange={(e) => setNewEventTitle(e.target.value)} // Update new event title as the user types.
-              required
-              className="border border-gray-200 p-3 rounded-md text-lg"
-            />
-            <button
-              className="bg-green-500 text-white p-3 mt-5 rounded-md"
-              type="submit"
-            >
-              Add
-            </button>{" "}
-          </form>
-        </DialogContent>
-      </Dialog> */}
+      <InfoDialog
+        reservation={selectedReservation}
+        open={isInfoDialogOpen}
+        onOpenChange={setIsInfoDialogOpen}
+        setIsEditDialogOpen={setIsEditDialogOpen}
+      />
+      <DefaultDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        title="예약 수정하기"
+      >
+        {selectedReservation && (
+          <EditReservationForm
+            reservation={selectedReservation}
+            onSubmit={handleSubmit}
+            onCloseDialog={() => setIsEditDialogOpen(false)}
+          />
+        )}
+      </DefaultDialog>
     </div>
   );
 };

@@ -44,6 +44,7 @@ import {
 } from "@radix-ui/react-dropdown-menu";
 import { DropdownMenuGroup } from "@/components/ui/dropdown-menu";
 import exp from "constants";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type GroupedReservations = {
   [key: string]: Reservation[];
@@ -129,8 +130,8 @@ export default function ReservationList(props: {
       <Table>
         <TableHeader className="sticky top-0 z-10 bg-white">
           <TableRow className="whitespace-nowrap">
-            {headers.map((header) => (
-              <TableHead>{header}</TableHead>
+            {headers.map((header, idx) => (
+              <TableHead key={idx}>{header}</TableHead>
             ))}
           </TableRow>
         </TableHeader>
