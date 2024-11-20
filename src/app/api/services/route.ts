@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServicesByWeightAndType, getAdditionalService } from "@/actions/services";
 
-export function parseServices(services: any[]) {
+function parseServices(services: any[]) {
 	return services.map((service) => {
 	  // 옵션 카테고리를 그룹화하기 위한 Map 생성
 	  const optionCategoryMap = new Map<number, { name: string; options: any[] }>();
