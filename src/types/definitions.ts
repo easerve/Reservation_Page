@@ -13,22 +13,22 @@ export type Database = {
         Row: {
           created_at: string | null
           id: number
-          price: number
-          price_range: string | null
+          price_max: number | null
+          price_min: number | null
           service_name: string
         }
         Insert: {
           created_at?: string | null
           id?: number
-          price: number
-          price_range?: string | null
+          price_max?: number | null
+          price_min?: number | null
           service_name: string
         }
         Update: {
           created_at?: string | null
           id?: number
-          price?: number
-          price_range?: string | null
+          price_max?: number | null
+          price_min?: number | null
           service_name?: string
         }
         Relationships: []
@@ -105,6 +105,9 @@ export type Database = {
           created_at: string | null
           memo: string | null
           name: string | null
+          neutering: boolean | null
+          reg_number: string | null
+          sex: string | null
           user_id: string | null
           uuid: string
           weight: number | null
@@ -115,6 +118,9 @@ export type Database = {
           created_at?: string | null
           memo?: string | null
           name?: string | null
+          neutering?: boolean | null
+          reg_number?: string | null
+          sex?: string | null
           user_id?: string | null
           uuid?: string
           weight?: number | null
@@ -125,6 +131,9 @@ export type Database = {
           created_at?: string | null
           memo?: string | null
           name?: string | null
+          neutering?: boolean | null
+          reg_number?: string | null
+          sex?: string | null
           user_id?: string | null
           uuid?: string
           weight?: number | null
@@ -146,38 +155,140 @@ export type Database = {
           },
         ]
       }
+      reservation_additional_services: {
+        Row: {
+          additional_service_id: number | null
+          id: number
+          reservation_id: string | null
+        }
+        Insert: {
+          additional_service_id?: number | null
+          id?: never
+          reservation_id?: string | null
+        }
+        Update: {
+          additional_service_id?: number | null
+          id?: never
+          reservation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_additional_services_additional_service_id_fkey"
+            columns: ["additional_service_id"]
+            isOneToOne: false
+            referencedRelation: "additional_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_additional_services_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["uuid"]
+          },
+        ]
+      }
+      reservation_services: {
+        Row: {
+          id: number
+          reservation_id: string
+          service_id: number
+        }
+        Insert: {
+          id?: never
+          reservation_id: string
+          service_id: number
+        }
+        Update: {
+          id?: never
+          reservation_id?: string
+          service_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_services_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "reservation_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reservation_services_option: {
+        Row: {
+          id: number
+          reservation_id: string | null
+          service_option_id: number | null
+        }
+        Insert: {
+          id?: never
+          reservation_id?: string | null
+          service_option_id?: number | null
+        }
+        Update: {
+          id?: never
+          reservation_id?: string | null
+          service_option_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_services_option_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "reservation_services_option_service_option_id_fkey"
+            columns: ["service_option_id"]
+            isOneToOne: false
+            referencedRelation: "service_options"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reservations: {
         Row: {
-          add_option: string | null
-          add_price: number | null
+          additional_option: string | null
+          additional_price: number | null
           consent_form: boolean
           created_at: string | null
           memo: string | null
           pet_id: string | null
-          service_id: number | null
+          reservation_date: string | null
           status: string
+          total_price: number | null
           uuid: string
         }
         Insert: {
-          add_option?: string | null
-          add_price?: number | null
+          additional_option?: string | null
+          additional_price?: number | null
           consent_form: boolean
           created_at?: string | null
           memo?: string | null
           pet_id?: string | null
-          service_id?: number | null
+          reservation_date?: string | null
           status: string
+          total_price?: number | null
           uuid?: string
         }
         Update: {
-          add_option?: string | null
-          add_price?: number | null
+          additional_option?: string | null
+          additional_price?: number | null
           consent_form?: boolean
           created_at?: string | null
           memo?: string | null
           pet_id?: string | null
-          service_id?: number | null
+          reservation_date?: string | null
           status?: string
+          total_price?: number | null
           uuid?: string
         }
         Relationships: [
@@ -188,14 +299,25 @@ export type Database = {
             referencedRelation: "pets"
             referencedColumns: ["uuid"]
           },
-          {
-            foreignKeyName: "reservations_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
         ]
+      }
+      service_option_category: {
+        Row: {
+          created_at: string
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
       }
       service_option_group: {
         Row: {
@@ -232,24 +354,35 @@ export type Database = {
       }
       service_options: {
         Row: {
+          category_id: number | null
           created_at: string | null
           id: number
           name: string
           price: number
         }
         Insert: {
+          category_id?: number | null
           created_at?: string | null
           id?: number
           name: string
           price: number
         }
         Update: {
+          category_id?: number | null
           created_at?: string | null
           id?: number
           name?: string
           price?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "service_options_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_option_category"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
@@ -305,37 +438,40 @@ export type Database = {
           created_at: string | null
           id: number
           name: string
-          service_option: boolean
         }
         Insert: {
           created_at?: string | null
           id?: number
           name: string
-          service_option: boolean
         }
         Update: {
           created_at?: string | null
           id?: number
           name?: string
-          service_option?: boolean
         }
         Relationships: []
       }
       user: {
         Row: {
+          address: string | null
           created_at: string
+          detail_address: string | null
           name: string | null
           phone: string
           uuid: string
         }
         Insert: {
+          address?: string | null
           created_at?: string
+          detail_address?: string | null
           name?: string | null
           phone: string
           uuid?: string
         }
         Update: {
+          address?: string | null
           created_at?: string
+          detail_address?: string | null
           name?: string | null
           phone?: string
           uuid?: string
