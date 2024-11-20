@@ -36,9 +36,10 @@ export interface MainService {
 
 export interface AdditionalService {
   id: number;
-  name: string;
+  service_name: string;
   price_min: number;
   price_max: number;
+  category: string;
 }
 
 export interface Dog {
