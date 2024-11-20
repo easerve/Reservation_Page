@@ -42,13 +42,13 @@ export const mainServices: MainService[] = [
     name: '클리핑',
     price: 25000,
     options: [
-      { id: 1, name: '6mm', price: 5000, category: '미리수' },
-      { id: 2, name: '1cm', price: 10000, category: '미리수' },
-      { id: 3, name: '2cm', price: 15000, category: '미리수' },
-      { id: 4, name: '곰돌이', price: 10000, category: '얼굴컷' },
-      { id: 5, name: '크라운', price: 5000, category: '얼굴컷' },
-      { id: 6, name: '앞머리', price: 5000, category: '얼굴컷' },
-      { id: 7, name: '양치', price: 2000, category: '양치' },
+      { id: 5, name: '6mm', price: 5000, category: '미리수' },
+      { id: 6, name: '1cm', price: 10000, category: '미리수' },
+      { id: 7, name: '2cm', price: 15000, category: '미리수' },
+      { id: 8, name: '곰돌이', price: 10000, category: '얼굴컷' },
+      { id: 9, name: '크라운', price: 5000, category: '얼굴컷' },
+      { id: 10, name: '앞머리', price: 5000, category: '얼굴컷' },
+      { id: 11, name: '양치', price: 2000, category: '양치' },
     ],
   },
   {
@@ -67,7 +67,7 @@ export const mainServices: MainService[] = [
 
 export const additionalServices: AdditionalService[] = [
   { id: 1, name: '발등', price_min: 5000, price_max: 5000 },
-  { id: 1, name: '엉킴', price_min: 10000, price_max: 10000 },
+  { id: 2, name: '엉킴', price_min: 10000, price_max: 10000 },
 ];
 
 export const bookedDates = [

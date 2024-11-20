@@ -12,12 +12,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogClose,
 } from '@/components/ui/dialog';
 import {
   Form,
@@ -149,13 +149,6 @@ export default function Booking() {
     loadBreeds();
   }, []);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedServiceForModal, setSelectedServiceForModal] =
-    useState<MainService | null>(null);
-  const [selectedOptionsInModal, setSelectedOptionsInModal] = useState<
-    Option[]
-  >([]);
-
   const price = useMemo(() => {
     let totalPrice = 0;
 
@@ -173,61 +166,76 @@ export default function Booking() {
     return totalPrice;
   }, [bookingData]);
 
+  // 모달의 열림 상태를 useState로 관리
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [tempOptions, setTempOptions] = useState<Option[]>([]); // 임시 옵션 저장
+
   const handleMainServiceSelect = (service: MainService) => {
-    if (service.options && service.options.length > 0) {
-      setSelectedServiceForModal(service);
-      setSelectedOptionsInModal([]); // 이전 선택된 옵션 초기화
-      setIsModalOpen(true);
-    } else {
+    if (bookingData.mainService?.id !== service.id) {
       setBookingData((prev) => ({
         ...prev,
         mainService: { ...service, options: [] },
+        // 임시 옵션 초기화
       }));
+      setTempOptions([]);
+    }
+    if (service.options && service.options.length > 0) {
+      setIsModalOpen(true);
     }
   };
 
+  // 옵션 선택 토글 핸들러
   const handleModalOptionToggle = (option: Option) => {
-    setSelectedOptionsInModal((prev) => {
-      if (prev.some((opt) => opt.id === option.id)) {
-        // 이미 선택된 옵션이면 제거
+    setTempOptions((prev) => {
+      const isSelected = prev.some((opt) => opt.id === option.id);
+      if (isSelected) {
         return prev.filter((opt) => opt.id !== option.id);
       } else {
-        // 선택되지 않은 옵션이면 추가
         return [...prev, option];
       }
     });
   };
 
-  const confirmSelection = () => {
-    if (selectedServiceForModal) {
-      setBookingData((prev) => ({
-        ...prev,
-        mainService: {
-          ...selectedServiceForModal,
-          options: selectedOptionsInModal,
-        },
-      }));
-    }
-    setIsModalOpen(false);
-    setSelectedServiceForModal(null);
-  };
-
-  const handleOptionSelect = (option: Option) => {
+  // 옵션 선택 완료 처리
+  const confirmOptionSelection = () => {
+    // 선택된 옵션을 bookingData에 저장
     setBookingData((prev) => {
       if (!prev.mainService) return prev;
-
-      const updatedService = { ...prev.mainService };
-      if (option.category === prev.mainService?.name) {
-        updatedService.options = updatedService.options.filter(
-          (o) => o.id !== option.id
-        );
-      } else {
-        updatedService.options.push(option);
-      }
-      return { ...prev, mainService: updatedService };
+      return {
+        ...prev,
+        mainService: {
+          ...prev.mainService,
+          options: tempOptions,
+        },
+      };
     });
+    setIsModalOpen(false);
   };
 
+  // 옵션 선택 취소 처리
+  const cancelOptionSelection = () => {
+    // 모달을 닫고 mainService를 초기화하여 선택 취소
+    setBookingData((prev) => ({
+      ...prev,
+      mainService: undefined,
+    }));
+    setIsModalOpen(false);
+  };
+
+  // 옵션을 카테고리별로 그룹화
+  const groupedOptions = useMemo(() => {
+    if (!bookingData.mainService || !bookingData.mainService.options) return {};
+    return bookingData.mainService.options.reduce((groups, option) => {
+      const category = option.category || '기타';
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(option);
+      return groups;
+    }, {} as { [key: string]: Option[] });
+  }, [bookingData.mainService]);
+
+  // 추가 서비스 토글 핸들러
   const handleAdditionalServiceToggle = (service: AdditionalService) => {
     setBookingData((prev) => {
       const isSelected = prev.additionalServices.some(
@@ -262,7 +270,9 @@ export default function Booking() {
     }
 
     if (bookingData.additionalServices.length > 0)
-      names.push(bookingData.additionalServices.map((service) => service.name));
+      names.push(
+        ...bookingData.additionalServices.map((service) => service.name)
+      );
 
     return names.join(', ');
   };
@@ -335,12 +345,12 @@ export default function Booking() {
 
       case 2:
         const getFieldLabel = (field: string) => {
-          if (field === 'petName') {
+          if (field === 'name') {
             return '반려견 이름';
           } else if (field === 'weight') {
             return '반려견 체중 (kg)';
-          } else if (field === 'age') {
-            return '반려견 나이';
+          } else if (field === 'birth') {
+            return '반려견 생년월일';
           } else if (field === 'breed') {
             return '반려견 견종';
           }
@@ -373,7 +383,7 @@ export default function Booking() {
                           variant="outline"
                           className={`w-full justify-between h-auto py-4 ${
                             bookingData.petInfo.name === dog.name
-                              ? 'border-primary] bg-primary/10'
+                              ? 'border-primary bg-primary/10'
                               : ''
                           }`}
                           onClick={() => {
@@ -435,10 +445,10 @@ export default function Booking() {
                 <div>
                   <Card>
                     <CardHeader>
-                      <CardTitle>반려견 선택</CardTitle>
+                      <CardTitle>반려견 정보 입력</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {['petName', 'weight', 'age'].map((field) => (
+                      {['name', 'weight', 'birth'].map((field) => (
                         <FormField
                           key={field}
                           control={petInfoForm.control}
@@ -448,7 +458,7 @@ export default function Booking() {
                               <FormLabel>{getFieldLabel(field)}</FormLabel>
                               <FormControl>
                                 <Input
-                                  type={field === 'petName' ? 'text' : 'number'}
+                                  type={field === 'name' ? 'text' : 'number'}
                                   {...fieldProps}
                                 />
                               </FormControl>
@@ -548,14 +558,16 @@ export default function Booking() {
                 {bookingData.dateTime.date && (
                   <div className="grid grid-cols-3 gap-2 mt-4">
                     {allTimeSlots.map((time) => {
-                      const today = new Date();
-                      const selectedDate = new Date(bookingData.dateTime.date);
+                      const now = new Date();
+                      const selectedDateTime = new Date(
+                        bookingData.dateTime.date
+                      );
 
                       const [hours, minutes] = time.split(':').map(Number);
-                      selectedDate.setHours(hours, minutes, 0, 0);
+                      selectedDateTime.setHours(hours, minutes, 0, 0);
 
                       const isDisabled =
-                        selectedDate < today ||
+                        selectedDateTime < now ||
                         getBookedTimesForDate(
                           bookingData.dateTime.date
                         ).includes(time);
@@ -575,7 +587,7 @@ export default function Booking() {
                           }
                           disabled={isDisabled}
                           onClick={() =>
-                            updateDateTime(bookingData.dateTime.date, time)
+                            updateDateTime(bookingData.dateTime.date!, time)
                           }
                         >
                           {time}
@@ -635,44 +647,58 @@ export default function Booking() {
                   </div>
                 ))}
               </CardContent>
-              {selectedServiceForModal && (
+              {/* 모달 컴포넌트 */}
+              {bookingData.mainService && isModalOpen && (
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>
-                        {selectedServiceForModal.name} 옵션 선택
+                        {bookingData.mainService.name} 옵션 선택
                       </DialogTitle>
                       <DialogDescription>
                         원하시는 옵션을 선택해주세요.
                       </DialogDescription>
+                      <DialogClose onClick={cancelOptionSelection} />
                     </DialogHeader>
-                    <div className="space-y-2">
-                      {selectedServiceForModal.options.map((option) => (
-                        <Button
-                          key={option.id}
-                          variant={
-                            selectedOptionsInModal.some(
-                              (opt) => opt.id === option.id
-                            )
-                              ? 'default'
-                              : 'outline'
-                          }
-                          onClick={() => handleModalOptionToggle(option)}
-                          className="w-full justify-between"
-                        >
-                          <span>{option.name}</span>
-                          <span>+ {option.price.toLocaleString()}원</span>
-                        </Button>
-                      ))}
+                    <div className="space-y-4">
+                      {mainServices
+                        .filter(
+                          (service) =>
+                            service.id === bookingData.mainService?.id
+                        )[0]
+                        ?.options.map((option) => (
+                          <Button
+                            key={option.id}
+                            variant={
+                              tempOptions.some((opt) => opt.id === option.id)
+                                ? 'default'
+                                : 'outline'
+                            }
+                            onClick={() => handleModalOptionToggle(option)}
+                            className={`w-full justify-between ${
+                              bookingData.mainService?.options.some(
+                                (opt) => opt.id === option.id
+                              )
+                                ? 'border-primary bg-primary/10'
+                                : ''
+                            }`}
+                          >
+                            <div className="flex justify-between w-full">
+                              <span>{option.name}</span>
+                              <span className="text-sm text-muted-foreground">
+                                + {option.price.toLocaleString()}원
+                              </span>
+                            </div>
+                          </Button>
+                        ))}
                     </div>
                     <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsModalOpen(false)}
-                      >
+                      <Button variant="outline" onClick={cancelOptionSelection}>
                         취소
                       </Button>
-                      <Button onClick={confirmSelection}>선택 완료</Button>
+                      <Button onClick={confirmOptionSelection}>
+                        선택 완료
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -784,7 +810,7 @@ export default function Booking() {
             </Card>
 
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setCurrentStep(3)}>
+              <Button variant="outline" onClick={() => setCurrentStep(4)}>
                 이전
               </Button>
               <Button
