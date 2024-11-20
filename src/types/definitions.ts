@@ -13,22 +13,22 @@ export type Database = {
         Row: {
           created_at: string | null
           id: number
-          max_price: number | null
-          min_price: number | null
+          price_max: number | null
+          price_min: number | null
           service_name: string
         }
         Insert: {
           created_at?: string | null
           id?: number
-          max_price?: number | null
-          min_price?: number | null
+          price_max?: number | null
+          price_min?: number | null
           service_name: string
         }
         Update: {
           created_at?: string | null
           id?: number
-          max_price?: number | null
-          min_price?: number | null
+          price_max?: number | null
+          price_min?: number | null
           service_name?: string
         }
         Relationships: []
@@ -105,6 +105,9 @@ export type Database = {
           created_at: string | null
           memo: string | null
           name: string | null
+          neutering: boolean | null
+          reg_number: string | null
+          sex: string | null
           user_id: string | null
           uuid: string
           weight: number | null
@@ -115,6 +118,9 @@ export type Database = {
           created_at?: string | null
           memo?: string | null
           name?: string | null
+          neutering?: boolean | null
+          reg_number?: string | null
+          sex?: string | null
           user_id?: string | null
           uuid?: string
           weight?: number | null
@@ -125,6 +131,9 @@ export type Database = {
           created_at?: string | null
           memo?: string | null
           name?: string | null
+          neutering?: boolean | null
+          reg_number?: string | null
+          sex?: string | null
           user_id?: string | null
           uuid?: string
           weight?: number | null
@@ -429,37 +438,40 @@ export type Database = {
           created_at: string | null
           id: number
           name: string
-          service_option: boolean
         }
         Insert: {
           created_at?: string | null
           id?: number
           name: string
-          service_option: boolean
         }
         Update: {
           created_at?: string | null
           id?: number
           name?: string
-          service_option?: boolean
         }
         Relationships: []
       }
       user: {
         Row: {
+          address: string | null
           created_at: string
+          detail_address: string | null
           name: string | null
           phone: string
           uuid: string
         }
         Insert: {
+          address?: string | null
           created_at?: string
+          detail_address?: string | null
           name?: string | null
           phone: string
           uuid?: string
         }
         Update: {
+          address?: string | null
           created_at?: string
+          detail_address?: string | null
           name?: string | null
           phone?: string
           uuid?: string
