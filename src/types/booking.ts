@@ -42,11 +42,11 @@ export interface AdditionalService {
 }
 
 export interface Dog {
-  id: String;
-  name: string;
+  // id: String;
+  petName: string;
   weight: number;
   birth: string;
-  breed: string;
+  breed: number;
   neutering: boolean;
   sex: string;
   regNumber: string;
@@ -59,7 +59,7 @@ export interface Customer {
   phone: string;
   address: string;
   detailAddress: string;
-  dogs: Dog[];
+  dogs: PetInfo[];
 }
 
 export interface UserDogsData {

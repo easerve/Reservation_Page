@@ -38,7 +38,6 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
       }
 
       const data = await response.json();
-      console.log("User info updated successfully:", data);
     } catch (error) {
       console.error("Error updating user info:", error);
     }
@@ -50,7 +49,9 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(dogInfo),
+        body: JSON.stringify({
+          PetInfo: dogInfo,
+        }),
       });
 
       if (!response.ok) {
@@ -58,7 +59,6 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
       }
 
       const data = await response.json();
-      console.log("Dog info updated successfully:", data);
     } catch (error) {
       console.error("Error updating dog info:", error);
     }

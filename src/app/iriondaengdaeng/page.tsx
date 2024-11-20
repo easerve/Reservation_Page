@@ -35,6 +35,7 @@ import {
   MainService,
   Option,
   AdditionalService,
+  PetInfo,
 } from "@/types/booking";
 import { INITIAL_BOOKING_STATE } from "@/constants/booking";
 import CutAgreementPage from "@/app/iriondaengdaeng/cutAgreementPage";
@@ -128,7 +129,7 @@ export default function Booking() {
     status: "" as string,
     customers: {
       phone: "" as string,
-      dogs: [] as Dog[],
+      dogs: [] as PetInfo[],
     } as Customer,
   });
 
@@ -160,7 +161,7 @@ export default function Booking() {
       getUserData({ phoneNumber: userDogsData.customers.phone });
       setIsPuppyAdd(!isPuppyAdd);
     }
-  }, [isPuppyAdd]);
+  }, [isPuppyAdd, userDogsData]);
 
   const price = useMemo(() => {
     let totalPrice = 0;

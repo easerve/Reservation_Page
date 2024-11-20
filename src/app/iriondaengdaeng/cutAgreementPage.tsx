@@ -33,11 +33,11 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
   userUUID,
 }) => {
   const [dogInfo, setDogInfo] = useState<Dog>({
-    id: "",
-    name: "",
+    // id: "",
+    petName: "",
     weight: 0,
     birth: "",
-    breed: "",
+    breed: 0,
     neutering: false,
     sex: "",
     regNumber: "",
@@ -170,8 +170,8 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                 <label className="block text-gray-700 mb-2">이름</label>
                 <input
                   type="text"
-                  name="name"
-                  value={dogInfo.name}
+                  name="petName"
+                  value={dogInfo.petName}
                   onChange={handleDogInfoChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -196,7 +196,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                       );
                       setDogInfo({
                         ...dogInfo,
-                        breed: option ? option.label : "",
+                        breed: option ? option.value : 0,
                       });
                     }}
                     value={
