@@ -307,7 +307,8 @@ export default function Booking() {
       if (!response.ok) throw new Error('Failed to fetch prices');
 
       const data = await response.json();
-      setServicesPricing(data);
+      console.log(data);
+      setServicesPricing(data.mainServices);
     } catch (error) {
       console.error('Error fetching service prices:', error);
     } finally {
@@ -663,8 +664,8 @@ export default function Booking() {
             </div>
           </div>
         );
-
       case 4:
+        console.log(bookingData);
         return (
           <div className="space-y-6">
             <Card>
