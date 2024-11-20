@@ -1,8 +1,9 @@
 export interface BookingData {
-  dateTime: BookingDateTime;
+  phoneNumber: string;
   petInfo: PetInfo;
-  mainService?: BookingService;
-  additionalServices: BookingService[];
+  dateTime: BookingDateTime;
+  mainService?: MainService;
+  additionalServices: AdditionalService[];
   inquiry: string;
 }
 
@@ -12,22 +13,36 @@ export interface BookingDateTime {
 }
 
 export interface PetInfo {
-  petName: string;
+  id: number;
+  name: string;
   weight: number;
-  phoneNumber: string;
   birth: string;
   breed: string;
 }
 
-export interface BookingService {
-  id: string;
+export interface Option {
+  id: number;
   name: string;
   price: number;
-  options: BookingService[];
+  category: string;
+}
+
+export interface MainService {
+  id: number;
+  name: string;
+  price: number;
+  options: Option[];
+}
+
+export interface AdditionalService {
+  id: number;
+  name: string;
+  price_min: number;
+  price_max: number;
 }
 
 export interface Dog {
-  id: string;
+  id: number;
   name: string;
   weight: number;
   birth: string;
