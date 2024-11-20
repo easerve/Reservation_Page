@@ -26,14 +26,14 @@ export async function addUser(request: Request) {
 		const supabase = await createServerSupabaseClient();
 		const { data: userData, error: userError} = await supabase
 			.from("user")
-			.insert([
+			.upsert(
 				{
 					name,
 					phone,
 					address,
 					detail_address: detailAddress,
-				}
-			]);
+				},
+			);
 
 		if (userError) {
 			handleError(userError);
