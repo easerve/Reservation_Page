@@ -35,11 +35,13 @@ import {
   MainService,
   Option,
   AdditionalService,
+  PetInfo,
 } from "@/types/booking";
 import { INITIAL_BOOKING_STATE } from "@/constants/booking";
 import CutAgreementPage from "@/app/iriondaengdaeng/cutAgreementPage";
 
 export default function Booking() {
+  const [isPuppyAdd, setIsPuppyAdd] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState<BookingData>(
     INITIAL_BOOKING_STATE
@@ -125,7 +127,10 @@ export default function Booking() {
 
   const [userDogsData, setUserDogsData] = useState<UserDogsData>({
     status: "" as string,
-    customers: { dogs: [] as Dog[] } as Customer,
+    customers: {
+      phone: "" as string,
+      dogs: [] as PetInfo[],
+    } as Customer,
   });
 
   const [breeds, setBreeds] = useState<
@@ -150,6 +155,13 @@ export default function Booking() {
     };
     loadBreeds();
   }, []);
+
+  useEffect(() => {
+    if (isPuppyAdd) {
+      getUserData({ phoneNumber: userDogsData.customers.phone });
+      setIsPuppyAdd(!isPuppyAdd);
+    }
+  }, [isPuppyAdd, userDogsData]);
 
   const price = useMemo(() => {
     let totalPrice = 0;
@@ -401,164 +413,83 @@ export default function Booking() {
                 setCurrentStep(3);
               })}
             >
-              {userDogsData.status === "success" ? (
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>반려견 선택</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {userDogsData.customers.dogs.map((dog, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          className={`w-full justify-between h-auto py-4 ${
-                            bookingData.petInfo.name === dog.name
-                              ? "border-primary bg-primary/10"
-                              : ""
-                          }`}
-                          onClick={() => {
-                            updatePetInfo({
-                              ...dog,
-                            });
-                          }}
-                        >
-                          <div>
-                            <p>이름: {dog.name}</p>
-                            <p>견종: {dog.breed}</p>
-                            <p>
-                              나이:{" "}
-                              {(() => {
-                                const birthDate = new Date(dog.birth);
-                                const today = new Date();
-                                const months =
-                                  (today.getFullYear() -
-                                    birthDate.getFullYear()) *
-                                    12 +
-                                  (today.getMonth() - birthDate.getMonth());
-                                return Math.floor(months / 12);
-                              })()}
-                              개월
-                            </p>
-                            <p>체중: {dog.weight}kg</p>
-                          </div>
-                        </Button>
-                      ))}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>반려견 선택</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {userDogsData.customers.dogs.map((dog) => (
                       <Button
+                        key={dog.id}
                         variant="outline"
-                        className={`w-full justify-between h-auto py-4`}
-                        onClick={openModal}
+                        className={`w-full justify-between h-auto py-4 ${
+                          bookingData.petInfo.name === dog.name
+                            ? "border-primary bg-primary/10"
+                            : ""
+                        }`}
+                        onClick={() => {
+                          updatePetInfo({
+                            name: dog.name,
+                            weight: dog.weight,
+                            birth: dog.birth,
+                            breed: dog.breed,
+                          });
+                        }}
                       >
-                        <div>강아지 추가하기</div>
+                        <div>
+                          <p>이름: {dog.name}</p>
+                          <p>견종: {dog.breed}</p>
+                          <p>
+                            나이:{" "}
+                            {(() => {
+                              const birthDate = new Date(dog.birth);
+                              const today = new Date();
+                              const months =
+                                (today.getFullYear() -
+                                  birthDate.getFullYear()) *
+                                  12 +
+                                (today.getMonth() - birthDate.getMonth());
+                              return Math.floor(months / 12);
+                            })()}
+                            개월
+                          </p>
+                          <p>체중: {dog.weight}kg</p>
+                        </div>
                       </Button>
-                      <CutAgreementPage
-                        isOpen={isModalOpen}
-                        onClose={closeModal}
-                        breeds={breeds}
-                      />
-                    </CardContent>
-                  </Card>
-                  <div className="flex gap-2">
+                    ))}
                     <Button
-                      type="button"
                       variant="outline"
-                      onClick={() => setCurrentStep(1)}
+                      className={`w-full justify-between h-auto py-4`}
+                      onClick={openModal}
                     >
-                      이전
+                      <div>강아지 추가하기</div>
                     </Button>
-                    <Button
-                      onClick={() => setCurrentStep(3)}
-                      className="flex-1 bg-primary"
-                    >
-                      다음
-                    </Button>
-                  </div>
+                    <CutAgreementPage
+                      isOpen={isModalOpen}
+                      onClose={closeModal}
+                      breeds={breeds}
+                      setIsPuppyAdd={setIsPuppyAdd}
+                      userUUID={userDogsData.customers.id}
+                    />
+                  </CardContent>
+                </Card>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCurrentStep(1)}
+                  >
+                    이전
+                  </Button>
+                  <Button
+                    onClick={() => setCurrentStep(3)}
+                    className="flex-1 bg-primary"
+                  >
+                    다음
+                  </Button>
                 </div>
-              ) : (
-                <div>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>반려견 선택</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {["petName", "weight", "birth"].map((field) => (
-                        <FormField
-                          key={field}
-                          control={petInfoForm.control}
-                          name={field as any}
-                          render={({ field: fieldProps }) => (
-                            <FormItem>
-                              <FormLabel>{getFieldLabel(field)}</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type={field === "name" ? "text" : "number"}
-                                  {...fieldProps}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      ))}
-                      <FormField
-                        control={petInfoForm.control}
-                        name="breed"
-                        render={({ field: fieldProps }) => (
-                          <FormItem>
-                            <FormLabel>반려견 견종</FormLabel>
-                            <FormControl>
-                              <Select
-                                {...fieldProps}
-                                options={breeds.map((breed) => ({
-                                  value: breed.id,
-                                  label: breed.name,
-                                }))}
-                                isSearchable
-                                isClearable
-                                onChange={(option) => {
-                                  setSelectedBreed(
-                                    option
-                                      ? breeds.find(
-                                          (breed) => breed.id === option.value
-                                        ) ?? null
-                                      : null
-                                  );
-                                  fieldProps.onChange(option?.label);
-                                }}
-                                value={
-                                  selectedBreed
-                                    ? {
-                                        value: selectedBreed.id,
-                                        label: selectedBreed.name,
-                                      }
-                                    : null
-                                }
-                                isDisabled={false}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </CardContent>
-                  </Card>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setCurrentStep(1)}
-                    >
-                      이전
-                    </Button>
-                    <Button
-                      onClick={() => setCurrentStep(3)}
-                      className="flex-1 bg-primary"
-                    >
-                      다음
-                    </Button>
-                  </div>
-                </div>
-              )}
+              </div>
             </form>
           </Form>
         );
