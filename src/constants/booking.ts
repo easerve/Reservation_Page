@@ -66,8 +66,8 @@ export const mainServices: MainService[] = [
 ];
 
 export const additionalServices: AdditionalService[] = [
-  { id: 1, name: '발등', price_min: 5000, price_max: 5000 },
-  { id: 2, name: '엉킴', price_min: 10000, price_max: 10000 },
+  { id: 1, service_name: '발등', price_min: 5000, price_max: 5000 },
+  { id: 2, service_name: '엉킴', price_min: 10000, price_max: 10000 },
 ];
 
 export const bookedDates = [
