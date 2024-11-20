@@ -73,6 +73,8 @@ export default function Booking() {
   };
 
   const updateDateTime = (date: Date, time: string | undefined) => {
+    const offset = date.getTimezoneOffset() * 60000;
+    date = new Date(date.getTime() - offset);
     setBookingData((prev) => ({ ...prev, dateTime: { date, time } }));
   };
 
@@ -417,10 +419,7 @@ export default function Booking() {
                           }`}
                           onClick={() => {
                             updatePetInfo({
-                              name: dog.name,
-                              weight: dog.weight,
-                              birth: dog.birth,
-                              breed: dog.breed,
+                              ...dog,
                             });
                           }}
                         >
@@ -970,10 +969,10 @@ export default function Booking() {
               bookingData.mainService?.id,
               bookingData.mainService?.options.map((option) => option.id),
             ].flat(),
-            addtinal_services: bookingData.additionalServices.map(
+            additional_services: bookingData.additionalServices.map(
               (service) => service.id
             ),
-            total_price: price[0], // 총 금액
+            total_price: price[0],
           },
         }),
       });

@@ -21,7 +21,7 @@ export const INITIAL_BOOKING_STATE: BookingData = {
     time: undefined as string | undefined,
   },
   petInfo: {
-    id: 0 as number,
+    id: '' as string,
     name: "" as string,
     weight: 0 as number,
     birth: "" as string,
