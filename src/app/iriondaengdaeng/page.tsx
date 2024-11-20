@@ -19,7 +19,6 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import CutAgreementPage from "@/app/iriondaengdaeng/cutAgreementPage";
 import {
   Form,
   FormControl,
@@ -38,7 +37,7 @@ import {
   AdditionalService,
 } from "@/types/booking";
 import { INITIAL_BOOKING_STATE } from "@/constants/booking";
-import { userInfo } from "os";
+import CutAgreementPage from "@/app/iriondaengdaeng/cutAgreementPage";
 
 export default function Booking() {
   const [isPuppyAdd, setIsPuppyAdd] = useState(false);
@@ -75,6 +74,8 @@ export default function Booking() {
   };
 
   const updateDateTime = (date: Date, time: string | undefined) => {
+    const offset = date.getTimezoneOffset() * 60000;
+    date = new Date(date.getTime() - offset);
     setBookingData((prev) => ({ ...prev, dateTime: { date, time } }));
   };
 
@@ -87,7 +88,7 @@ export default function Booking() {
       .string()
       .regex(
         /^01([0|1|6|7|8|9])([0-9]{3,4})([0-9]{4})$/,
-        "올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)"
+        "대시('-')를 제외한 휴대폰 번호를 입력해주세요"
       ),
   });
 
@@ -175,7 +176,8 @@ export default function Booking() {
 
     bookingData.additionalServices.forEach((service) => {
       totalPrice += service.price_min;
-      totalPriceMax += service.price_max;
+      totalPriceMax +=
+        service.price_max === 0 ? service.price_min : service.price_max;
     });
 
     return [totalPrice, totalPriceMax];
@@ -288,68 +290,12 @@ export default function Booking() {
   >([]);
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
 
+  // 5번은 프론트에서 처리
   const getWeightRangeId = (weight: number) => {
     if (weight <= 4) return 1;
-    if (weight <= 6) return 2;
-    if (weight <= 8) return 3;
-    if (weight <= 10) return 4;
-    return 5;
-  };
-
-  // FIXME: 임시로 1을 반환하도록 했는데 수정 필요함
-  const getTypeId = (breed: string) => {
-    return 1;
-  };
-
-  const fetchServicePrices = async () => {
-    if (!bookingData.petInfo.weight || !bookingData.petInfo.breed) return;
-
-    setIsLoadingPrices(true);
-    try {
-      const weightRangeId = getWeightRangeId(bookingData.petInfo.weight);
-      const typeId = getTypeId(bookingData.petInfo.breed);
-
-      const response = await fetch(
-        `/api/services?weightRangeId=${weightRangeId}&typeId=${typeId}`
-      );
-
-      if (!response.ok) throw new Error("Failed to fetch prices");
-
-      const newOptionCategories: {
-        category: string;
-        options: Option[];
-      }[] = [];
-
-      const data = await response.json();
-
-      data.data.mainServices.forEach((service: any) => {
-        service.options.forEach((option: any) => {
-          const category = option.category;
-          const existingCategory = newOptionCategories.find(
-            (opt) => opt.category === category
-          );
-
-          if (existingCategory) {
-            if (!existingCategory.options.some((opt) => opt.id === option.id)) {
-              existingCategory.options.push(option);
-            }
-          } else {
-            newOptionCategories.push({ category, options: [option] });
-          }
-        });
-      });
-
-      setOptionCategories(newOptionCategories);
-      console.log("TEST");
-      console.log(newOptionCategories);
-      console.log(optionCategories);
-      setServicesPricing(data.data.mainServices);
-      setAdditionalServicesPricing(data.data.additional_services);
-    } catch (error) {
-      console.error("Error fetching service prices:", error);
-    } finally {
-      setIsLoadingPrices(false);
-    }
+    else if (weight <= 6) return 2;
+    else if (weight <= 8) return 3;
+    else return 4;
   };
 
   const [bookedDates, setBookedDates] = useState<
@@ -364,16 +310,6 @@ export default function Booking() {
       fetchServicePrices();
     }
   }, [currentStep]);
-
-  const fetchBookedDate = async () => {
-    try {
-      const res = await fetch("http://localhost:3000/api/reservations?scope=6");
-      const data = await res.json();
-      setBookedDates(data.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   useEffect(() => {
     if (currentStep === 3) {
@@ -679,7 +615,7 @@ export default function Booking() {
               </CardContent>
               {bookingData.mainService && isModalOpen && (
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                  <DialogContent>
+                  <DialogContent className="max-w-[90vw] md:max-w-[500px]">
                     <DialogHeader>
                       <DialogTitle>
                         {bookingData.mainService.name} 옵션 선택
@@ -689,7 +625,7 @@ export default function Booking() {
                       </DialogDescription>
                       <DialogClose onClick={cancelOptionSelection} />
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <div className="h-[50vh] overflow-y-auto pr-2 space-y-4">
                       {optionCategories.map(({ category, options }) => (
                         <div key={category} className="space-y-2">
                           <h3 className="font-bold mb-2">{category}</h3>
@@ -843,29 +779,7 @@ export default function Booking() {
               <Button variant="outline" onClick={() => setCurrentStep(4)}>
                 이전
               </Button>
-              <Button
-                className="flex-1 bg-primary"
-                onClick={async () => {
-                  try {
-                    const response = await fetch("/api/bookings", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        ...bookingData,
-                        price,
-                      }),
-                    });
-                    if (!response.ok) {
-                      throw new Error("예약 저장에 실패했습니다.");
-                    }
-                    alert("예약이 완료되었습니다.");
-                    resetBookingData();
-                  } catch (error) {
-                    console.error("Error saving booking:", error);
-                    alert("예약 저장 중 오류가 발생했습니다.");
-                  }
-                }}
-              >
+              <Button className="flex-1 bg-primary" onClick={reservations}>
                 예약 완료
               </Button>
             </div>
@@ -903,6 +817,104 @@ export default function Booking() {
       setUserDogsData(data);
     } catch (error) {
       console.error(error);
+    }
+  }
+
+  async function fetchBookedDate() {
+    try {
+      const res = await fetch("http://localhost:3000/api/reservations?scope=6");
+      const data = await res.json();
+      setBookedDates(data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async function fetchServicePrices() {
+    if (!bookingData.petInfo.weight || !bookingData.petInfo.breed) return;
+
+    setIsLoadingPrices(true);
+    try {
+      const weightRangeId = getWeightRangeId(bookingData.petInfo.weight);
+      // NOTE: 불필요한 while
+      const typeId =
+        breeds.find((breed) => breed.name === bookingData.petInfo.breed)
+          ?.type ?? 1;
+
+      const response = await fetch(
+        `/api/services?weightRangeId=${weightRangeId}&typeId=${typeId}`
+      );
+
+      if (!response.ok) throw new Error("Failed to fetch prices");
+
+      const newOptionCategories: {
+        category: string;
+        options: Option[];
+      }[] = [];
+
+      const data = await response.json();
+
+      data.data.mainServices.forEach((service: any) => {
+        service.options.forEach((option: any) => {
+          const category = option.category;
+          const existingCategory = newOptionCategories.find(
+            (opt) => opt.category === category
+          );
+
+          if (existingCategory) {
+            if (!existingCategory.options.some((opt) => opt.id === option.id)) {
+              existingCategory.options.push(option);
+            }
+          } else {
+            newOptionCategories.push({ category, options: [option] });
+          }
+        });
+      });
+
+      setOptionCategories(newOptionCategories);
+      setServicesPricing(data.data.mainServices);
+      setAdditionalServicesPricing(data.data.additional_services);
+    } catch (error) {
+      console.error("Error fetching service prices:", error);
+    } finally {
+      setIsLoadingPrices(false);
+    }
+  }
+
+  async function reservations() {
+    try {
+      const response = await fetch("/api/reservations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ReservationInfo: {
+            pet_id: bookingData.petInfo.id,
+            reservation_date: `${
+              bookingData.dateTime.date.toISOString().split("T")[0]
+            } ${bookingData.dateTime.time}:00+09`,
+            memo: bookingData.inquiry,
+            status: userDogsData.status === "new" ? "예약대기" : "예약확정",
+            consent_form: true,
+            services: [
+              bookingData.mainService?.id,
+              bookingData.mainService?.options.map((option) => option.id),
+            ].flat(),
+            additional_services: bookingData.additionalServices.map(
+              (service) => service.id
+            ),
+            total_price: price[0],
+          },
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("예약 저장에 실패했습니다.");
+      }
+      alert("예약이 완료되었습니다.");
+      resetBookingData();
+    } catch (error) {
+      console.error("Error saving reservation:", error);
+      alert("예약 저장 중 오류가 발생했습니다.");
+      resetBookingData();
     }
   }
 }

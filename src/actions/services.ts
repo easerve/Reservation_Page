@@ -33,8 +33,8 @@ export async function getServicesByWeightAndType(weightRageId: number, typeId: n
 				)
 			)
 		`)
-		.eq("breed_type", weightRageId)
-		.eq("weight_range", typeId);
+		.eq("breed_type", typeId)
+		.eq("weight_range", weightRageId);
 
 	if (servicesError) {
 		handleError(servicesError);
