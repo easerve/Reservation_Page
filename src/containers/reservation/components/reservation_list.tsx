@@ -80,7 +80,7 @@ export default function ReservationList(props: { reservations: Reservation[], se
   }
 
   return (
-    <div className="w-full overflow-auto">
+    <div className="w-full h-[60vh] overflow-y-auto scrollbar-hide flex-grow">
       <Table>
         <TableHeader>
           <TableRow className="whitespace-nowrap">
@@ -104,7 +104,7 @@ export default function ReservationList(props: { reservations: Reservation[], se
           {Object.entries(groupedReservations).map(([date, dateReservations]) => (
             <React.Fragment key={`date-${date}`}>
               <TableRow>
-                <TableCell colSpan={14} className="font-medium bg-muted">
+                <TableCell colSpan={14} className="font-medium font-bold bg-muted">
                   {format(new Date(date), 'M월 d일 eeee', { locale: ko })}
                 </TableCell>
               </TableRow>
@@ -131,20 +131,20 @@ export default function ReservationList(props: { reservations: Reservation[], se
                     {`${(reservation.price + reservation.additional_price).toLocaleString()}원`}
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-col gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleClose(reservation.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                    <div className="flex justify-center items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleEdit(reservation)}
                       >
                         수정
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleClose(reservation.id)}
+                      >
+                        <X className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>

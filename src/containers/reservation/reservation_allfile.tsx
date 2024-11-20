@@ -22,11 +22,16 @@ import { Reservation } from "@/types/interface";
 import { reservationData } from "@/data/data";
 import { getDate2 } from "@/components/utils/date_utils";
 import { getDate } from "date-fns";
+import CalendarBar from "./components/calendar_bar";
 
 export default function ReservationPage() {
   const [view, setView] = useState("list");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [reservations, setReservations] = useState<Reservation[]>(reservationData);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [currentMonth, setCurrentMonth] = useState<{
+    year: number,
+    month: number
+  }>({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
 
   const handleAddEvent = (data: z.infer<typeof outerFormSchema>) => {
     const newData = {
@@ -49,12 +54,12 @@ export default function ReservationPage() {
   };
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-4">
+    <div className="w-full h-full max-w-6xl mx-auto p-4 flex flex-col">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">예약</h1>
       </div>
 
-      <Tabs value={view} onValueChange={setView} className="w-full">
+      <Tabs value={view} onValueChange={setView} className="w-full flex-grow">
         <div className="flex items-center gap-4 mb-4">
           <TabsList>
             {/* <TabsTrigger value="calendar">캘린더</TabsTrigger> */}
@@ -76,9 +81,15 @@ export default function ReservationPage() {
             </Button>
           </div>
         </div>
-        <TabsContent value="list" className="mt-0">
-          <ReservationList reservations={reservations} setReservations={setReservations} />
-          {/* <ReservationList /> */}
+        <TabsContent value="list" className="mt-0 flex flex-col h-full">
+          <CalendarBar currentMonth={currentMonth} setCurrentMonth={setCurrentMonth} setReservations={setReservations} />
+          <div className="border-solid border-2 rounded-2xl border-gray-200 mt-4 mb-12 flex flex-col flex-grow justify-between overflow-hidden">
+            <ReservationList reservations={reservations} setReservations={setReservations} />
+            <div className="bg-gray-200 flex justify-between p-4">
+              <span className="font-bold">월 매출</span>
+              <span>{reservations.length} 원</span>
+            </div>
+          </div>
         </TabsContent>
         <DefaultDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} title="예약 추가하기">
           <OuterReservationForm onSubmit={handleAddEvent} onCloseDialog={handleCloseDialog} />
