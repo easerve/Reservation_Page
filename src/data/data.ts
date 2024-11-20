@@ -77,7 +77,7 @@ export const reservationData: Reservation[] = [
     additional_price: 25000,
   },
   {
-    id: "uuid4",
+    id: "uuid7",
     time: new Date("2024-11-01T10:00:00"),
     breed: "말티즈",
     name: "꼬숑",
@@ -92,7 +92,7 @@ export const reservationData: Reservation[] = [
     additional_price: 15000,
   },
   {
-    id: "uuid5",
+    id: "uuid8",
     time: new Date("2024-11-01T10:00:00"),
     breed: "비숑",
     name: "뽀송",
@@ -107,7 +107,7 @@ export const reservationData: Reservation[] = [
     additional_price: 25000,
   },
   {
-    id: "uuid1",
+    id: "uuid9",
     time: new Date("2024-12-01T10:00:00"),
     breed: "포메라니안",
     name: "둥이",
@@ -122,7 +122,7 @@ export const reservationData: Reservation[] = [
     additional_price: 25000,
   },
   {
-    id: "uuid2",
+    id: "uuid10",
     time: new Date("2024-12-01T10:00:00"),
     breed: "포메니안",
     name: "둥둥이",
@@ -137,7 +137,7 @@ export const reservationData: Reservation[] = [
     additional_price: 25000,
   },
   {
-    id: "uuid3",
+    id: "uuid11",
     time: new Date("2024-12-03T10:00:00"),
     breed: "포메라니안",
     name: "둥둥이",
@@ -145,7 +145,7 @@ export const reservationData: Reservation[] = [
     birth: "2019-09-18",
     phone: "01012341234",
     service_name: ["위생목용+미용", "발톱깎기"],
-    memo: "특이사항",
+    memo: "특이사항이 이렇게나 긴데 이걸 어떻게 다 설명해야될 지 모르겠어요. 그냥 설명을 안하고 싶어요. 그냥 그냥그냥요. 히히",
     additional_service: "추가 서비스",
     status: "예약",
     price: 50000,

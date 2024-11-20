@@ -65,9 +65,6 @@ export default function EditReservationForm(props: {
       memo: props.reservation.memo,
     },
   });
-
-  console.log(props.reservation.additional_price, typeof props.reservation.additional_price);
-
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(props.onSubmit)} className="space-y-4">
@@ -131,8 +128,11 @@ export default function EditReservationForm(props: {
                   {...field}
                   type="number"
                   step="0.1"
-                  onChange={(e) => field.onChange(e.target.value === "" ? "" : parseFloat(e.target.value))}
-
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value === "" ? "" : parseFloat(e.target.value)
+                    )
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -167,7 +167,11 @@ export default function EditReservationForm(props: {
                   {...field}
                   type="number"
                   step="1"
-                  onChange={(e) => field.onChange(e.target.value === "" ? "" : parseInt(e.target.value))}
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value === "" ? "" : parseInt(e.target.value)
+                    )
+                  }
                 />
               </FormControl>
               <FormMessage />
