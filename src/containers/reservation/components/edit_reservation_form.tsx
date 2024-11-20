@@ -32,17 +32,11 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/date_picker/date_picker";
+import { Reservation } from "@/types/interface";
 
-export const outerFormSchema = z.object({
+export const editFormSchema = z.object({
   time: z.date({
     required_error: "예약 시간을 선택해주세요.",
-  }),
-  phone: z.string().regex(/^[0-9]{11}$/, {
-    message: "올바른 전화번호 형식을 입력해주세요 (11자리 숫자).",
-  }),
-  name: z.string().min(1, "동물 이름을 입력해주세요."),
-  breed: z.string({
-    required_error: "견종을 선택해주세요.",
   }),
   weight: z
     .number({
@@ -51,38 +45,32 @@ export const outerFormSchema = z.object({
     })
     .positive()
     .multipleOf(0.1),
-  birth: z.date({
-    required_error: "생일을 선택해주세요.",
-  }),
-  service_name: z.string().min(1, "미용 내용을 입력해주세요."),
   additional_service: z.string().min(1, "추가 미용 내용을 입력해주세요."),
   additional_price: z.number().nonnegative("추가 서비스 금액을 입력해주세요."),
   memo: z.string().optional(),
 });
 
-export default function OuterReservationForm(props: {
-  onSubmit: (data: z.infer<typeof outerFormSchema>) => void;
+export default function EditReservationForm(props: {
+  reservation: Reservation;
+  onSubmit: (data: z.infer<typeof editFormSchema>) => void;
   onCloseDialog: () => void;
 }) {
-  const form = useForm<z.infer<typeof outerFormSchema>>({
-    resolver: zodResolver(outerFormSchema),
+  const form = useForm<z.infer<typeof editFormSchema>>({
+    resolver: zodResolver(editFormSchema),
     defaultValues: {
-      phone: "",
-      name: "",
-      service_name: "",
-      weight: 0,
-      additional_price: 0,
+      time: new Date(props.reservation.time),
+      weight: props.reservation.weight,
+      additional_service: props.reservation.additional_service,
+      additional_price: props.reservation.additional_price,
+      memo: props.reservation.memo,
     },
   });
 
-  function onSubmit(data: z.infer<typeof outerFormSchema>) {
-    console.log("submit done");
-    props.onSubmit(data);
-  }
+  console.log(props.reservation.additional_price, typeof props.reservation.additional_price);
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(props.onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="time"
@@ -134,55 +122,6 @@ export default function OuterReservationForm(props: {
         />
         <FormField
           control={form.control}
-          name="phone"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>전화번호</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="01012345678" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>동물 이름</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="반려동물 이름을 입력하세요" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="breed"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>견종</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="견종을 선택하세요" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="말티즈">말티즈</SelectItem>
-                  <SelectItem value="포메라니안">포메라니안</SelectItem>
-                  <SelectItem value="시츄">시츄</SelectItem>
-                  <SelectItem value="믹스">믹스</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
           name="weight"
           render={({ field }) => (
             <FormItem>
@@ -194,61 +133,6 @@ export default function OuterReservationForm(props: {
                   step="0.1"
                   onChange={(e) => field.onChange(e.target.value === "" ? "" : parseFloat(e.target.value))}
 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="birth"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>생일</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "yyyy년 MM월 dd일 HH:mm")
-                      ) : (
-                        <span>생일을 선택하세요</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="service_name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>기본 미용</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="미용 내용을 간단히 작성해주세요."
-                  className="resize-none"
-                  {...field}
                 />
               </FormControl>
               <FormMessage />

@@ -86,3 +86,15 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* tailwind.css 또는 글로벌 CSS 파일에 추가 */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE와 Edge에서 스크롤바 숨기기 */
+    scrollbar-width: none; /* Firefox에서 스크롤바 숨기기 */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera에서 스크롤바 숨기기 */
+  }
+}
+
