@@ -36,13 +36,11 @@ import {
   MainService,
   Option,
   AdditionalService,
+  BookingDateTime,
 } from '@/types/booking';
-import {
-  INITIAL_BOOKING_STATE,
-  mainServices,
-  additionalServices,
-  bookedDates,
-} from '@/constants/booking';
+import { INITIAL_BOOKING_STATE, bookedDates } from '@/constants/booking';
+import { log } from 'console';
+import { set } from 'date-fns';
 
 export default function Booking() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -276,13 +274,16 @@ export default function Booking() {
 
     if (bookingData.additionalServices.length > 0)
       names.push(
-        ...bookingData.additionalServices.map((service) => service.name)
+        ...bookingData.additionalServices.map((service) => service.service_name)
       );
 
     return names.join(', ');
   };
 
   const [servicesPricing, setServicesPricing] = useState<MainService[]>([]);
+  const [additionalServicesPricing, setAdditionalServicesPricing] = useState<
+    AdditionalService[]
+  >([]);
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
 
   const getWeightRangeId = (weight: number) => {
@@ -312,8 +313,8 @@ export default function Booking() {
       if (!response.ok) throw new Error('Failed to fetch prices');
 
       const data = await response.json();
-      console.log(data);
-      setServicesPricing(data.mainServices);
+      setServicesPricing(data.data.mainServices);
+      setAdditionalServicesPricing(data.data.additional_services);
     } catch (error) {
       console.error('Error fetching service prices:', error);
     } finally {
@@ -321,22 +322,48 @@ export default function Booking() {
     }
   };
 
+  const [bookedDates, setBookedDates] = useState<{
+    date: string;
+    times: string[];
+  }[]>([]);
+
   useEffect(() => {
     if (currentStep === 4) {
       fetchServicePrices();
     }
   }, [currentStep]);
 
+  const fetchBookedDate = async () => {
+    try {
+      const res = await fetch('http://localhost:3000/api/reservations?scope=6');
+      const data = await res.json();
+      setBookedDates(data.data);
+      console.log(data.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    if (currentStep === 3) {
+      fetchBookedDate();
+    }
+  }, [currentStep]);
+
   const allTimeSlots = ['10:00', '14:00', '17:00'];
 
-  const fullyBookedDates = bookedDates
-    .filter((booking) => booking.times.length >= allTimeSlots.length)
-    .map((booking) => booking.date);
+  const fullyBookedDates = useMemo(() => {
+    if (bookedDates.length === 0) return []; // 데이터가 없을 경우 빈 배열 반환
+    return bookedDates
+      .filter((booking) => (booking.times ?? []).length >= allTimeSlots.length)
+      .map((booking) => new Date(booking.date)); // `date`를 Date 객체로 변환
+  }, [bookedDates, allTimeSlots]);
 
   // 선택된 날짜의 예약된 시간대 가져오기
   const getBookedTimesForDate = (date: Date | undefined): string[] => {
+    if (!bookedDates.length || !date) return []; // 데이터가 없거나 날짜가 없을 경우 빈 배열 반환
     const booking = bookedDates.find(
-      (booking) => booking.date.toDateString() === date?.toDateString()
+      (booking) => new Date(booking.date).toDateString() === date.toDateString()
     );
     return booking ? booking.times : [];
   };
@@ -351,56 +378,7 @@ export default function Booking() {
 
   const renderStep = () => {
     switch (currentStep) {
-      // Step 1: 날짜 및 시간 선택
       case 1:
-        // return (
-        //   <Form {...phoneNumberForm}>
-        //     <form
-        //       onSubmit={phoneNumberForm.handleSubmit(async (values) => {
-        //         try {
-        //           const res = await fetch(
-        //             'http://localhost:3000/api/auth/profile?phone=' +
-        //               values.phoneNumber
-        //           );
-        //           const data = await res.json();
-        //           updatePhoneNumber(values.phoneNumber);
-        //           setUserDogsData(data);
-        //         } catch (error) {
-        //           console.error(error);
-        //         }
-        //         setCurrentStep(2);
-        //       })}
-        //       className="space-y-6"
-        //     >
-        //       <Card>
-        //         <CardHeader>
-        //           <CardTitle>보호자 전화번호</CardTitle>
-        //         </CardHeader>
-        //         <CardContent className="space-y-4">
-        //           <FormField
-        //             control={phoneNumberForm.control}
-        //             name="phoneNumber"
-        //             render={({ field: fieldProps }) => (
-        //               <FormItem>
-        //                 <FormLabel>전화번호</FormLabel>
-        //                 <FormControl>
-        //                   <Input type="text" {...fieldProps} />
-        //                 </FormControl>
-        //                 <FormMessage />
-        //               </FormItem>
-        //             )}
-        //           />
-        //         </CardContent>
-        //       </Card>
-        // <Button
-        //   className="w-full bg-primary"
-        //   disabled={!phoneNumberForm.formState.isValid}
-        // >
-        //   다음
-        // </Button>
-        //     </form>
-        //   </Form>
-        // );
         return (
           <Form {...phoneNumberForm}>
             <form
@@ -453,12 +431,12 @@ export default function Booking() {
 
       case 2:
         const getFieldLabel = (field: string) => {
-          if (field === 'petName') {
+          if (field === 'name') {
             return '반려견 이름';
           } else if (field === 'weight') {
             return '반려견 체중 (kg)';
-          } else if (field === 'age') {
-            return '반려견 나이';
+          } else if (field === 'birth') {
+            return '반려견 생년월일';
           } else if (field === 'breed') {
             return '반려견 견종';
           }
@@ -542,12 +520,12 @@ export default function Booking() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setCurrentStep(2)}
+                      onClick={() => setCurrentStep(1)}
                     >
                       이전
                     </Button>
                     <Button
-                      onClick={() => setCurrentStep(4)}
+                      onClick={() => setCurrentStep(3)}
                       className="flex-1 bg-primary"
                     >
                       다음
@@ -561,7 +539,7 @@ export default function Booking() {
                       <CardTitle>반려견 선택</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {['petName', 'weight', 'age'].map((field) => (
+                      {['petName', 'weight', 'birth'].map((field) => (
                         <FormField
                           key={field}
                           control={petInfoForm.control}
@@ -571,7 +549,7 @@ export default function Booking() {
                               <FormLabel>{getFieldLabel(field)}</FormLabel>
                               <FormControl>
                                 <Input
-                                  type={field === 'petName' ? 'text' : 'number'}
+                                  type={field === 'name' ? 'text' : 'number'}
                                   {...fieldProps}
                                 />
                               </FormControl>
@@ -626,11 +604,14 @@ export default function Booking() {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setCurrentStep(2)}
+                      onClick={() => setCurrentStep(1)}
                     >
                       이전
                     </Button>
-                    <Button type="submit" className="flex-1 bg-primary">
+                    <Button
+                      onClick={() => setCurrentStep(3)}
+                      className="flex-1 bg-primary"
+                    >
                       다음
                     </Button>
                   </div>
@@ -639,188 +620,6 @@ export default function Booking() {
             </form>
           </Form>
         );
-      // const getFieldLabel = (field: string) => {
-      //   if (field === 'name') {
-      //     return '반려견 이름';
-      //   } else if (field === 'weight') {
-      //     return '반려견 체중 (kg)';
-      //   } else if (field === 'birth') {
-      //     return '반려견 생년월일';
-      //   } else if (field === 'breed') {
-      //     return '반려견 견종';
-      //   }
-      //   return '';
-      // };
-
-      // return (
-      //   <Form {...petInfoForm}>
-      //     <form
-      //       onSubmit={petInfoForm.handleSubmit((values) => {
-      //         updatePetInfo({
-      //           name: values.name,
-      //           weight: Number(values.weight),
-      //           birth: values.birth,
-      //           breed: selectedBreed ? selectedBreed.breed : '',
-      //         });
-      //         setCurrentStep(3);
-      //       })}
-      //     >
-      //       {userDogsData.status === 'success' ? (
-      //         <div className="space-y-6">
-      //           <Card>
-      //             <CardHeader>
-      //               <CardTitle>반려견 선택</CardTitle>
-      //             </CardHeader>
-      //             <CardContent className="space-y-4">
-      //               {userDogsData.customers.dogs.map((dog) => (
-      //                 <Button
-      //                   key={dog.id}
-      //                   variant="outline"
-      //                   className={`w-full justify-between h-auto py-4 ${
-      //                     bookingData.petInfo.name === dog.name
-      //                       ? 'border-primary bg-primary/10'
-      //                       : ''
-      //                   }`}
-      //                   onClick={() => {
-      //                     updatePetInfo({
-      //                       name: dog.name,
-      //                       weight: dog.weight,
-      //                       birth: dog.birth,
-      //                       breed: dog.breed,
-      //                     });
-      //                   }}
-      //                 >
-      //                   <div>
-      //                     <p>이름: {dog.name}</p>
-      //                     <p>견종: {dog.breed}</p>
-      //                     <p>
-      //                       나이:{' '}
-      //                       {(() => {
-      //                         const birthDate = new Date(dog.birth);
-      //                         const today = new Date();
-      //                         const months =
-      //                           (today.getFullYear() -
-      //                             birthDate.getFullYear()) *
-      //                             12 +
-      //                           (today.getMonth() - birthDate.getMonth());
-      //                         return Math.floor(months / 12);
-      //                       })()}
-      //                       개월
-      //                     </p>
-      //                     <p>체중: {dog.weight}kg</p>
-      //                   </div>
-      //                 </Button>
-      //               ))}
-      //               <Button
-      //                 variant="outline"
-      //                 className={`w-full justify-between h-auto py-4`}
-      //                 // onClick={}
-      //               >
-      //                 <div>강아지 추가하기</div>
-      //               </Button>
-      //             </CardContent>
-      //           </Card>
-      //           <div className="flex gap-2">
-      //             <Button
-      //               type="button"
-      //               variant="outline"
-      //               onClick={() => setCurrentStep(1)}
-      //             >
-      //               이전
-      //             </Button>
-      //             <Button
-      //               onClick={() => setCurrentStep(3)}
-      //               className="flex-1 bg-primary"
-      //             >
-      //               다음
-      //             </Button>
-      //           </div>
-      //         </div>
-      //       ) : (
-      //         <div>
-      //           <Card>
-      //             <CardHeader>
-      //               <CardTitle>반려견 정보 입력</CardTitle>
-      //             </CardHeader>
-      //             <CardContent className="space-y-4">
-      //               {['name', 'weight', 'birth'].map((field) => (
-      //                 <FormField
-      //                   key={field}
-      //                   control={petInfoForm.control}
-      //                   name={field as any}
-      //                   render={({ field: fieldProps }) => (
-      //                     <FormItem>
-      //                       <FormLabel>{getFieldLabel(field)}</FormLabel>
-      //                       <FormControl>
-      //                         <Input
-      //                           type={field === 'name' ? 'text' : 'number'}
-      //                           {...fieldProps}
-      //                         />
-      //                       </FormControl>
-      //                       <FormMessage />
-      //                     </FormItem>
-      //                   )}
-      //                 />
-      //               ))}
-      //               <FormField
-      //                 control={petInfoForm.control}
-      //                 name="breed"
-      //                 render={({ field: fieldProps }) => (
-      //                   <FormItem>
-      //                     <FormLabel>반려견 견종</FormLabel>
-      //                     <FormControl>
-      //                       <Select
-      //                         {...fieldProps}
-      //                         options={breeds.map((breed) => ({
-      //                           value: breed.id,
-      //                           label: breed.breed,
-      //                         }))}
-      //                         isSearchable
-      //                         isClearable
-      //                         onChange={(option) => {
-      //                           setSelectedBreed(
-      //                             option
-      //                               ? breeds.find(
-      //                                   (breed) => breed.id === option.value
-      //                                 ) ?? null
-      //                               : null
-      //                           );
-      //                           fieldProps.onChange(option?.label);
-      //                         }}
-      //                         value={
-      //                           selectedBreed
-      //                             ? {
-      //                                 value: selectedBreed.id,
-      //                                 label: selectedBreed.breed,
-      //                               }
-      //                             : null
-      //                         }
-      //                         isDisabled={false}
-      //                       />
-      //                     </FormControl>
-      //                     <FormMessage />
-      //                   </FormItem>
-      //                 )}
-      //               />
-      //             </CardContent>
-      //           </Card>
-      //           <div className="flex gap-2">
-      //             <Button
-      //               type="button"
-      //               variant="outline"
-      //               onClick={() => setCurrentStep(1)}
-      //             >
-      //               이전
-      //             </Button>
-      //             <Button type="submit" className="flex-1 bg-primary">
-      //               다음
-      //             </Button>
-      //           </div>
-      //         </div>
-      //       )}
-      //     </form>
-      //   </Form>
-      // );
 
       case 3:
         return (
@@ -893,17 +692,24 @@ export default function Booking() {
                 )}
               </CardContent>
             </Card>
-            <Button
-              className="w-full bg-primary"
-              onClick={() => setCurrentStep(2)}
-              disabled={
-                !bookingData.dateTime.date || !bookingData.dateTime.time
-              }
-            >
-              다음
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCurrentStep(2)}
+              >
+                이전
+              </Button>
+              <Button
+                className="flex-1 bg-primary"
+                onClick={() => setCurrentStep(4)}
+              >
+                다음
+              </Button>
+            </div>
           </div>
         );
+
       case 4:
         console.log(bookingData);
         return (
@@ -936,7 +742,6 @@ export default function Booking() {
                   ))
                 )}
               </CardContent>
-              {/* 모달 컴포넌트 */}
               {bookingData.mainService && isModalOpen && (
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogContent>
@@ -950,7 +755,7 @@ export default function Booking() {
                       <DialogClose onClick={cancelOptionSelection} />
                     </DialogHeader>
                     <div className="space-y-4">
-                      {mainServices
+                      {servicesPricing
                         .filter(
                           (service) =>
                             service.id === bookingData.mainService?.id
@@ -999,7 +804,7 @@ export default function Booking() {
                 <CardTitle>추가 서비스</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {additionalServices.map((service) => (
+                {additionalServicesPricing.map((service) => (
                   <Button
                     key={service.id}
                     variant="outline"
@@ -1012,7 +817,7 @@ export default function Booking() {
                     }`}
                     onClick={() => handleAdditionalServiceToggle(service)}
                   >
-                    <span>{service.name}</span>
+                    <span>{service.service_name}</span>
                     <span className="text-sm text-muted-foreground">
                       {service.price_min == 0
                         ? ''
