@@ -12,6 +12,9 @@ interface PetInfo {
 	birth: string;
 	phoneNumber: string;
 	breed: number;
+	neutering: boolean;
+	sex: string;
+	regNumber: string;
 }
 
 function handleError(error: Error) {
