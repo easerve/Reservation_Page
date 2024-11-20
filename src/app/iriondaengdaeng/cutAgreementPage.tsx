@@ -21,12 +21,16 @@ interface CutAgreementPageProps {
   isOpen: boolean;
   onClose: () => void;
   breeds: { id: number; name: string; type: Number }[];
+  setIsPuppyAdd: (isAdd: boolean) => void;
+  userUUID: string;
 }
 
 const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
   isOpen,
   onClose,
   breeds,
+  setIsPuppyAdd,
+  userUUID,
 }) => {
   const [dogInfo, setDogInfo] = useState<Dog>({
     id: "",
@@ -39,7 +43,9 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
     regNumber: "",
     phoneNumber: "",
   });
+
   const [userInfo, setUserInfo] = useState<User>({
+    id: userUUID,
     name: "",
     phone: "",
     address: "",
@@ -188,6 +194,10 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                               null
                           : null
                       );
+                      setDogInfo({
+                        ...dogInfo,
+                        breed: option ? option.label : "",
+                      });
                     }}
                     value={
                       selectedBreed
@@ -328,6 +338,8 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
               setCurrentStep={setCurrentStep}
               dogInfo={dogInfo}
               userInfo={userInfo}
+              onClose={onClose}
+              setIsPuppyAdd={setIsPuppyAdd}
             />
           </div>
         );

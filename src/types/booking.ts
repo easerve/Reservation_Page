@@ -55,6 +55,11 @@ export interface Dog {
 }
 
 export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  detailAddress: string;
   dogs: Dog[];
 }
 
@@ -64,6 +69,7 @@ export interface UserDogsData {
 }
 
 export interface User {
+  id: string;
   name: string;
   phone: string;
   address: string;

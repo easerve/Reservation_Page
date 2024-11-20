@@ -7,12 +7,16 @@ interface ConsentFormProps {
   setCurrentStep: (step: number) => void;
   dogInfo: Dog;
   userInfo: User;
+  onClose: () => void;
+  setIsPuppyAdd: (isAdd: boolean) => void;
 }
 
 const ConsentForm: React.FC<ConsentFormProps> = ({
   setCurrentStep,
   dogInfo,
   userInfo,
+  onClose,
+  setIsPuppyAdd,
 }) => {
   const [allChecked, setAllChecked] = useState(false);
   const [requiredChecked, setRequiredChecked] = useState(false);
@@ -61,8 +65,13 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
   };
 
   const onClick = () => {
+    console.log(dogInfo);
+    console.log(userInfo);
     updateUserInfo();
     makeDogInfo();
+    setCurrentStep(1);
+    setIsPuppyAdd(true);
+    onClose();
   };
 
   const handleAllCheckedChange = () => {
@@ -405,7 +414,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
           disabled={
             !requiredChecked || !personalInfoChecked || !thirdPartyChecked
           }
-          onClick={() => onClick}
+          onClick={onClick}
         >
           강아지 추가하기
         </Button>
