@@ -392,12 +392,12 @@ export default function Booking() {
         //           />
         //         </CardContent>
         //       </Card>
-        //       <Button
-        //         className="w-full bg-primary"
-        //         disabled={!phoneNumberForm.formState.isValid}
-        //       >
-        //         다음
-        //       </Button>
+        // <Button
+        //   className="w-full bg-primary"
+        //   disabled={!phoneNumberForm.formState.isValid}
+        // >
+        //   다음
+        // </Button>
         //     </form>
         //   </Form>
         // );
@@ -417,7 +417,7 @@ export default function Booking() {
                 } catch (error) {
                   console.error(error);
                 }
-                setCurrentStep(3);
+                setCurrentStep(2);
               })}
               className="space-y-6"
             >
@@ -441,18 +441,12 @@ export default function Booking() {
                   />
                 </CardContent>
               </Card>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCurrentStep(1)}
-                >
-                  이전
-                </Button>
-                <Button type="submit" className="flex-1 bg-primary">
-                  다음
-                </Button>
-              </div>
+              <Button
+                className="w-full bg-primary"
+                disabled={!phoneNumberForm.formState.isValid}
+              >
+                다음
+              </Button>
             </form>
           </Form>
         );
@@ -481,7 +475,7 @@ export default function Booking() {
                   birth: values.birth,
                   breed: selectedBreed ? selectedBreed.name : '',
                 });
-                setCurrentStep(4);
+                setCurrentStep(3);
               })}
               className="space-y-6"
             >
