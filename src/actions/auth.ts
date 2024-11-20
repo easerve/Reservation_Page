@@ -44,7 +44,8 @@ export async function getUserDogs(phone: String) {
 		.select(`
 			*,
 			breeds (
-			  name
+			  name,
+			  type
 			)
 		`)
 		.eq("user_id", userData.uuid);
@@ -57,6 +58,7 @@ export async function getUserDogs(phone: String) {
 		id: pet.uuid,
 		name: pet.name,
 		breed: pet.breeds?.name,
+		type: pet.breeds?.type,
 		birth: pet.birth,
 		weight: pet.weight,
 	}));

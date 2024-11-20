@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addReservation } from "@/actions/reservation";
-import { getReservations } from "@/actions/reservation";
+import { addReservation } from "@/actions/reservations";
+import { getReservations } from "@/actions/reservations";
 
 interface RequestBody {
 	ReservationInfo: {

@@ -13,22 +13,22 @@ export type Database = {
         Row: {
           created_at: string | null
           id: number
-          price: number
-          price_range: string | null
+          max_price: number | null
+          min_price: number | null
           service_name: string
         }
         Insert: {
           created_at?: string | null
           id?: number
-          price: number
-          price_range?: string | null
+          max_price?: number | null
+          min_price?: number | null
           service_name: string
         }
         Update: {
           created_at?: string | null
           id?: number
-          price?: number
-          price_range?: string | null
+          max_price?: number | null
+          min_price?: number | null
           service_name?: string
         }
         Relationships: []
@@ -148,24 +148,24 @@ export type Database = {
       }
       reservation_additional_services: {
         Row: {
-          additional_option_id: number | null
+          additional_service_id: number | null
           id: number
           reservation_id: string | null
         }
         Insert: {
-          additional_option_id?: number | null
+          additional_service_id?: number | null
           id?: never
           reservation_id?: string | null
         }
         Update: {
-          additional_option_id?: number | null
+          additional_service_id?: number | null
           id?: never
           reservation_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "reservation_additional_services_additional_option_id_fkey"
-            columns: ["additional_option_id"]
+            foreignKeyName: "reservation_additional_services_additional_service_id_fkey"
+            columns: ["additional_service_id"]
             isOneToOne: false
             referencedRelation: "additional_services"
             referencedColumns: ["id"]
@@ -208,6 +208,39 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reservation_services_option: {
+        Row: {
+          id: number
+          reservation_id: string | null
+          service_option_id: number | null
+        }
+        Insert: {
+          id?: never
+          reservation_id?: string | null
+          service_option_id?: number | null
+        }
+        Update: {
+          id?: never
+          reservation_id?: string | null
+          service_option_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_services_option_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["uuid"]
+          },
+          {
+            foreignKeyName: "reservation_services_option_service_option_id_fkey"
+            columns: ["service_option_id"]
+            isOneToOne: false
+            referencedRelation: "service_options"
             referencedColumns: ["id"]
           },
         ]
@@ -259,6 +292,24 @@ export type Database = {
           },
         ]
       }
+      service_option_category: {
+        Row: {
+          created_at: string
+          id: number
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          name?: string
+        }
+        Relationships: []
+      }
       service_option_group: {
         Row: {
           id: number
@@ -294,24 +345,35 @@ export type Database = {
       }
       service_options: {
         Row: {
+          category_id: number | null
           created_at: string | null
           id: number
           name: string
           price: number
         }
         Insert: {
+          category_id?: number | null
           created_at?: string | null
           id?: number
           name: string
           price: number
         }
         Update: {
+          category_id?: number | null
           created_at?: string | null
           id?: number
           name?: string
           price?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "service_options_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_option_category"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
