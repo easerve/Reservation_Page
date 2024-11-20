@@ -39,7 +39,6 @@ export interface AdditionalService {
   service_name: string;
   price_min: number;
   price_max: number;
-  category: string;
 }
 
 export interface Dog {

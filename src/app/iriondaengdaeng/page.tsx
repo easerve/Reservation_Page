@@ -19,7 +19,6 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import CutAgreementPage from "@/app/iriondaengdaeng/cutAgreementPage";
 import {
   Form,
   FormControl,
@@ -38,6 +37,7 @@ import {
   AdditionalService,
 } from "@/types/booking";
 import { INITIAL_BOOKING_STATE } from "@/constants/booking";
+import CutAgreementPage from "@/app/iriondaengdaeng/cutAgreementPage";
 
 export default function Booking() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -163,7 +163,8 @@ export default function Booking() {
 
     bookingData.additionalServices.forEach((service) => {
       totalPrice += service.price_min;
-      totalPriceMax += service.price_max;
+      totalPriceMax +=
+        service.price_max === 0 ? service.price_min : service.price_max;
     });
 
     return [totalPrice, totalPriceMax];
@@ -276,17 +277,12 @@ export default function Booking() {
   >([]);
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
 
+  // 5번은 프론트에서 처리
   const getWeightRangeId = (weight: number) => {
     if (weight <= 4) return 1;
-    if (weight <= 6) return 2;
-    if (weight <= 8) return 3;
-    if (weight <= 10) return 4;
-    return 5;
-  };
-
-  // FIXME: 임시로 1을 반환하도록 했는데 수정 필요함
-  const getTypeId = (breed: string) => {
-    return 1;
+    else if (weight <= 6) return 2;
+    else if (weight <= 8) return 3;
+    else return 4;
   };
 
   const fetchServicePrices = async () => {
@@ -295,7 +291,10 @@ export default function Booking() {
     setIsLoadingPrices(true);
     try {
       const weightRangeId = getWeightRangeId(bookingData.petInfo.weight);
-      const typeId = getTypeId(bookingData.petInfo.breed);
+      // NOTE: 불필요한 while
+      const typeId =
+        breeds.find((breed) => breed.name === bookingData.petInfo.breed)
+          ?.type ?? 1;
 
       const response = await fetch(
         `/api/services?weightRangeId=${weightRangeId}&typeId=${typeId}`
@@ -328,9 +327,6 @@ export default function Booking() {
       });
 
       setOptionCategories(newOptionCategories);
-      console.log("TEST");
-      console.log(newOptionCategories);
-      console.log(optionCategories);
       setServicesPricing(data.data.mainServices);
       setAdditionalServicesPricing(data.data.additional_services);
     } catch (error) {
@@ -471,9 +467,9 @@ export default function Booking() {
                       <CardTitle>반려견 선택</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {userDogsData.customers.dogs.map((dog) => (
+                      {userDogsData.customers.dogs.map((dog, index) => (
                         <Button
-                          key={dog.id}
+                          key={index}
                           variant="outline"
                           className={`w-full justify-between h-auto py-4 ${
                             bookingData.petInfo.name === dog.name
@@ -751,7 +747,7 @@ export default function Booking() {
               </CardContent>
               {bookingData.mainService && isModalOpen && (
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                  <DialogContent>
+                  <DialogContent className="max-w-[90vw] md:max-w-[500px]">
                     <DialogHeader>
                       <DialogTitle>
                         {bookingData.mainService.name} 옵션 선택
@@ -761,7 +757,7 @@ export default function Booking() {
                       </DialogDescription>
                       <DialogClose onClick={cancelOptionSelection} />
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <div className="h-[50vh] overflow-y-auto pr-2 space-y-4">
                       {optionCategories.map(({ category, options }) => (
                         <div key={category} className="space-y-2">
                           <h3 className="font-bold mb-2">{category}</h3>
