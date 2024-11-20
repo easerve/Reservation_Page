@@ -55,6 +55,7 @@ export default function ReservationList(props: {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReservation, setEditingReservation] =
     useState<Reservation | null>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   const groupedReservations = props.reservations.reduce<GroupedReservations>(
     (groups, reservation) => {
@@ -68,6 +69,11 @@ export default function ReservationList(props: {
     },
     {}
   );
+
+  const handleRowClick = (id: string) => {
+    console.log("row clicked: ", id);
+    setExpandedRow((prev) => (prev === id ? null : id));
+  };
 
   const handleEdit = (reservation: Reservation) => {
     setEditingReservation(reservation);
@@ -126,15 +132,16 @@ export default function ReservationList(props: {
             ([date, dateReservations]) => (
               <React.Fragment key={`date-${date}`}>
                 <TableRow>
-                  <TableCell
-                    colSpan={14}
-                    className="font-medium font-bold bg-primary/5"
-                  >
+                  <TableCell colSpan={14} className="font-bold bg-primary/5">
                     {format(new Date(date), "M월 d일 eeee", { locale: ko })}
                   </TableCell>
                 </TableRow>
                 {dateReservations.map((reservation) => (
-                  <TableRow key={reservation.id} className="whitespace-nowrap">
+                  <TableRow
+                    key={reservation.id}
+                    className="whitespace-nowrap"
+                    onClick={() => handleRowClick(reservation.id)}
+                  >
                     <TableCell>{getTimeString2(reservation.time)}</TableCell>
                     <TableCell>{reservation.breed}</TableCell>
                     <TableCell>{reservation.name}</TableCell>
@@ -145,7 +152,11 @@ export default function ReservationList(props: {
                     <TableCell>{reservation.phone}</TableCell>
                     <TableCell>{reservation.service_name.join(", ")}</TableCell>
                     <TableCell>{reservation.additional_service}</TableCell>
-                    <TableCell>{reservation.memo}</TableCell>
+                    <TableCell>
+                      {reservation.memo.length < 10
+                        ? reservation.memo
+                        : `${reservation.memo.slice(0, 9)}...`}
+                    </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

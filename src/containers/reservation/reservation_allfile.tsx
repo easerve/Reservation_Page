@@ -63,7 +63,7 @@ export default function ReservationPage() {
       <Tabs value={view} onValueChange={setView} className="w-full flex-grow">
         <div className="flex items-center gap-4 mb-4">
           <TabsList>
-            {/* <TabsTrigger value="calendar">캘린더</TabsTrigger> */}
+            <TabsTrigger value="calendar">캘린더</TabsTrigger>
             <TabsTrigger value="list">리스트</TabsTrigger>
           </TabsList>
 
@@ -87,7 +87,7 @@ export default function ReservationPage() {
             </Button>
           </div>
         </div>
-        <TabsContent value="list" className="mt-0 flex flex-col h-full">
+        <TabsContent value="list" className="mt-0 flex flex-col">
           <CalendarBar
             currentMonth={currentMonth}
             setCurrentMonth={setCurrentMonth}
@@ -103,6 +103,9 @@ export default function ReservationPage() {
               <span>{reservations.length} 원</span>
             </div>
           </div>
+        </TabsContent>
+        <TabsContent value="calendar" className="mt-0 flex flex-col">
+          <Calendar />
         </TabsContent>
         <DefaultDialog
           open={isDialogOpen}

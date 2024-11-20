@@ -28,9 +28,6 @@ import {
 } from "@/components/ui/dialog";
 
 import "@/styles/calendar/style.css";
-import OuterReservationForm, {
-  formSchema,
-} from "@/containers/reservation/components/outer_reservation_form";
 import InnerReservationForm, {
   innerFormSchema,
 } from "./inner_reservation_form";
