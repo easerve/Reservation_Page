@@ -277,6 +277,50 @@ export default function Booking() {
     return names.join(', ');
   };
 
+  const [servicesPricing, setServicesPricing] = useState<MainService[]>([]);
+  const [isLoadingPrices, setIsLoadingPrices] = useState(false);
+
+  const getWeightRangeId = (weight: number) => {
+    if (weight <= 4) return 1;
+    if (weight <= 6) return 2;
+    if (weight <= 8) return 3;
+    if (weight <= 10) return 4;
+    return 5;
+  };
+
+  const getTypeId = (breed: string) => {
+    return 1;
+  };
+
+  const fetchServicePrices = async () => {
+    if (!bookingData.petInfo.weight || !bookingData.petInfo.breed) return;
+
+    setIsLoadingPrices(true);
+    try {
+      const weightRangeId = getWeightRangeId(bookingData.petInfo.weight);
+      const typeId = getTypeId(bookingData.petInfo.breed);
+
+      const response = await fetch(
+        `/api/services?weightRangeId=${weightRangeId}&typeId=${typeId}`
+      );
+
+      if (!response.ok) throw new Error('Failed to fetch prices');
+
+      const data = await response.json();
+      setServicesPricing(data);
+    } catch (error) {
+      console.error('Error fetching service prices:', error);
+    } finally {
+      setIsLoadingPrices(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentStep === 4) {
+      fetchServicePrices();
+    }
+  }, [currentStep]);
+
   const allTimeSlots = ['10:00', '14:00', '17:00'];
 
   const fullyBookedDates = bookedDates
@@ -628,24 +672,28 @@ export default function Booking() {
                 <CardTitle>메인 서비스</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {mainServices.map((service) => (
-                  <div key={service.id} className="space-y-2">
-                    <Button
-                      variant="outline"
-                      className={`w-full justify-between h-auto py-4 ${
-                        bookingData.mainService?.id === service.id
-                          ? 'border-primary bg-primary/10'
-                          : ''
-                      }`}
-                      onClick={() => handleMainServiceSelect(service)}
-                    >
-                      <span>{service.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {service.price.toLocaleString()}원
-                      </span>
-                    </Button>
-                  </div>
-                ))}
+                {isLoadingPrices ? (
+                  <div>가격 정보를 불러오는 중...</div>
+                ) : (
+                  servicesPricing.map((service) => (
+                    <div key={service.id} className="space-y-2">
+                      <Button
+                        variant="outline"
+                        className={`w-full justify-between h-auto py-4 ${
+                          bookingData.mainService?.id === service.id
+                            ? 'border-primary bg-primary/10'
+                            : ''
+                        }`}
+                        onClick={() => handleMainServiceSelect(service)}
+                      >
+                        <span>{service.name}</span>
+                        <span className="text-sm text-muted-foreground">
+                          {service.price.toLocaleString()}원
+                        </span>
+                      </Button>
+                    </div>
+                  ))
+                )}
               </CardContent>
               {/* 모달 컴포넌트 */}
               {bookingData.mainService && isModalOpen && (
