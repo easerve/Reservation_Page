@@ -188,8 +188,15 @@ export default function Booking() {
   const handleModalOptionToggle = (option: Option) => {
     setTempOptions((prev) => {
       const isSelected = prev.some((opt) => opt.id === option.id);
+      const isSameCategory = prev.some(
+        (opt) => opt.category === option.category
+      );
       if (isSelected) {
         return prev.filter((opt) => opt.id !== option.id);
+      } else if (isSameCategory) {
+        return prev.map((opt) =>
+          opt.category === option.category ? option : opt
+        );
       } else {
         return [...prev, option];
       }
@@ -258,6 +265,12 @@ export default function Booking() {
   };
 
   const [servicesPricing, setServicesPricing] = useState<MainService[]>([]);
+  const [optionCategories, setOptionCategories] = useState<
+    {
+      category: string;
+      options: Option[];
+    }[]
+  >([]);
   const [additionalServicesPricing, setAdditionalServicesPricing] = useState<
     AdditionalService[]
   >([]);
@@ -290,7 +303,34 @@ export default function Booking() {
 
       if (!response.ok) throw new Error('Failed to fetch prices');
 
+      const newOptionCategories: {
+        category: string;
+        options: Option[];
+      }[] = [];
+
       const data = await response.json();
+
+      data.data.mainServices.forEach((service: any) => {
+        service.options.forEach((option: any) => {
+          const category = option.category;
+          const existingCategory = newOptionCategories.find(
+            (opt) => opt.category === category
+          );
+
+          if (existingCategory) {
+            if (!existingCategory.options.some((opt) => opt.id === option.id)) {
+              existingCategory.options.push(option);
+            }
+          } else {
+            newOptionCategories.push({ category, options: [option] });
+          }
+        });
+      });
+
+      setOptionCategories(newOptionCategories);
+      console.log('TEST');
+      console.log(newOptionCategories);
+      console.log(optionCategories);
       setServicesPricing(data.data.mainServices);
       setAdditionalServicesPricing(data.data.additional_services);
     } catch (error) {
@@ -731,36 +771,30 @@ export default function Booking() {
                       <DialogClose onClick={cancelOptionSelection} />
                     </DialogHeader>
                     <div className="space-y-4">
-                      {servicesPricing
-                        .filter(
-                          (service) =>
-                            service.id === bookingData.mainService?.id
-                        )[0]
-                        ?.options.map((option) => (
-                          <Button
-                            key={option.id}
-                            variant={
-                              tempOptions.some((opt) => opt.id === option.id)
-                                ? 'default'
-                                : 'outline'
-                            }
-                            onClick={() => handleModalOptionToggle(option)}
-                            className={`w-full justify-between ${
-                              bookingData.mainService?.options.some(
-                                (opt) => opt.id === option.id
-                              )
-                                ? 'border-primary bg-primary/10'
-                                : ''
-                            }`}
-                          >
-                            <div className="flex justify-between w-full">
-                              <span>{option.name}</span>
-                              <span className="text-sm text-muted-foreground">
-                                +{option.price.toLocaleString()}원
-                              </span>
-                            </div>
-                          </Button>
-                        ))}
+                      {optionCategories.map(({ category, options }) => (
+                        <div key={category} className="space-y-2">
+                          <h3 className="font-bold mb-2">{category}</h3>
+                          {options.map((option) => (
+                            <Button
+                              key={option.id}
+                              variant="outline"
+                              onClick={() => handleModalOptionToggle(option)}
+                              className={`w-full justify-between ${
+                                tempOptions.some((opt) => opt.id === option.id)
+                                  ? 'border-primary bg-primary/10'
+                                  : ''
+                              }`}
+                            >
+                              <div className="flex justify-between w-full">
+                                <span>{option.name}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  +{option.price.toLocaleString()}원
+                                </span>
+                              </div>
+                            </Button>
+                          ))}
+                        </div>
+                      ))}
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={cancelOptionSelection}>
