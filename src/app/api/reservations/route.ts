@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 		}
 		const { pet_id, reservation_date, memo, status, consent_form, services, additional_services, total_price } = body.ReservationInfo;
 
-		if (!pet_id || !reservation_date || !memo || !status || !consent_form || !services || !additional_services || !total_price) {
+		if (!pet_id || !reservation_date || !status || !consent_form || !services || !additional_services || !total_price) {
 			console.log(body.ReservationInfo);
 			return NextResponse.json(
 				{ error: "Missing required fields in ReservationInfo" },

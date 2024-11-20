@@ -27,13 +27,13 @@ export async function addUser(request: Request) {
 		const { data: userData, error: userError} = await supabase
 			.from("user")
 			.upsert(
-				{
-					name,
-					phone,
-					address,
-					detail_address: detailAddress,
-				},
-			);
+			{
+				name,
+				phone,
+				address,
+				detail_address: detailAddress,
+			},
+			).eq("phone", phone);
 
 		if (userError) {
 			handleError(userError);
@@ -43,6 +43,7 @@ export async function addUser(request: Request) {
 			status: "success"
 		};
 	} catch (error) {
+		console.error(error);
 		return {
 			status: "fail"
 		}
@@ -110,6 +111,7 @@ export async function getUserDogs(phone: String) {
 	return {
 		status: "success",
 		customers: {
+			id: userData.uuid,
 			name: userData.name,
 			phone: userData.phone,
 			address: userData.address,

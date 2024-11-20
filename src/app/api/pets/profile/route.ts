@@ -8,6 +8,9 @@ interface RequestBody {
 	  phoneNumber: string;
 	  birth: number;
 	  breed: number;
+	  neutering: boolean;
+	  sex: string;
+	  regNumber: string;
 	}
 }
 
@@ -22,7 +25,7 @@ export async function POST(request: NextRequest) {
 				{ status: 400 }
 			);
 		}
-		const { petName, weight, phoneNumber, birth, breed } = body.PetInfo;
+		const { petName, weight, phoneNumber, birth, breed, neutering, sex, regNumber} = body.PetInfo;
 
 		if (!petName || !weight || !phoneNumber || !birth || !breed) {
 			return NextResponse.json(
@@ -37,6 +40,9 @@ export async function POST(request: NextRequest) {
 			phoneNumber,
 			birth: new Date(birth).toISOString(),
 			breed,
+			neutering,
+			sex,
+			regNumber,
 		};
 
 		const result = await addPet(petInfo);
