@@ -145,7 +145,7 @@ export const reservationData: Reservation[] = [
     birth: "2019-09-18",
     phone: "01012341234",
     service_name: ["위생목용+미용", "발톱깎기"],
-    memo: "특이사항",
+    memo: "특이사항이 이렇게나 긴데 이걸 어떻게 다 설명해야될 지 모르겠어요. 그냥 설명을 안하고 싶어요. 그냥 그냥그냥요. 히히",
     additional_service: "추가 서비스",
     status: "예약",
     price: 50000,
