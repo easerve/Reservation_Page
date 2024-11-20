@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import Select from 'react-select';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,15 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import Select from 'react-select';
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -20,11 +29,12 @@ import {
 } from '@/components/ui/form';
 import {
   BookingData,
-  BookingService,
-  PetInfo,
   Dog,
   Customer,
   UserDogsData,
+  MainService,
+  Option,
+  AdditionalService,
 } from '@/types/booking';
 import {
   INITIAL_BOOKING_STATE,
@@ -45,8 +55,11 @@ export default function Booking() {
     setCurrentStep(1);
   };
 
-  const updateDateTime = (date: Date, time: string | undefined) => {
-    setBookingData((prev) => ({ ...prev, dateTime: { date, time } }));
+  const updatePhoneNumber = (phoneNumber: string) => {
+    setBookingData((prev) => ({
+      ...prev,
+      phoneNumber,
+    }));
   };
 
   const [userDogsData, setUserDogsData] = useState<UserDogsData>({
@@ -54,7 +67,12 @@ export default function Booking() {
     customers: { dogs: [] as Dog[] } as Customer,
   });
 
-  const updatePetInfo = (info: PetInfo) => {
+  const updatePetInfo = (info: {
+    name?: string;
+    weight?: number;
+    birth?: string;
+    breed?: string;
+  }) => {
     setBookingData((prev) => ({
       ...prev,
       petInfo: {
@@ -62,6 +80,10 @@ export default function Booking() {
         ...info,
       },
     }));
+  };
+
+  const updateDateTime = (date: Date, time: string | undefined) => {
+    setBookingData((prev) => ({ ...prev, dateTime: { date, time } }));
   };
 
   const updateInquiry = (text: string) => {
@@ -78,7 +100,7 @@ export default function Booking() {
   });
 
   const petInfoSchema = z.object({
-    petName: z.string().min(1, '반려견의 이름을 입력해주세요'),
+    name: z.string().min(1, '반려견의 이름을 입력해주세요'),
     weight: z.string().refine((val) => {
       const num = parseFloat(val);
       return (
@@ -95,14 +117,14 @@ export default function Booking() {
   const phoneNumberForm = useForm<z.infer<typeof phoneNumberSchema>>({
     resolver: zodResolver(phoneNumberSchema),
     defaultValues: {
-      phoneNumber: bookingData.petInfo.phoneNumber,
+      phoneNumber: bookingData.phoneNumber,
     },
   });
 
   const petInfoForm = useForm<z.infer<typeof petInfoSchema>>({
     resolver: zodResolver(petInfoSchema),
     defaultValues: {
-      petName: bookingData.petInfo.petName,
+      name: bookingData.petInfo.name,
       weight: String(bookingData.petInfo.weight),
       birth: String(bookingData.petInfo.birth),
       breed: bookingData.petInfo.breed,
@@ -118,7 +140,6 @@ export default function Booking() {
   useEffect(() => {
     const loadBreeds = async () => {
       try {
-        // const breedData = await fetchBreeds(); //temp
         const breedOptions = breedDummyData.breed;
         setBreeds(breedOptions);
       } catch (error) {
@@ -128,197 +149,86 @@ export default function Booking() {
     loadBreeds();
   }, []);
 
-  const ServiceOptionButton = ({
-    service,
-    isSelected,
-    onClick,
-    depth = 0,
-  }: {
-    service: BookingService;
-    isSelected: boolean;
-    onClick: () => void;
-    depth?: number;
-  }) => (
-    <Button
-      variant="outline"
-      className={`w-full justify-between h-auto py-3 ${
-        isSelected ? 'border-primary bg-primary/10' : ''
-      }`}
-      onClick={onClick}
-      disabled={service.price == 0}
-    >
-      <span className="text-sm">{service.name}</span>
-      <span className="text-sm text-muted-foreground">
-        {service.price === 0
-          ? ''
-          : `${depth === 0 ? '' : '+ '}${service.price.toLocaleString()}원`}
-      </span>
-    </Button>
-  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedServiceForModal, setSelectedServiceForModal] =
+    useState<MainService | null>(null);
+  const [selectedOptionsInModal, setSelectedOptionsInModal] = useState<
+    Option[]
+  >([]);
 
-  const RecursiveOptions = ({
-    options,
-    selectedOptions,
-    onToggle,
-    depth = 0,
-    parentId,
-  }: {
-    options: BookingService[];
-    selectedOptions: BookingService[];
-    onToggle: (option: BookingService, parentId?: string) => void;
-    depth?: number;
-    parentId?: string;
-  }) => {
-    return (
-      <div className={`space-y-2 ${depth > 0 ? 'ml-4' : ''}`}>
-        {options.map((option) => (
-          <div key={option.id} className="space-y-2">
-            <ServiceOptionButton
-              service={option}
-              isSelected={selectedOptions.some((opt) => opt.id === option.id)}
-              onClick={() => onToggle(option, parentId)}
-              depth={depth}
-            />
-
-            {option.options?.length > 0 && (
-              <RecursiveOptions
-                options={option.options}
-                selectedOptions={selectedOptions}
-                onToggle={onToggle}
-                depth={depth + 1}
-                parentId={option.id}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const calculateServicePrice = (
-    service: BookingService,
-    selectedOptions: BookingService[]
-  ): number => {
-    let price = service.price;
-
-    // 하위 옵션들 중 선택된 것들만 가격 계산
-    if (service.options && service.options.length > 0) {
-      const selectedChildOptions = service.options.filter((option) =>
-        selectedOptions.some((selected) => selected.id === option.id)
-      );
-
-      price += selectedChildOptions.reduce(
-        (sum, option) => sum + calculateServicePrice(option, selectedOptions),
-        0
-      );
-    }
-
-    return price;
-  };
-
-  // 가격 계산
   const price = useMemo(() => {
     let totalPrice = 0;
 
     if (bookingData.mainService) {
-      // 메인 서비스 가격
       totalPrice += bookingData.mainService.price;
-
-      // 선택된 옵션들의 가격만 계산
-      totalPrice += bookingData.mainService.options.reduce(
-        (sum, option) =>
-          sum +
-          calculateServicePrice(option, bookingData.mainService?.options || []),
-        0
-      );
+      bookingData.mainService.options.forEach((option) => {
+        totalPrice += option.price;
+      });
     }
 
-    // 추가 서비스 가격
     bookingData.additionalServices.forEach((service) => {
-      totalPrice += service.price;
+      totalPrice += service.price_min; // 필요에 따라 수정
     });
 
     return totalPrice;
-  }, [bookingData.mainService, bookingData.additionalServices]);
+  }, [bookingData]);
 
-  const handleMainServiceSelect = (service: BookingService) => {
-    setBookingData((prev) => ({
-      ...prev,
-      mainService: { ...service, options: [] },
-    }));
+  const handleMainServiceSelect = (service: MainService) => {
+    if (service.options && service.options.length > 0) {
+      setSelectedServiceForModal(service);
+      setSelectedOptionsInModal([]); // 이전 선택된 옵션 초기화
+      setIsModalOpen(true);
+    } else {
+      setBookingData((prev) => ({
+        ...prev,
+        mainService: { ...service, options: [] },
+      }));
+    }
   };
 
-  const handleSubOptionToggle = (option: BookingService, parentId?: string) => {
-    if (!bookingData.mainService) return;
-
-    setBookingData((prev) => {
-      if (!prev.mainService) return prev;
-
-      // Check if option is already selected
-      const isSelected = prev.mainService.options.some(
-        (opt) => opt.id === option.id
-      );
-
-      // If selected, remove the option
-      if (isSelected) {
-        return {
-          ...prev,
-          mainService: {
-            ...prev.mainService,
-            options: prev.mainService.options.filter(
-              (opt) => opt.id !== option.id
-            ),
-          },
-        };
+  const handleModalOptionToggle = (option: Option) => {
+    setSelectedOptionsInModal((prev) => {
+      if (prev.some((opt) => opt.id === option.id)) {
+        // 이미 선택된 옵션이면 제거
+        return prev.filter((opt) => opt.id !== option.id);
+      } else {
+        // 선택되지 않은 옵션이면 추가
+        return [...prev, option];
       }
-
-      // If not selected, handle new selection
-      const findSiblingOptions = (
-        options: BookingService[],
-        targetId: string,
-        parentId?: string
-      ): BookingService[] => {
-        for (const opt of options) {
-          if (opt.id === parentId) {
-            return opt.options;
-          }
-          if (opt.options.length > 0) {
-            const found = findSiblingOptions(opt.options, targetId, parentId);
-            if (found.length > 0) return found;
-          }
-        }
-        return [];
-      };
-
-      // Get siblings of the current option
-      const siblings = parentId
-        ? findSiblingOptions(prev.mainService.options, option.id, parentId)
-        : prev.mainService.options;
-
-      // Remove any existing selections at the same depth for required options
-      const removeExistingSelections = (
-        options: BookingService[]
-      ): BookingService[] =>
-        options.filter(
-          (opt) => !siblings.some((sibling) => sibling.id === opt.id)
-        );
-
-      const newOptions = removeExistingSelections(prev.mainService.options);
-
-      // Add new selection
-      newOptions.push(option);
-
-      return {
-        ...prev,
-        mainService: {
-          ...prev.mainService,
-          options: newOptions,
-        },
-      };
     });
   };
 
-  const handleAdditionalServiceToggle = (service: BookingService) => {
+  const confirmSelection = () => {
+    if (selectedServiceForModal) {
+      setBookingData((prev) => ({
+        ...prev,
+        mainService: {
+          ...selectedServiceForModal,
+          options: selectedOptionsInModal,
+        },
+      }));
+    }
+    setIsModalOpen(false);
+    setSelectedServiceForModal(null);
+  };
+
+  const handleOptionSelect = (option: Option) => {
+    setBookingData((prev) => {
+      if (!prev.mainService) return prev;
+
+      const updatedService = { ...prev.mainService };
+      if (option.category === prev.mainService?.name) {
+        updatedService.options = updatedService.options.filter(
+          (o) => o.id !== option.id
+        );
+      } else {
+        updatedService.options.push(option);
+      }
+      return { ...prev, mainService: updatedService };
+    });
+  };
+
+  const handleAdditionalServiceToggle = (service: AdditionalService) => {
     setBookingData((prev) => {
       const isSelected = prev.additionalServices.some(
         (s) => s.id === service.id
@@ -378,17 +288,13 @@ export default function Booking() {
           <Form {...phoneNumberForm}>
             <form
               onSubmit={phoneNumberForm.handleSubmit(async (values) => {
-                updatePetInfo({
-                  ...bookingData.petInfo,
-                  phoneNumber: values.phoneNumber,
-                });
                 try {
                   const res = await fetch(
                     'http://localhost:3000/api/auth/profile?phone=' +
                       values.phoneNumber
                   );
                   const data = await res.json();
-
+                  updatePhoneNumber(values.phoneNumber);
                   setUserDogsData(data);
                 } catch (error) {
                   console.error(error);
@@ -446,9 +352,8 @@ export default function Booking() {
             <form
               onSubmit={petInfoForm.handleSubmit((values) => {
                 updatePetInfo({
-                  petName: values.petName,
+                  name: values.name,
                   weight: Number(values.weight),
-                  phoneNumber: bookingData.petInfo.phoneNumber,
                   birth: values.birth,
                   breed: selectedBreed ? selectedBreed.breed : '',
                 });
@@ -467,15 +372,14 @@ export default function Booking() {
                           key={dog.id}
                           variant="outline"
                           className={`w-full justify-between h-auto py-4 ${
-                            bookingData.petInfo.petName === dog.name
+                            bookingData.petInfo.name === dog.name
                               ? 'border-primary] bg-primary/10'
                               : ''
                           }`}
                           onClick={() => {
                             updatePetInfo({
-                              petName: dog.name,
+                              name: dog.name,
                               weight: dog.weight,
-                              phoneNumber: bookingData.petInfo.phoneNumber,
                               birth: dog.birth,
                               breed: dog.breed,
                             });
@@ -714,24 +618,65 @@ export default function Booking() {
               <CardContent className="space-y-2">
                 {mainServices.map((service) => (
                   <div key={service.id} className="space-y-2">
-                    <ServiceOptionButton
-                      service={service}
-                      isSelected={bookingData.mainService?.id === service.id}
+                    <Button
+                      variant="outline"
+                      className={`w-full justify-between h-auto py-4 ${
+                        bookingData.mainService?.id === service.id
+                          ? 'border-primary bg-primary/10'
+                          : ''
+                      }`}
                       onClick={() => handleMainServiceSelect(service)}
-                    />
-
-                    {bookingData.mainService?.id === service.id &&
-                      service.options?.length > 0 && (
-                        <RecursiveOptions
-                          options={service.options}
-                          selectedOptions={bookingData.mainService.options}
-                          onToggle={handleSubOptionToggle}
-                          depth={1}
-                        />
-                      )}
+                    >
+                      <span>{service.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {service.price.toLocaleString()}원
+                      </span>
+                    </Button>
                   </div>
                 ))}
               </CardContent>
+              {selectedServiceForModal && (
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {selectedServiceForModal.name} 옵션 선택
+                      </DialogTitle>
+                      <DialogDescription>
+                        원하시는 옵션을 선택해주세요.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2">
+                      {selectedServiceForModal.options.map((option) => (
+                        <Button
+                          key={option.id}
+                          variant={
+                            selectedOptionsInModal.some(
+                              (opt) => opt.id === option.id
+                            )
+                              ? 'default'
+                              : 'outline'
+                          }
+                          onClick={() => handleModalOptionToggle(option)}
+                          className="w-full justify-between"
+                        >
+                          <span>{option.name}</span>
+                          <span>+ {option.price.toLocaleString()}원</span>
+                        </Button>
+                      ))}
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsModalOpen(false)}
+                      >
+                        취소
+                      </Button>
+                      <Button onClick={confirmSelection}>선택 완료</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </Card>
 
             <Card>
@@ -754,9 +699,9 @@ export default function Booking() {
                   >
                     <span>{service.name}</span>
                     <span className="text-sm text-muted-foreground">
-                      {service.price == 0
+                      {service.price_min == 0
                         ? ''
-                        : `+ ${service.price.toLocaleString()}원`}
+                        : `+ ${service.price_min.toLocaleString()}원`}
                     </span>
                   </Button>
                 ))}
@@ -812,9 +757,9 @@ export default function Booking() {
 
                 <div>
                   <h3 className="font-medium text-gray-600">반려견 정보</h3>
-                  <p>이름: {bookingData.petInfo.petName}</p>
+                  <p>이름: {bookingData.petInfo.name}</p>
                   <p>체중: {bookingData.petInfo.weight}kg</p>
-                  <p>연락처: {bookingData.petInfo.phoneNumber}</p>
+                  <p>연락처: {bookingData.phoneNumber}</p>
                 </div>
 
                 <div>
