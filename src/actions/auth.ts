@@ -13,6 +13,45 @@ function handleError(error: any) {
 	throw new Error(error.message);
 }
 
+export async function addUser(request: Request) {
+	try {
+		const { name, phone, address, detailAddress } = await request.json();
+
+		if (!name || !phone || !address || !detailAddress) {
+			return {
+				status: "fail"
+			};
+		}
+
+		const supabase = await createServerSupabaseClient();
+		const { data: userData, error: userError} = await supabase
+			.from("user")
+			.insert([
+				{
+					name,
+					phone,
+					address,
+					detail_address: detailAddress,
+				}
+			]);
+
+		if (userError) {
+			handleError(userError);
+		}
+
+		return {
+			status: "success"
+		};
+	} catch (error) {
+		return {
+			status: "fail"
+		}
+	}
+
+}
+
+
+
 export async function getUserDogs(phone: String) {
 	const supabase = await createServerSupabaseClient();
 

@@ -1,8 +1,6 @@
 "use server";
 
-import { Database } from "@/types/definitions";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
-import { SupabaseAuthClient } from "@supabase/supabase-js/dist/module/lib/SupabaseAuthClient";
 
 function handleError(error: Error) {
 	console.log('Error in /services:', error);
