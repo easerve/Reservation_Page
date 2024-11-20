@@ -12,11 +12,11 @@ export interface BookingDateTime {
 }
 
 export interface PetInfo {
-  petName: string,
-  weight: number,
-  phoneNumber: string,
-  birth: string,
-  breed: string,
+  petName: string;
+  weight: number;
+  phoneNumber: string;
+  birth: string;
+  breed: string;
 }
 
 export interface BookingService {
@@ -32,6 +32,9 @@ export interface Dog {
   weight: number;
   birth: string;
   breed: string;
+  neutering: boolean;
+  sex: string;
+  regNumber: string;
 }
 
 export interface Customer {
@@ -41,4 +44,11 @@ export interface Customer {
 export interface UserDogsData {
   status: string;
   customers: Customer;
+}
+
+export interface User {
+  name: string;
+  phone: string;
+  address: string;
+  detailAddress: string;
 }
