@@ -492,7 +492,7 @@ export default function Booking() {
                           variant="outline"
                           className={`w-full justify-between h-auto py-4 ${
                             bookingData.petInfo.name === dog.name
-                              ? 'bg-primary bg-primary/10'
+                              ? 'border-primary bg-primary/10'
                               : ''
                           }`}
                           onClick={() => {
