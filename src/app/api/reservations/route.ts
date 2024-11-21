@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addReservation } from "@/actions/reservations";
-import { getReservations } from "@/actions/reservations";
+
+import {
+	getScopeReservations,
+	getReservationId,
+	updateReservation,
+	deleteReservation,
+} from "@/actions/reservations";
 
 interface RequestBody {
 	ReservationInfo: {
@@ -16,23 +22,72 @@ interface RequestBody {
 	}
 }
 
+export async function DELETE(request: NextRequest) {
+	try {
+		const { searchParams } = new URL(request.url);
+		const reservationId = searchParams.get("id");
+		const body: RequestBody = await request.json();
+
+		if (!reservationId) {
+			return NextResponse.json(
+				{ error: "Reservation ID is required" },
+				{ status: 400 }
+			);
+		}
+		deleteReservation(reservationId);
+		return NextResponse.json({ status: 'success' });
+	} catch (error) {
+		console.error("Error in /reservations:", error);
+		return NextResponse.json({ error: error.message }, { status: error.status || 500 });
+	}
+}
+
+export async function PUT(request: NextRequest) {
+	try {
+		const { searchParams } = new URL(request.url);
+		const reservationId = searchParams.get("id");
+		const body: RequestBody = await request.json();
+
+		if (!reservationId) {
+			return NextResponse.json(
+				{ error: "Reservation ID is required" },
+				{ status: 400 }
+			);
+		}
+		updateReservation(reservationId, body.ReservationInfo);
+		return NextResponse.json({ status: 'success' });
+
+	} catch (error) {
+		console.error("Error in /reservations:", error);
+		return NextResponse.json({ error: error.message }, { status: error.status || 500 });
+	}
+}
+
 export async function GET(request: NextRequest) {
 	try {
 		const { searchParams } = new URL(request.url);
 		const scopeParam = searchParams.get("scope");
-		const scope = scopeParam ? parseInt(scopeParam, 10) : 1;
+		const reservationId = searchParams.get("id");
+		if (scopeParam) {
+			const scope = scopeParam ? parseInt(scopeParam, 10) : 1;
 
-		if (isNaN(scope) || scope < 1) {
-			return NextResponse.json(
-				{ error: "Invalid scope parameter" },
-				{ status: 400 }
-			);
+			if (isNaN(scope) || scope < 1) {
+				return NextResponse.json(
+					{ error: "Invalid scope parameter" },
+					{ status: 400 }
+				);
+			}
+			const reservations = await getScopeReservations(scope);
+			return NextResponse.json({ status: 'success', data: reservations });
 		}
-		const reservations = await getReservations(scope);
-		return NextResponse.json({ status: 'success', data: reservations });
+		if (reservationId) {
+			const reservation = await getReservationId(reservationId);
+			return NextResponse.json({ status: 'success', data: reservation });
+		}
+
 	} catch (error) {
 		console.error("Error in /reservations:", error);
-		return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+		return NextResponse.json({ error: error.message }, { status: error.status || 500 });
 	}
 }
 
@@ -82,6 +137,6 @@ export async function POST(request: NextRequest) {
 		}
 	} catch (error) {
 		console.error("Error in /reservations:", error);
-		return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+		return NextResponse.json({ error: error.message }, { status: error.status || 500 });
 	}
 }
