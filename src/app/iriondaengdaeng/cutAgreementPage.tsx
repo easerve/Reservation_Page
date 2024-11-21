@@ -222,7 +222,6 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                 <input
                   type="number"
                   name="weight"
-                  value={dogInfo.weight}
                   onChange={handleDogInfoChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"

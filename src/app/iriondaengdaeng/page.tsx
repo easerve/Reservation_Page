@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import Select from "react-select";
 import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,6 @@ import {
 } from "@/components/ui/form";
 import {
   BookingData,
-  Dog,
   Customer,
   UserDogsData,
   MainService,
@@ -59,12 +57,7 @@ export default function Booking() {
     }));
   };
 
-  const updatePetInfo = (info: {
-    name?: string;
-    weight?: number;
-    birth?: string;
-    breed?: string;
-  }) => {
+  const updatePetInfo = (info: PetInfo) => {
     setBookingData((prev) => ({
       ...prev,
       petInfo: {
@@ -388,29 +381,10 @@ export default function Booking() {
         );
 
       case 2:
-        const getFieldLabel = (field: string) => {
-          if (field === "name") {
-            return "반려견 이름";
-          } else if (field === "weight") {
-            return "반려견 체중 (kg)";
-          } else if (field === "birth") {
-            return "반려견 생년월일";
-          } else if (field === "breed") {
-            return "반려견 견종";
-          }
-          return "";
-        };
-
         return (
           <Form {...petInfoForm}>
             <form
-              onSubmit={petInfoForm.handleSubmit((values) => {
-                updatePetInfo({
-                  name: values.name,
-                  weight: Number(values.weight),
-                  birth: values.birth,
-                  breed: selectedBreed ? selectedBreed.name : "",
-                });
+              onSubmit={petInfoForm.handleSubmit(() => {
                 setCurrentStep(3);
               })}
             >
@@ -430,12 +404,7 @@ export default function Booking() {
                             : ""
                         }`}
                         onClick={() => {
-                          updatePetInfo({
-                            name: dog.name,
-                            weight: dog.weight,
-                            birth: dog.birth,
-                            breed: dog.breed,
-                          });
+                          updatePetInfo({ ...dog });
                         }}
                       >
                         <div className="text-left">
