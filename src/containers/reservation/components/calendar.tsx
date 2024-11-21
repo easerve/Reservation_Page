@@ -52,7 +52,14 @@ function updateTimeInDate(date: Date, time: string): Date {
   return updatedDate;
 }
 
-const Calendar: React.FC = () => {
+const Calendar: React.FC = (props: {
+  currentMonth: { year: number; month: number };
+  reservations: Reservation[];
+  setReservations: React.Dispatch<React.SetStateAction<Reservation[]>>;
+  setCurrentMonth: React.Dispatch<
+    React.SetStateAction<{ year: number; month: number }>
+  >;
+}) => {
   const [currentEvents, setCurrentEvents] = useState<EventApi[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState<boolean>(false);

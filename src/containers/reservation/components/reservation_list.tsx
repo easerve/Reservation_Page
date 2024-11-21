@@ -61,6 +61,7 @@ export default function ReservationList(props: {
 
   const groupedReservations = props.reservations.reduce<GroupedReservations>(
     (groups, reservation) => {
+      console.log("reservation: ", reservation);
       const date = reservation.time;
       const dateStr = date.toDateString();
       if (!groups[dateStr]) {
@@ -159,9 +160,7 @@ export default function ReservationList(props: {
                         getAge2(reservation.birth).months
                       }개월`}</TableCell>
                       <TableCell>{reservation.phone}</TableCell>
-                      <TableCell>
-                        {reservation.service_name.join(", ")}
-                      </TableCell>
+                      <TableCell>{reservation.service_name}</TableCell>
                       <TableCell>{reservation.additional_service}</TableCell>
                       <TableCell>
                         {reservation.memo.length < 10
@@ -199,10 +198,10 @@ export default function ReservationList(props: {
                         </DropdownMenu>
                       </TableCell>
                       <TableCell>
-                        {reservation.price.toLocaleString()}원
+                        {reservation.price?.toLocaleString()}원
                       </TableCell>
                       <TableCell>
-                        {reservation.additional_price.toLocaleString()}원
+                        {reservation.additional_price?.toLocaleString()}원
                       </TableCell>
                       <TableCell>
                         {`${(

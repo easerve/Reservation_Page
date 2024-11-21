@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,6 @@ export default function ReservationPage() {
     year: number;
     month: number;
   }>({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
-
   const handleAddEvent = (data: z.infer<typeof outerFormSchema>) => {
     const newData = {
       ...data,
@@ -53,6 +52,33 @@ export default function ReservationPage() {
     console.log("close dialog");
     setIsDialogOpen(false);
   };
+
+  function getNextMonth(year, month) {
+    if (month === 12) {
+      return `${year + 1}-01-01`;
+    } else {
+      return `${year}-${month + 1}-01`;
+    }
+  }
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch(
+        `/api/reservations/range?start_date=${currentMonth.year}-${
+          currentMonth.month
+        }-01&end_date=${getNextMonth(currentMonth.year, currentMonth.month)}`
+      );
+      const data = await res.json();
+      setReservations(
+        data.data.map((item) => {
+          return {
+            ...item,
+            time: new Date(item.time),
+          };
+        })
+      );
+    })();
+  }, [currentMonth]);
 
   return (
     <div className="w-full h-full max-w-6xl mx-auto p-4 flex flex-col">
@@ -91,7 +117,6 @@ export default function ReservationPage() {
           <CalendarBar
             currentMonth={currentMonth}
             setCurrentMonth={setCurrentMonth}
-            setReservations={setReservations}
           />
           <div className="border-solid border-2 rounded-2xl border-gray-200 mt-4 mb-12 flex flex-col flex-grow justify-between overflow-hidden">
             <ReservationList
@@ -105,7 +130,12 @@ export default function ReservationPage() {
           </div>
         </TabsContent>
         <TabsContent value="calendar" className="mt-0 flex flex-col">
-          <Calendar />
+          <Calendar
+            currentMonth={currentMonth}
+            setCurrentMonth={setCurrentMonth}
+            reservations={reservations}
+            setReservations={setReservations}
+          />
         </TabsContent>
         <DefaultDialog
           open={isDialogOpen}
