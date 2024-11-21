@@ -76,6 +76,52 @@ function handleError(error: PostgrestError) {
   throw new Error('Internal server error', error);
 }
 
+export async function getReservationsByPhone(
+	phone: string,
+	limit: number = 10
+) : Promise<AdminReservationInfo[]> {
+	const supabase = await createServerSupabaseClient();
+	const { data: reservationsData, error: reservationsError } = await supabase
+		.from('reservations')
+		.select(`
+			uuid,
+			reservation_date,
+			memo,
+			status,
+			consent_form,
+			additional_services,
+			additional_price,
+			total_price,
+			service_name,
+			pet_id!inner(
+				name,
+				birth,
+				weight,
+				memo,
+				neutering,
+				sex,
+				reg_number,
+				user_id!inner(
+					name,
+					phone
+				),
+				breed_id(
+					name
+				)
+			)
+		`)
+		.eq('pet_id.user_id.phone', phone)
+		.limit(limit);
+
+	if (reservationsError) {
+		if (reservationsError.code === 'PGRST116') {
+			throw new Error('Reservation not found');
+		}
+		handleError(reservationsError);
+	}
+	return reservationsData as undefined as AdminReservationInfo[];
+}
+
 export async function getReservationId(reservationId: string) : Promise<AdminReservationInfo>{
 	const supabase = await createServerSupabaseClient();
 	const {data: reservationData, error: reservationError} = await supabase
