@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { Dot, X } from "lucide-react";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 
@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { Reservation } from "@/types/interface";
+import { Reservation, ReservationStatus } from "@/types/interface";
 
 import { getTimeString2, getAge2 } from "@/components/utils/date_utils";
 import DefaultDialog from "@/components/default_dialog/default_dialog";
@@ -45,6 +45,7 @@ import {
 import { DropdownMenuGroup } from "@/components/ui/dropdown-menu";
 import exp from "constants";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getTrimmedStr } from "@/utils/functions";
 
 type GroupedReservations = {
   [key: string]: Reservation[];
@@ -160,12 +161,14 @@ export default function ReservationList(props: {
                         getAge2(reservation.birth).months
                       }개월`}</TableCell>
                       <TableCell>{reservation.phone}</TableCell>
-                      <TableCell>{reservation.service_name}</TableCell>
-                      <TableCell>{reservation.additional_service}</TableCell>
                       <TableCell>
-                        {reservation.memo.length < 10
-                          ? reservation.memo
-                          : `${reservation.memo.slice(0, 9)}...`}
+                        {getTrimmedStr(reservation.service_name, 20)}
+                      </TableCell>
+                      <TableCell>
+                        {getTrimmedStr(reservation.additional_services, 20)}
+                      </TableCell>
+                      <TableCell>
+                        {getTrimmedStr(reservation.memo, 10)}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -173,26 +176,38 @@ export default function ReservationList(props: {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="rounded-full"
+                              className={`rounded-full ${
+                                ReservationStatus.find(
+                                  (status) =>
+                                    status.value === reservation.status
+                                )?.css
+                              }`}
                             >
                               {reservation.status}
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent className="bg-white border border-solid p-2 rounded-sm mt-2">
+                          <DropdownMenuContent className="p-2">
                             <DropdownMenuSeparator />
-                            <DropdownMenuRadioGroup>
-                              <DropdownMenuRadioItem
-                                value="top"
-                                className="hover: border-none"
-                              >
-                                Top
-                              </DropdownMenuRadioItem>
-                              <DropdownMenuRadioItem value="bottom">
-                                Bottom
-                              </DropdownMenuRadioItem>
-                              <DropdownMenuRadioItem value="right">
-                                Right
-                              </DropdownMenuRadioItem>
+                            <DropdownMenuRadioGroup
+                              value={reservation.status}
+                              onValueChange={() => {
+                                console.log("onValueChange");
+                              }}
+                              className="bg-white bg-opacity-5 backdrop-blur-md p-2 rounded-lg border"
+                            >
+                              {ReservationStatus.map((status) => (
+                                <DropdownMenuRadioItem
+                                  value={status.value}
+                                  className={`${status.css} py-1 px-3 rounded-full m-1 po`}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                  }}
+                                >
+                                  <div className="flex font-bold text-[0.7rem]">
+                                    {status.value}
+                                  </div>
+                                </DropdownMenuRadioItem>
+                              ))}
                             </DropdownMenuRadioGroup>
                           </DropdownMenuContent>
                         </DropdownMenu>
