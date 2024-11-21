@@ -2,9 +2,11 @@
 
 import { Database } from '@/types/definitions';
 import { createServerSupabaseClient } from '@/utils/supabase/server';
+import { PostgrestError } from '@supabase/supabase-js';
 
 export type ReservationRow = Database["public"]["Tables"]["reservations"]["Row"];
 export type ReservationInsert = Database["public"]["Tables"]["reservations"]["Insert"];
+export type ReservationUpdate = Database["public"]["Tables"]["reservations"]["Update"];
 
 interface ReservationInfo {
 	pet_id: string;
@@ -46,13 +48,63 @@ interface AdminReservationInfo {
     };
 }
 
-function handleError(error: Error) {
+function handleError(error: PostgrestError) {
   console.error('Error in /reservations:', error);
-  throw new Error('Internal server error');
+  throw new Error('Internal server error', error);
 }
 
+export async function getReservationId(reservationId: string) {
+	const supabase = await createServerSupabaseClient();
+	const {data: reservationData, error: reservationError} = await supabase
+		.from('reservations')
+		.select('*')
+		.eq('uuid', reservationId)
+		.single();
 
-export async function getReservations(scope: number) {
+	if (reservationError) {
+		if (reservationError.code === 'PGRST116') {
+			throw new Error('Reservation not found');
+		}
+		handleError(reservationError);
+	}
+
+	return reservationData as ReservationRow;
+}
+
+export async function deleteReservation(reservationId: string) {
+	const supabase = await createServerSupabaseClient();
+	const {data: deleteData, error: reservationError} = await supabase
+		.from('reservations')
+		.delete()
+		.eq('uuid', reservationId);
+
+	if (reservationError) {
+		if (reservationError.code === 'PGRST116') {
+			throw new Error('Reservation not found');
+		}
+		handleError(reservationError);
+	}
+}
+
+export async function updateReservation(
+	reservationId: string,
+	reservationInfo: ReservationUpdate
+) {
+	const supabase = await createServerSupabaseClient();
+	const {data: updateData, error: reservationError} = await supabase
+		.from('reservations')
+		.update(reservationInfo)
+		.eq('uuid', reservationId);
+
+	if (reservationError) {
+		if (reservationError.code === 'PGRST116') {
+			throw new Error('Reservation not found');
+		}
+		handleError(reservationError);
+	}
+}
+
+export async function getScopeReservations(scope: number) {
 	const supabase = await createServerSupabaseClient();
 
 	const today = new Date();
@@ -159,5 +211,5 @@ export async function getReservationsByDateRange(start_date: string, end_date: s
 		handleError(reservationError);
 	}
 
-	return reservationData as AdminReservationInfo[];
+	return reservationData as undefined as AdminReservationInfo[];
 }
