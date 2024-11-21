@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import { getDate2 } from "@/components/utils/date_utils";
 import { getDate } from "date-fns";
 import CalendarBar from "./components/calendar_bar";
 import { getReservationsOfOneMonth } from "@/services/admin/get";
+import { ReservationUpdate } from "@/actions/reservations";
 
 export default function ReservationPage() {
   const [view, setView] = useState("list");
@@ -34,6 +35,9 @@ export default function ReservationPage() {
     year: number;
     month: number;
   }>({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
+
+  const monthlyRevenue = useRef<string>("0");
+
   const handleAddEvent = (data: z.infer<typeof outerFormSchema>) => {
     const newData = {
       ...data,
@@ -64,6 +68,28 @@ export default function ReservationPage() {
     })();
   }, [currentMonth]);
 
+  function updateReservation(id: string, data: Partial<Reservation>) {
+    const newReservations = reservations.map((reservation) => {
+      return reservation.id === id ? { ...reservation, ...data } : reservation;
+    });
+    setReservations(newReservations);
+  }
+
+  function deleteReservation(id: string) {
+    const newReservations = reservations.filter(
+      (reservation) => reservation.id !== id
+    );
+    setReservations(newReservations);
+  }
+
+  monthlyRevenue.current = reservations
+    .reduce(
+      (acc, cur) =>
+        acc +
+        (cur.status === "미용완료" ? cur.price + cur.additional_price : 0),
+      0
+    )
+    .toLocaleString();
   return (
     <div className="w-full h-full max-w-6xl mx-auto p-4 flex flex-col">
       <div className="flex justify-between items-center mb-6">
@@ -105,11 +131,14 @@ export default function ReservationPage() {
           <div className="border-solid border-2 rounded-2xl border-gray-200 mt-4 mb-12 flex flex-col flex-grow justify-between overflow-hidden">
             <ReservationList
               reservations={reservations}
-              setReservations={setReservations}
+              updateReservation={updateReservation}
+              deleteReservation={deleteReservation}
             />
             <div className="bg-primary/50 flex justify-between p-4 text-primary-foreground">
               <span className="font-bold">월 매출</span>
-              <span>{reservations.length} 원</span>
+              <span className="font-extrabold">
+                {monthlyRevenue.current} 원
+              </span>
             </div>
           </div>
         </TabsContent>
