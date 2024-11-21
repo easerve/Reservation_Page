@@ -1,5 +1,6 @@
 "use server";
 
+
 import { Database } from '@/types/definitions';
 import { createServerSupabaseClient } from '@/utils/supabase/server';
 import { PostgrestError } from '@supabase/supabase-js';
@@ -8,44 +9,45 @@ export type ReservationRow = Database["public"]["Tables"]["reservations"]["Row"]
 export type ReservationInsert = Database["public"]["Tables"]["reservations"]["Insert"];
 export type ReservationUpdate = Database["public"]["Tables"]["reservations"]["Update"];
 
+
 interface ReservationInfo {
-	pet_id: string;
-	reservation_date: string;
-	memo: string;
-	status: string;
-	consent_form: boolean;
-	service_name: string;
-	additional_services: string;
-	total_price: number;
-	additional_price: number;
+  pet_id: string;
+  reservation_date: string;
+  memo: string;
+  status: string;
+  consent_form: boolean;
+  service_name: string;
+  additional_services: string;
+  total_price: number;
+  additional_price: number;
 }
 
 interface AdminReservationInfo {
-    uuid: string;
-    reservation_date: string;
-    memo: string | null;
-    status: string;
-    consent_form: boolean;
-	additional_services: string | null
-	additional_price: number | null
-    total_price: number;
-    service_name: string;
-    pet_id: {
-        name: string | null;
-        birth: string | null;
-        weight: number | null;
-        user_id: {
-            name: string | null;
-            phone: string;
-        };
-        breed_id: {
-            name: string;
-        };
-        memo: string | null;
-        neutering: boolean | null;
-		sex: string | null;
-		reg_number: string | null;
+  uuid: string;
+  reservation_date: string;
+  memo: string | null;
+  status: string;
+  consent_form: boolean;
+  additional_services: string | null;
+  additional_price: number | null;
+  total_price: number;
+  service_name: string;
+  pet_id: {
+    name: string | null;
+    birth: string | null;
+    weight: number | null;
+    user_id: {
+      name: string | null;
+      phone: string;
     };
+    breed_id: {
+      name: string;
+    };
+    memo: string | null;
+    neutering: boolean | null;
+    sex: string | null;
+    reg_number: string | null;
+  };
 }
 
 function handleError(error: PostgrestError) {
@@ -143,41 +145,45 @@ export async function getScopeReservations(scope: number) {
 }
 
 export async function addReservation(reservationInfo: ReservationInfo) {
-	const supabase = await createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
-	// Insert reservation data
-	const { data: insertData, error: insertError } = await supabase
-		.from('reservations')
-		.insert({
-			pet_id: reservationInfo.pet_id,
-			reservation_date: reservationInfo.reservation_date,
-			memo: reservationInfo.memo,
-			status: reservationInfo.status,
-			consent_form: reservationInfo.consent_form,
-			service_name: reservationInfo.service_name,
-			additional_services: reservationInfo.additional_services,
-			total_price: reservationInfo.total_price,
-			additional_price: reservationInfo.additional_price,
-		})
-		.select()
-		.single();
+  // Insert reservation data
+  const { data: insertData, error: insertError } = await supabase
+    .from("reservations")
+    .insert({
+      pet_id: reservationInfo.pet_id,
+      reservation_date: reservationInfo.reservation_date,
+      memo: reservationInfo.memo,
+      status: reservationInfo.status,
+      consent_form: reservationInfo.consent_form,
+      service_name: reservationInfo.service_name,
+      additional_services: reservationInfo.additional_services,
+      total_price: reservationInfo.total_price,
+      additional_price: reservationInfo.additional_price,
+    })
+    .select()
+    .single();
 
-	if (insertError) {
-		handleError(insertError);
-	}
+  if (insertError) {
+    handleError(insertError);
+  }
 
-	return {
-		status: "success",
-		reservationId: insertData?.uuid,
-	}
+  return {
+    status: "success",
+    reservationId: insertData?.uuid,
+  };
 }
 
-export async function getReservationsByDateRange(start_date: string, end_date: string) : Promise<AdminReservationInfo[]> {
-	const supabase = await createServerSupabaseClient();
+export async function getReservationsByDateRange(
+  start_date: string,
+  end_date: string
+): Promise<AdminReservationInfo[]> {
+  const supabase = await createServerSupabaseClient();
 
-	const { data: reservationData, error: reservationError } = await supabase
-		.from("reservations")
-		.select(`
+  const { data: reservationData, error: reservationError } = await supabase
+    .from("reservations")
+    .select(
+      `
 			uuid,
 			reservation_date,
 			memo,
