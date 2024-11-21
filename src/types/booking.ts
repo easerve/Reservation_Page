@@ -74,3 +74,17 @@ export interface User {
   address: string;
   detailAddress: string;
 }
+
+export interface ReservationData {
+  Reservation: {
+    pet_id: string;
+    reservation_date: string;
+    memo: string;
+    status: string;
+    consent_form: boolean;
+    service_name: string;
+    additional_services: string;
+    total_price: number;
+    additional_price: number;
+  };
+}

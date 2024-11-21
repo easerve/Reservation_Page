@@ -35,7 +35,7 @@ import {
   AdditionalService,
   PetInfo,
 } from "@/types/booking";
-import { INITIAL_BOOKING_STATE } from "@/constants/booking";
+import { INITIAL_BOOKING_STATE, BIG_DOG_SERVICE_PRICES } from "@/constants/booking";
 import CutAgreementPage from "@/app/iriondaengdaeng/cutAgreementPage";
 
 export default function Booking() {
@@ -152,6 +152,12 @@ export default function Booking() {
   }, [isPuppyAdd, userDogsData]);
 
   const price = useMemo(() => {
+    if (
+      !bookingData.mainService &&
+      bookingData.additionalServices.length === 0
+    ) {
+      return [0, 0];
+    }
     let totalPrice = 0;
 
     if (bookingData.mainService) {
@@ -831,27 +837,7 @@ export default function Booking() {
           ? ((bookingData.petInfo.weight - 10 + 1) / 2) * 5000
           : 0;
       // NOTE: 대형견 가격으로 갱신
-      const bigDogServicePrices =
-        typeId === 4
-          ? [
-              {
-                id: 1,
-                price_per_kg: 7000,
-              },
-              {
-                id: 2,
-                price_per_kg: 10000,
-              },
-              {
-                id: 3,
-                price_per_kg: 13000,
-              },
-              {
-                id: 4,
-                price_per_kg: 20000,
-              },
-            ]
-          : [];
+      const bigDogServicePrices = typeId === 4 ? BIG_DOG_SERVICE_PRICES : [];
 
       data.data.mainServices.forEach((service: MainService) => {
         if (typeId === 4) {
