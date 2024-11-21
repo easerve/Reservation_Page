@@ -20,7 +20,6 @@ import OuterReservationForm, {
 import App from "next/app";
 
 import { Reservation } from "@/types/interface";
-import { reservationData } from "@/data/data";
 import { getDate2 } from "@/components/utils/date_utils";
 import { getDate } from "date-fns";
 import CalendarBar from "./components/calendar_bar";
