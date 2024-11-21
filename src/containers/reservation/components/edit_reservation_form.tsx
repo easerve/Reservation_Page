@@ -82,8 +82,6 @@ export default function EditReservationForm(props: {
               additional_services: data.additional_service,
               additional_price: data.additional_price,
               reservation_date: data.time.toISOString(),
-              total_price:
-                props.reservation.total_price + data.additional_price,
             },
           }),
         }
@@ -100,8 +98,6 @@ export default function EditReservationForm(props: {
                   additional_services: data.additional_service,
                   additional_price: data.additional_price,
                   reservation_date: data.time.toISOString(),
-                  total_price:
-                    props.reservation.total_price + data.additional_price,
                 }
               : reservation
           )

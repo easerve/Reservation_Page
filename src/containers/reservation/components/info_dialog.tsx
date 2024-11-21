@@ -133,7 +133,7 @@ export default function InfoDialog(props: {
                 </span>
               </div>
               <div className="text-sm font-medium">
-                가격: {props.reservation.total_price.toLocaleString()}원
+                가격: {props.reservation.price.toLocaleString()}원
               </div>
               {props.reservation.additional_price > 0 && (
                 <div className="text-sm font-medium">
@@ -144,7 +144,7 @@ export default function InfoDialog(props: {
               <div className="text-sm font-medium">
                 총 금액:{" "}
                 {(
-                  props.reservation.total_price + props.reservation.additional_price
+                  props.reservation.price + props.reservation.additional_price
                 ).toLocaleString()}
                 원
               </div>
