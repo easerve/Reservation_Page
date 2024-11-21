@@ -34,6 +34,7 @@ import {
   Option,
   AdditionalService,
   PetInfo,
+  Dog,
 } from "@/types/booking";
 import {
   INITIAL_BOOKING_STATE,
@@ -60,11 +61,11 @@ export default function Booking() {
     }));
   };
 
-  const updatePetInfo = (info: PetInfo) => {
+  const updatePetInfo = (info: Dog) => {
     setBookingData((prev) => ({
       ...prev,
-      petInfo: {
-        ...prev.petInfo,
+      dog: {
+        ...prev.dog,
         ...info,
       },
     }));
@@ -128,18 +129,22 @@ export default function Booking() {
   const petInfoForm = useForm<z.infer<typeof petInfoSchema>>({
     resolver: zodResolver(petInfoSchema),
     defaultValues: {
-      name: bookingData.petInfo.name,
-      weight: String(bookingData.petInfo.weight),
-      birth: String(bookingData.petInfo.birth),
-      breed: bookingData.petInfo.breed,
+      name: bookingData.dog.petName,
+      weight: String(bookingData.dog.weight),
+      birth: String(bookingData.dog.birth),
+      breed: bookingData.dog.breed.toString(),
     },
   });
 
   const [userDogsData, setUserDogsData] = useState<UserDogsData>({
     status: "" as string,
     customers: {
+      id: "" as string,
+      name: "" as string,
       phone: "" as string,
-      dogs: [] as PetInfo[],
+      address: "" as string,
+      detailAddress: "" as string,
+      dogs: [] as Dog[],
     } as Customer,
   });
 
@@ -413,12 +418,12 @@ export default function Booking() {
                     <CardTitle>반려견 선택</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {userDogsData.customers.dogs.map((dog) => (
+                    {userDogsData.customers.dogs.map((dog, idx) => (
                       <Button
-                        key={dog.id}
+                        key={idx}
                         variant="outline"
                         className={`w-full justify-between h-auto py-4 ${
-                          bookingData.petInfo.name === dog.name
+                          bookingData.dog.petName === dog.petName
                             ? "border-primary bg-primary/10"
                             : ""
                         }`}
@@ -427,7 +432,7 @@ export default function Booking() {
                         }}
                       >
                         <div className="text-left">
-                          <p>이름: {dog.name}</p>
+                          <p>이름: {dog.petName}</p>
                           <p>견종: {dog.breed}</p>
                           <p>
                             나이:
@@ -738,8 +743,8 @@ export default function Booking() {
 
                 <div>
                   <h3 className="font-medium text-gray-600">반려견 정보</h3>
-                  <p>이름: {bookingData.petInfo.name}</p>
-                  <p>체중: {bookingData.petInfo.weight}kg</p>
+                  <p>이름: {bookingData.dog.petName}</p>
+                  <p>체중: {bookingData.dog.weight}kg</p>
                   <p>연락처: {bookingData.phoneNumber}</p>
                 </div>
 
@@ -822,15 +827,15 @@ export default function Booking() {
   }
 
   async function fetchServicePrices() {
-    if (!bookingData.petInfo.weight || !bookingData.petInfo.breed) return;
+    if (!bookingData.dog.weight || !bookingData.dog.breed) return;
 
     setIsLoadingPrices(true);
     try {
-      const weightRangeId = getWeightRangeId(bookingData.petInfo.weight);
+      const weightRangeId = getWeightRangeId(bookingData.dog.weight);
       // NOTE: 불필요한 while
-      const typeId =
-        breeds.find((breed) => breed.name === bookingData.petInfo.breed)
-          ?.type ?? 1;
+      const typeId = bookingData.dog.breed;
+      // breeds.find((breed) => breed.name === bookingData.dog.breed)
+      //   ?.type ?? 1;
 
       const response = await fetch(
         `/api/services?weightRangeId=${weightRangeId}&typeId=${typeId}`
@@ -846,8 +851,8 @@ export default function Booking() {
       const data = await response.json();
       // NOTE: kg당 가격 추가
       const addPrice =
-        bookingData.petInfo.weight > 10 && typeId !== 4
-          ? Math.floor((bookingData.petInfo.weight - 10 + 1) / 2) * 5000
+        bookingData.dog.weight > 10 && typeId !== 4
+          ? Math.floor((bookingData.dog.weight - 10 + 1) / 2) * 5000
           : 0;
       // NOTE: 대형견 가격으로 갱신
       const bigDogServicePrices = typeId === 4 ? BIG_DOG_SERVICE_PRICES : [];
@@ -858,8 +863,7 @@ export default function Booking() {
             (bigDogService) => bigDogService.id === service.id
           );
           if (bigDogService) {
-            service.price =
-              bigDogService.price_per_kg * bookingData.petInfo.weight;
+            service.price = bigDogService.price_per_kg * bookingData.dog.weight;
           }
         } else {
           service.price += addPrice;
@@ -897,7 +901,7 @@ export default function Booking() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ReservationInfo: {
-            pet_id: bookingData.petInfo.id,
+            pet_id: bookingData.dog.id,
             reservation_date: `${
               bookingData.dateTime.date.toISOString().split("T")[0]
             } ${bookingData.dateTime.time}:00+09`,

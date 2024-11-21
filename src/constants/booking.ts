@@ -2,7 +2,7 @@ import {
   BookingData,
   MainService,
   AdditionalService,
-  PetInfo,
+  Dog,
 } from "../types/booking";
 
 export const INITIAL_BOOKING_STATE: BookingData = {
@@ -10,13 +10,17 @@ export const INITIAL_BOOKING_STATE: BookingData = {
     date: new Date() as Date,
     time: undefined as string | undefined,
   },
-  petInfo: {
-    id: "" as string,
-    name: "" as string,
+  dog: {
+    id: "" as String,
+    petName: "" as string,
     weight: 0 as number,
     birth: "" as string,
-    breed: "" as string,
-  } as PetInfo,
+    breed: 0 as number,
+    neutering: false as boolean,
+    sex: "" as string,
+    regNumber: "" as string,
+    phoneNumber: "" as string,
+  } as Dog,
   phoneNumber: "" as string,
   mainService: undefined as MainService | undefined,
   additionalServices: [] as AdditionalService[],
