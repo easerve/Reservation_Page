@@ -479,8 +479,12 @@ export default function Booking() {
                   disabled={(date) => {
                     const today = new Date();
                     today.setHours(0, 0, 0, 0);
+                    const fiveMonthsFromNow = new Date(
+                      new Date().setMonth(new Date().getMonth() + 6)
+                    );
                     return (
                       date < today ||
+                      date > fiveMonthsFromNow ||
                       fullyBookedDates.some(
                         (bookedDate) =>
                           bookedDate.toDateString() === date.toDateString()
@@ -821,8 +825,46 @@ export default function Booking() {
       }[] = [];
 
       const data = await response.json();
+      // NOTE: kg당 가격 추가
+      const addPrice =
+        bookingData.petInfo.weight > 10 && typeId !== 4
+          ? ((bookingData.petInfo.weight - 10 + 1) / 2) * 5000
+          : 0;
+      // NOTE: 대형견 가격으로 갱신
+      const bigDogServicePrices =
+        typeId === 4
+          ? [
+              {
+                id: 1,
+                price_per_kg: 7000,
+              },
+              {
+                id: 2,
+                price_per_kg: 10000,
+              },
+              {
+                id: 3,
+                price_per_kg: 13000,
+              },
+              {
+                id: 4,
+                price_per_kg: 20000,
+              },
+            ]
+          : [];
 
       data.data.mainServices.forEach((service: MainService) => {
+        if (typeId === 4) {
+          const bigDogService = bigDogServicePrices.find(
+            (bigDogService) => bigDogService.id === service.id
+          );
+          if (bigDogService) {
+            service.price =
+              bigDogService.price_per_kg * bookingData.petInfo.weight;
+          }
+        } else {
+          service.price += addPrice;
+        }
         service.options.forEach((option: Option) => {
           const category = option.category;
           const existingCategory = newOptionCategories.find(
@@ -863,15 +905,15 @@ export default function Booking() {
             memo: bookingData.inquiry,
             status: userDogsData.status === "new" ? "예약대기" : "예약확정",
             consent_form: true,
-            services: [
-              bookingData.mainService?.name,
-              bookingData.mainService?.options.map((option) => option.name),
-            ]
-              .flat()
+            service_name:
+              `${bookingData.mainService?.name}(` +
+              [bookingData.mainService?.options.map((option) => option.name), ,]
+                .flat()
+                .join(", ") +
+              ")",
+            additional_services: bookingData.additionalServices
+              .map((service) => service.service_name)
               .join(", "),
-            additional_services: bookingData.additionalServices.map(
-              (service) => service.id
-            ),
             total_price: price[0],
             additional_price: price[1] - price[0],
           },
