@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,11 @@ import OuterReservationForm, {
 import App from "next/app";
 
 import { Reservation } from "@/types/interface";
-import { reservationData } from "@/data/data";
 import { getDate2 } from "@/components/utils/date_utils";
 import { getDate } from "date-fns";
 import CalendarBar from "./components/calendar_bar";
+import { getReservationsOfOneMonth } from "@/services/admin/get";
+import { ReservationUpdate } from "@/actions/reservations";
 
 export default function ReservationPage() {
   const [view, setView] = useState("list");
@@ -33,9 +34,9 @@ export default function ReservationPage() {
     year: number;
     month: number;
   }>({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
-  const [breeds, setBreeds] = useState<
-    { id: number; name: string; type: number }[]
-  >([]);
+
+  const monthlyRevenue = useRef<string>("0");
+
   const handleAddEvent = (data: z.infer<typeof outerFormSchema>) => {
     const newData = {
       ...data,
@@ -43,54 +44,51 @@ export default function ReservationPage() {
       status: "예약 대기",
       time: new Date(data.time),
       birth: getDate2(data.birth),
-      service_name: [data.service_name],
+      service_name: data.service_name,
       price: 0,
     } as Reservation;
-    console.log("submit done: ", newData);
+    // console.log("submit done: ", newData);
     setReservations([...reservations, newData]);
     handleCloseDialog();
   };
 
   const handleCloseDialog = () => {
-    console.log("close dialog");
+    // console.log("close dialog");
     setIsDialogOpen(false);
   };
 
-  function getNextMonth(year, month) {
-    if (month === 12) {
-      return `${year + 1}-01-01`;
-    } else {
-      return `${year}-${month + 1}-01`;
-    }
-  }
-
   useEffect(() => {
     (async () => {
-      const res = await fetch(
-        `/api/reservations/range?start_date=${currentMonth.year}-${
-          currentMonth.month
-        }-01&end_date=${getNextMonth(currentMonth.year, currentMonth.month)}`
+      const reservations = await getReservationsOfOneMonth(
+        currentMonth.year,
+        currentMonth.month
       );
-      const data = await res.json();
-      setReservations(
-        data.data.map((item) => {
-          return {
-            ...item,
-            time: new Date(item.time),
-          };
-        })
-      );
+      setReservations(reservations);
     })();
   }, [currentMonth]);
 
-  useEffect(() => {
-    (async () => {
-      const res = await fetch(`/api/pets/breed`);
-      const data = await res.json();
-      setBreeds(data.data);
-    })();
-  }, []);
+  function updateReservation(id: string, data: Partial<Reservation>) {
+    const newReservations = reservations.map((reservation) => {
+      return reservation.id === id ? { ...reservation, ...data } : reservation;
+    });
+    setReservations(newReservations);
+  }
 
+  function deleteReservation(id: string) {
+    const newReservations = reservations.filter(
+      (reservation) => reservation.id !== id
+    );
+    setReservations(newReservations);
+  }
+
+  monthlyRevenue.current = reservations
+    .reduce(
+      (acc, cur) =>
+        acc +
+        (cur.status === "미용완료" ? cur.price + cur.additional_price : 0),
+      0
+    )
+    .toLocaleString();
   return (
     <div className="w-full h-full max-w-6xl mx-auto p-4 flex flex-col">
       <div className="flex justify-between items-center mb-6">
@@ -132,11 +130,14 @@ export default function ReservationPage() {
           <div className="border-solid border-2 rounded-2xl border-gray-200 mt-4 mb-12 flex flex-col flex-grow justify-between overflow-hidden">
             <ReservationList
               reservations={reservations}
-              setReservations={setReservations}
+              updateReservation={updateReservation}
+              deleteReservation={deleteReservation}
             />
             <div className="bg-primary/50 flex justify-between p-4 text-primary-foreground">
               <span className="font-bold">월 매출</span>
-              <span>{reservations.length} 원</span>
+              <span className="font-extrabold">
+                {monthlyRevenue.current} 원
+              </span>
             </div>
           </div>
         </TabsContent>
@@ -146,6 +147,7 @@ export default function ReservationPage() {
             setCurrentMonth={setCurrentMonth}
             reservations={reservations}
             setReservations={setReservations}
+            updateReservation={updateReservation}
           />
         </TabsContent>
         <DefaultDialog

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { reservationData } from "@/data/data";
 import { Reservation } from "@/types/interface";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";

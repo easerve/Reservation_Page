@@ -78,8 +78,8 @@ export default function Booking() {
     setBookingData((prev) => ({
       ...prev,
       dateTime: {
-        ...prev.dateTime,
         date,
+        time: undefined,
       },
     }));
   };
@@ -155,7 +155,7 @@ export default function Booking() {
   useEffect(() => {
     const loadBreeds = async () => {
       try {
-        const breedData = await fetch("http://localhost:3000/api/pets/breed");
+        const breedData = await fetch("/api/pets/breed");
         const breedOptions = await breedData.json();
         setBreeds(breedOptions.data);
       } catch (error) {
@@ -807,9 +807,7 @@ export default function Booking() {
 
   async function getUserData(values: { phoneNumber: string }) {
     try {
-      const res = await fetch(
-        "http://localhost:3000/api/auth/profile?phone=" + values.phoneNumber
-      );
+      const res = await fetch("/api/auth/profile?phone=" + values.phoneNumber);
       const data = await res.json();
 
       setUserDogsData(data);
@@ -820,7 +818,7 @@ export default function Booking() {
 
   async function fetchBookedDate() {
     try {
-      const res = await fetch("http://localhost:3000/api/reservations?scope=6");
+      const res = await fetch("/api/reservations?scope=6");
       const data = await res.json();
       setBookedDates(data.data);
     } catch (error) {

@@ -6,6 +6,7 @@ import {
 	getReservationId,
 	updateReservation,
 	deleteReservation,
+	getReservationsByPhone,
 } from "@/actions/reservations";
 
 interface RequestBody {
@@ -20,6 +21,32 @@ interface RequestBody {
 	  total_price: number;
 	  additional_price: number;
 	}
+}
+
+interface AdminReservationInfo {
+    uuid: string;
+    reservation_date: string;
+    memo: string;
+    status: string;
+    consent_form: boolean;
+    additional_services: string;
+    additional_price: number;
+    total_price: number;
+    service_name: string;
+    pet_id: {
+        name: string;
+        birth: string;
+        weight: number;
+        user_id: {
+            name: string;
+            phone: string;
+        };
+        breed_id: {
+            name: string;
+        };
+        memo: string;
+        neutering: boolean;
+    };
 }
 
 export async function DELETE(request: NextRequest) {
@@ -68,6 +95,7 @@ export async function GET(request: NextRequest) {
 		const { searchParams } = new URL(request.url);
 		const scopeParam = searchParams.get("scope");
 		const reservationId = searchParams.get("id");
+		const phone = searchParams.get("phone");
 		if (scopeParam) {
 			const scope = scopeParam ? parseInt(scopeParam, 10) : 1;
 
@@ -80,10 +108,54 @@ export async function GET(request: NextRequest) {
 			const reservations = await getScopeReservations(scope);
 			return NextResponse.json({ status: 'success', data: reservations });
 		}
-		if (reservationId) {
-			const reservation = await getReservationId(reservationId);
-			return NextResponse.json({ status: 'success', data: reservation });
+		else if (reservationId) {
+			const reservation: AdminReservationInfo = await getReservationId(reservationId);
+			const result = {
+				id: reservation.uuid,
+				time: reservation.reservation_date,
+				breed: reservation.pet_id.breed_id.name,
+				name: reservation.pet_id.name,
+				weight: reservation.pet_id.weight,
+				birth: reservation.pet_id.birth,
+				phone: reservation.pet_id.user_id.phone,
+				service_name: reservation.service_name,
+				additional_services: reservation.additional_services,
+				additional_price: reservation.additional_price,
+				total_price: reservation.total_price,
+				status: reservation.status,
+				consent_form: reservation.consent_form,
+				memo: reservation.memo,
+			}
+			return NextResponse.json({ status: 'success', data: result });
 		}
+		else if (phone) {
+			const reservations = await getReservationsByPhone(phone);
+			if (!reservations) {
+				return NextResponse.json({ data: [] }, { status: 200 });
+			}
+			const result = await Promise.all(
+				reservations.map(async (reservation: AdminReservationInfo) => {
+				return {
+					id: reservation.uuid,
+					time: reservation.reservation_date,
+					breed: reservation.pet_id.breed_id.name,
+					name: reservation.pet_id.name,
+					weight: reservation.pet_id.weight,
+					birth: reservation.pet_id.birth,
+					phone: reservation.pet_id.user_id.phone,
+					service_name: reservation.service_name,
+					additional_services: reservation.additional_services,
+					additional_price: reservation.additional_price,
+					total_price: reservation.total_price,
+					status: reservation.status,
+					consent_form: reservation.consent_form,
+					memo: reservation.memo,
+				};
+				})
+			);
+			return NextResponse.json({ status: 'success', data: result });
+		}
+
 
 	} catch (error) {
 		console.error("Error in /reservations:", error);

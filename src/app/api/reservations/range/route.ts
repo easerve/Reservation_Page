@@ -3,29 +3,29 @@ import { getReservationsByDateRange } from "@/actions/reservations";
 import { Database } from "@/types/definitions";
 
 interface AdminReservationInfo {
-    uuid: string;
-    reservation_date: string;
-    memo: string;
-    status: string;
-    consent_form: boolean;
-    additional_services: string;
-    additional_price: number;
-    total_price: number;
-    service_name: string;
-    pet_id: {
-        name: string;
-        birth: string;
-        weight: number;
-        user_id: {
-            name: string;
-            phone: string;
-        };
-        breed_id: {
-            name: string;
-        };
-        memo: string;
-        neutering: boolean;
+  uuid: string;
+  reservation_date: string;
+  memo: string;
+  status: string;
+  consent_form: boolean;
+  additional_services: string;
+  additional_price: number;
+  total_price: number;
+  service_name: string;
+  pet_id: {
+    name: string;
+    birth: string;
+    weight: number;
+    user_id: {
+      name: string;
+      phone: string;
     };
+    breed_id: {
+      name: string;
+    };
+    memo: string;
+    neutering: boolean;
+  };
 }
 
 export async function GET(request: NextRequest) {
