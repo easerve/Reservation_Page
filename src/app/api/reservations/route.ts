@@ -9,9 +9,10 @@ interface RequestBody {
 	  memo: string;
 	  status: string;
 	  consent_form: boolean;
-	  services: number[];
-	  additional_services: number[];
+	  service_name: string;
+	  additional_services: string;
 	  total_price: number;
+	  additional_price: number;
 	}
 }
 
@@ -45,9 +46,9 @@ export async function POST(request: NextRequest) {
 				{ status: 400 }
 			);
 		}
-		const { pet_id, reservation_date, memo, status, consent_form, services, additional_services, total_price } = body.ReservationInfo;
+		const { pet_id, reservation_date, memo, status, consent_form, service_name, additional_services, total_price, additional_price } = body.ReservationInfo;
 
-		if (!pet_id || !reservation_date || !status || !consent_form || !services || !additional_services || !total_price) {
+		if (!pet_id || !reservation_date || !status || !consent_form || !service_name || !total_price) {
 			console.log(body.ReservationInfo);
 			return NextResponse.json(
 				{ error: "Missing required fields in ReservationInfo" },
@@ -61,14 +62,21 @@ export async function POST(request: NextRequest) {
 			memo,
 			status,
 			consent_form,
-			services,
+			service_name,
 			additional_services,
 			total_price,
+			additional_price
 		};
 
 		const result = await addReservation(reservationInfo);
 		if (result.status === "success") {
-			return NextResponse.json(result, { status: 200 });
+			return NextResponse.json(
+				{
+					message: "예약이 성공적으로 완료되었습니다.",
+					reservationId: result.reservationId,
+				},
+				{ status: 200 }
+			);
 		} else {
 			return NextResponse.json({ error: "Failed to add reservation" }, { status: 500 });
 		}

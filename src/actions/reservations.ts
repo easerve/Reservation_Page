@@ -10,11 +10,12 @@ interface ReservationInfo {
 	pet_id: string;
 	reservation_date: string;
 	memo: string;
-	services: number[];
 	status: string;
 	consent_form: boolean;
-	additional_services: number[];
+	service_name: string;
+	additional_services: string;
 	total_price: number;
+	additional_price: number;
 }
 
 function handleError(error: Error) {
@@ -73,7 +74,10 @@ export async function addReservation(reservationInfo: ReservationInfo) {
 			memo: reservationInfo.memo,
 			status: reservationInfo.status,
 			consent_form: reservationInfo.consent_form,
+			service_name: reservationInfo.service_name,
+			additional_services: reservationInfo.additional_services,
 			total_price: reservationInfo.total_price,
+			additional_price: reservationInfo.additional_price,
 		})
 		.select()
 		.single();
@@ -82,33 +86,8 @@ export async function addReservation(reservationInfo: ReservationInfo) {
 		handleError(insertError);
 	}
 
-	for (const serviceId of reservationInfo.services) {
-		const { error: insertError } = await supabase
-			.from('reservation_services')
-			.insert({
-				reservation_id: insertData!.uuid,
-				service_id: serviceId,
-			});
-
-		if (insertError) {
-			handleError(insertError);
-		}
-	}
-
-	for (const additionalServiceId of reservationInfo.additional_services) {
-		const { error: insertError } = await supabase
-			.from('reservation_additional_services')
-			.insert({
-				reservation_id: insertData!.uuid,
-				additional_service_id: additionalServiceId,
-			});
-
-		if (insertError) {
-			handleError(insertError);
-		}
-	}
-
 	return {
-		status: "success"
+		status: "success",
+		reservationId: insertData?.uuid,
 	}
 }
