@@ -42,7 +42,7 @@ export interface AdditionalService {
 }
 
 export interface Dog {
-  // id: String;
+  id: String;
   petName: string;
   weight: number;
   birth: string;
