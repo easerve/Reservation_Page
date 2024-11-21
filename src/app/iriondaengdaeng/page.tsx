@@ -35,7 +35,10 @@ import {
   AdditionalService,
   PetInfo,
 } from "@/types/booking";
-import { INITIAL_BOOKING_STATE, BIG_DOG_SERVICE_PRICES } from "@/constants/booking";
+import {
+  INITIAL_BOOKING_STATE,
+  BIG_DOG_SERVICE_PRICES,
+} from "@/constants/booking";
 import CutAgreementPage from "@/app/iriondaengdaeng/cutAgreementPage";
 
 export default function Booking() {
@@ -67,10 +70,24 @@ export default function Booking() {
     }));
   };
 
-  const updateDateTime = (date: Date, time: string | undefined) => {
+  const updateDate = (date: Date) => {
+    // NOTE: 한국 시간으로 변경
     const offset = date.getTimezoneOffset() * 60000;
     date = new Date(date.getTime() - offset);
-    setBookingData((prev) => ({ ...prev, dateTime: { date, time } }));
+    setBookingData((prev) => ({
+      ...prev,
+      dateTime: {
+        ...prev.dateTime,
+        date,
+      },
+    }));
+  };
+
+  const updateTime = (time: string) => {
+    setBookingData((prev) => ({
+      ...prev,
+      dateTime: { ...prev.dateTime, time },
+    }));
   };
 
   const updateInquiry = (text: string) => {
@@ -413,7 +430,7 @@ export default function Booking() {
                           <p>이름: {dog.name}</p>
                           <p>견종: {dog.breed}</p>
                           <p>
-                            나이:{" "}
+                            나이:
                             {(() => {
                               const birthDate = new Date(dog.birth);
                               const today = new Date();
@@ -422,9 +439,11 @@ export default function Booking() {
                                   birthDate.getFullYear()) *
                                   12 +
                                 (today.getMonth() - birthDate.getMonth());
-                              return Math.floor(months / 12);
+                              const years = Math.floor(months / 12);
+                              const remainingMonths = months % 12;
+
+                              return ` ${years}년${remainingMonths}개월`;
                             })()}
-                            개월
                           </p>
                           <p>체중: {dog.weight}kg</p>
                         </div>
@@ -478,9 +497,7 @@ export default function Booking() {
                   mode="single"
                   selected={bookingData.dateTime.date}
                   onSelect={(date) => {
-                    if (date) {
-                      updateDateTime(date, undefined);
-                    }
+                    updateDate(date);
                   }}
                   disabled={(date) => {
                     const today = new Date();
@@ -529,9 +546,7 @@ export default function Booking() {
                               : ""
                           }
                           disabled={isDisabled}
-                          onClick={() =>
-                            updateDateTime(bookingData.dateTime.date!, time)
-                          }
+                          onClick={() => updateTime(time)}
                         >
                           {time}
                         </Button>
@@ -834,7 +849,7 @@ export default function Booking() {
       // NOTE: kg당 가격 추가
       const addPrice =
         bookingData.petInfo.weight > 10 && typeId !== 4
-          ? ((bookingData.petInfo.weight - 10 + 1) / 2) * 5000
+          ? Math.floor((bookingData.petInfo.weight - 10 + 1) / 2) * 5000
           : 0;
       // NOTE: 대형견 가격으로 갱신
       const bigDogServicePrices = typeId === 4 ? BIG_DOG_SERVICE_PRICES : [];
