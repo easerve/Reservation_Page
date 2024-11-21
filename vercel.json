@@ -1,8 +1,0 @@
-{
-  "framework": "nextjs",
-  "build": {
-    "env": {
-      "NEXT_PRIVATE_ESLINT_ENABLED": "false"
-    }
-  }
-}
