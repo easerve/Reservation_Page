@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "eslint . --fix",
     "generate-types": "npx supabase gen types typescript --project-id mimkzhydnmijxpgyocrp --schema public > ./src/types/definitions.ts"
   },
   "dependencies": {
