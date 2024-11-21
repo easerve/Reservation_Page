@@ -1,12 +1,14 @@
 "use server";
 
-import { Database } from "@/types/definitions";
-import { createServerSupabaseClient } from "@/utils/supabase/server";
 
-export type ReservationRow =
-  Database["public"]["Tables"]["reservations"]["Row"];
-export type ReservationInsert =
-  Database["public"]["Tables"]["reservations"]["Insert"];
+import { Database } from '@/types/definitions';
+import { createServerSupabaseClient } from '@/utils/supabase/server';
+import { PostgrestError } from '@supabase/supabase-js';
+
+export type ReservationRow = Database["public"]["Tables"]["reservations"]["Row"];
+export type ReservationInsert = Database["public"]["Tables"]["reservations"]["Insert"];
+export type ReservationUpdate = Database["public"]["Tables"]["reservations"]["Update"];
+
 
 interface ReservationInfo {
   pet_id: string;
@@ -48,49 +50,98 @@ interface AdminReservationInfo {
   };
 }
 
-function handleError(error: Error) {
-  console.error("Error in /reservations:", error);
-  throw new Error("Internal server error");
+function handleError(error: PostgrestError) {
+  console.error('Error in /reservations:', error);
+  throw new Error('Internal server error', error);
 }
 
-export async function getReservations(scope: number) {
-  const supabase = await createServerSupabaseClient();
+export async function getReservationId(reservationId: string) {
+	const supabase = await createServerSupabaseClient();
+	const {data: reservationData, error: reservationError} = await supabase
+		.from('reservations')
+		.select('*')
+		.eq('uuid', reservationId)
+		.single();
 
-  const today = new Date();
-  const endDate = new Date();
-  endDate.setMonth(today.getMonth() + scope);
+	if (reservationError) {
+		if (reservationError.code === 'PGRST116') {
+			throw new Error('Reservation not found');
+		}
+		handleError(reservationError);
+	}
 
-  const formatDate = (date: Date) => date.toISOString().split("T")[0];
+	return reservationData as ReservationRow;
+}
 
-  const { data: reservationsData, error: reservationsError } = await supabase
-    .from("reservations")
-    .select("*")
-    .gte("reservation_date", today.toISOString())
-    .lte("reservation_date", endDate.toISOString());
+export async function deleteReservation(reservationId: string) {
+	const supabase = await createServerSupabaseClient();
+	const {data: deleteData, error: reservationError} = await supabase
+		.from('reservations')
+		.delete()
+		.eq('uuid', reservationId);
 
-  if (reservationsError) {
-    handleError(reservationsError);
-  }
+	if (reservationError) {
+		if (reservationError.code === 'PGRST116') {
+			throw new Error('Reservation not found');
+		}
+		handleError(reservationError);
+	}
+}
 
-  const reservationsMap: { [key: string]: string[] } = {};
+export async function updateReservation(
+	reservationId: string,
+	reservationInfo: ReservationUpdate
+) {
+	const supabase = await createServerSupabaseClient();
+	const {data: updateData, error: reservationError} = await supabase
+		.from('reservations')
+		.update(reservationInfo)
+		.eq('uuid', reservationId);
 
-  reservationsData?.forEach((reservation) => {
-    const [date, time] = reservation.reservation_date!.split("T");
-    const formattedTime = time.slice(0, 5);
+	if (reservationError) {
+		if (reservationError.code === 'PGRST116') {
+			throw new Error('Reservation not found');
+		}
+		handleError(reservationError);
+	}
+}
 
-    if (!reservationsMap[date]) {
-      reservationsMap[date] = [];
-    }
-    reservationsMap[date].push(formattedTime);
-  });
+export async function getScopeReservations(scope: number) {
+	const supabase = await createServerSupabaseClient();
 
-  const formattedReservations = Object.entries(reservationsMap).map(
-    ([date, times]) => ({
-      date,
-      times,
-    })
-  );
-  return formattedReservations;
+	const today = new Date();
+	const endDate = new Date();
+	endDate.setMonth(today.getMonth() + scope);
+
+	const formatDate = (date: Date) => date.toISOString().split('T')[0];
+
+	const { data: reservationsData, error: reservationsError } = await supabase
+		.from('reservations')
+		.select('*')
+		.gte('reservation_date', today.toISOString())
+		.lte('reservation_date', endDate.toISOString());
+
+	if (reservationsError) {
+		handleError(reservationsError);
+	}
+
+	const reservationsMap: { [key: string]: string[] } = {};
+
+	reservationsData?.forEach((reservation) => {
+		const [date, time] = reservation.reservation_date!.split('T');
+		const formattedTime = time.slice(0, 5);
+
+		if (!reservationsMap[date]) {
+			reservationsMap[date] = [];
+		}
+		reservationsMap[date].push(formattedTime);
+	});
+
+	const formattedReservations = Object.entries(reservationsMap).map(([date, times]) => ({
+		date,
+		times,
+	}));
+	return formattedReservations;
 }
 
 export async function addReservation(reservationInfo: ReservationInfo) {
@@ -158,16 +209,13 @@ export async function getReservationsByDateRange(
 					name
 				)
 			)
-		`
-    )
-    .gte("reservation_date", start_date)
-    .lte("reservation_date", end_date)
-    .order("reservation_date", { ascending: true });
+		`)
+		.gte("reservation_date", start_date)
+		.lte("reservation_date", end_date);
 
-  if (reservationError) {
-    handleError(reservationError);
-  }
+	if (reservationError) {
+		handleError(reservationError);
+	}
 
-  // 올바른 해결 방법이 맞는지 문의
-  return reservationData as unknown as AdminReservationInfo[];
+	return reservationData as undefined as AdminReservationInfo[];
 }

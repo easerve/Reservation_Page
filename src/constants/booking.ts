@@ -5,23 +5,13 @@ import {
   PetInfo,
 } from "../types/booking";
 
-export const LargeDog = {
-  bath: 20000,
-  pricing_per_kg: {
-    beauty_bath: 7000,
-    clipping: 10000,
-    sporting: 13000,
-    scissor_cut: 20000,
-  },
-};
-
 export const INITIAL_BOOKING_STATE: BookingData = {
   dateTime: {
     date: new Date() as Date,
     time: undefined as string | undefined,
   },
   petInfo: {
-    id: '' as string,
+    id: "" as string,
     name: "" as string,
     weight: 0 as number,
     birth: "" as string,
@@ -32,3 +22,10 @@ export const INITIAL_BOOKING_STATE: BookingData = {
   additionalServices: [] as AdditionalService[],
   inquiry: "",
 };
+
+export const BIG_DOG_SERVICE_PRICES = [
+  { id: 1, price_per_kg: 7000 },
+  { id: 2, price_per_kg: 10000 },
+  { id: 3, price_per_kg: 13000 },
+  { id: 4, price_per_kg: 20000 },
+];

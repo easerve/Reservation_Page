@@ -4,23 +4,12 @@ import { User, Dog } from "@/types/booking";
 import { Button } from "@/components/ui/button";
 import ConsentForm from "@/app/iriondaengdaeng/ConsentForm";
 import Select from "react-select";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-
-// if (typeof window !== "undefined") {
-//   Modal.setAppElement("#__next");
-// }
+import { FormControl } from "@/components/ui/form";
 
 interface CutAgreementPageProps {
   isOpen: boolean;
   onClose: () => void;
-  breeds: { id: number; name: string; type: Number }[];
+  breeds: { id: number; name: string; type: number }[];
   setIsPuppyAdd: (isAdd: boolean) => void;
   userUUID: string;
 }
@@ -55,7 +44,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
   const [selectedBreed, setSelectedBreed] = useState<{
     id: number;
     name: string;
-    type: Number;
+    type: number;
   } | null>(null);
 
   const handleDogInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -208,20 +197,15 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                     isDisabled={false}
                   />
                 </FormControl>
-                {/* <input
-                  type="text"
-                  name="breed"
-                  value={dogInfo.breed}
-                  onChange={handleDogInfoChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                /> */}
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">무게</label>
                 <input
                   type="number"
                   name="weight"
+                  min="0"
+                  max="30"
+                  value={dogInfo.weight || ""}
                   onChange={handleDogInfoChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -345,6 +329,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
 
   return (
     <Modal
+      ariaHideApp={false}
       isOpen={isOpen}
       onRequestClose={onClose}
       contentLabel="Cut Agreement"
