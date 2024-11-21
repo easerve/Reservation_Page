@@ -17,6 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { getAge2 } from "@/components/utils/date_utils";
 import { Reservation } from "@/types/interface";
 import {
   CalendarIcon,
@@ -56,20 +57,6 @@ export default function InfoDialog(props: {
     });
   };
 
-  const calculateAge = (birthDate: string) => {
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birth.getDate())
-    ) {
-      age--;
-    }
-    return age;
-  };
-
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh]">
@@ -105,8 +92,10 @@ export default function InfoDialog(props: {
               <div className="flex items-center space-x-2">
                 <DogIcon className="h-4 w-4 opacity-70" />
                 <span className="text-sm font-medium">
-                  {calculateAge(props.reservation.birth)}세 (생일:{" "}
-                  {props.reservation.birth})
+                  {`${getAge2(props.reservation.birth).years}년 ${
+                    getAge2(props.reservation.birth).months
+                  }개월`}{" "}
+                  (생일: {props.reservation.birth})
                 </span>
               </div>
               <div className="flex items-center space-x-2">
@@ -150,7 +139,7 @@ export default function InfoDialog(props: {
               </div>
               {props.reservation.memo && (
                 <div>
-                  <h4 className="text-sm font-semibold mb-2">메모</h4>
+                  <h4 className="text-sm font-semibold mb-2">특이사항</h4>
                   <p className="text-sm text-gray-600">
                     {props.reservation.memo}
                   </p>
