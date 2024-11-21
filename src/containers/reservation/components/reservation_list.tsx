@@ -307,6 +307,7 @@ export default function ReservationList(props: {
           <EditReservationForm
             reservation={editingReservation}
             onSubmit={handleSubmit}
+            updateReservation={props.updateReservation}
             onCloseDialog={() => setIsDialogOpen(false)}
           />
         )}

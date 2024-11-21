@@ -148,6 +148,7 @@ export default function ReservationPage() {
             setCurrentMonth={setCurrentMonth}
             reservations={reservations}
             setReservations={setReservations}
+            updateReservation={updateReservation}
           />
         </TabsContent>
         <DefaultDialog

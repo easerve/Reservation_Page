@@ -53,7 +53,7 @@ export const editFormSchema = z.object({
 export default function EditReservationForm(props: {
   reservation: Reservation;
   onSubmit: (data: z.infer<typeof editFormSchema>) => void;
-  setReservations: React.Dispatch<React.SetStateAction<Reservation[]>>;
+  updateReservation: (id: string, data: Partial<Reservation>) => void;
   onCloseDialog: () => void;
 }) {
   const form = useForm<z.infer<typeof editFormSchema>>({
@@ -89,19 +89,12 @@ export default function EditReservationForm(props: {
       console.log(response);
 
       if (response.ok) {
-        props.setReservations((prev) =>
-          prev.map((reservation) =>
-            reservation.id === props.reservation.id
-              ? {
-                  ...reservation,
-                  memo: data.memo,
-                  additional_services: data.additional_service,
-                  additional_price: data.additional_price,
-                  reservation_date: data.time.toISOString(),
-                }
-              : reservation
-          )
-        );
+        props.updateReservation(props.reservation.id, {
+          memo: data.memo,
+          additional_services: data.additional_service,
+          additional_price: data.additional_price,
+          time: data.time,
+        });
         props.onCloseDialog();
       } else {
         console.error("Failed to update reservation");

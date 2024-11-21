@@ -58,6 +58,7 @@ interface CalendarProps {
   setCurrentMonth: React.Dispatch<
     React.SetStateAction<{ year: number; month: number }>
   >;
+  updateReservation: (id: string, updatedData: Partial<Reservation>) => void;
 }
 
 const Calendar: React.FC<CalendarProps> = ({
@@ -65,6 +66,7 @@ const Calendar: React.FC<CalendarProps> = ({
   reservations,
   setReservations,
   setCurrentMonth,
+  updateReservation,
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState<boolean>(false);
@@ -222,7 +224,7 @@ const Calendar: React.FC<CalendarProps> = ({
           <EditReservationForm
             reservation={selectedReservation}
             onSubmit={handleSubmit}
-            setReservations={setReservations}
+            updateReservation={updateReservation}
             onCloseDialog={() => setIsEditDialogOpen(false)}
           />
         )}
