@@ -33,6 +33,9 @@ export default function ReservationPage() {
     year: number;
     month: number;
   }>({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
+  const [breeds, setBreeds] = useState<
+    { id: number; name: string; type: number }[]
+  >([]);
   const handleAddEvent = (data: z.infer<typeof outerFormSchema>) => {
     const newData = {
       ...data,
@@ -79,6 +82,14 @@ export default function ReservationPage() {
       );
     })();
   }, [currentMonth]);
+
+  useEffect(() => {
+    (async () => {
+      const res = await fetch(`/api/pets/breed`);
+      const data = await res.json();
+      setBreeds(data.data);
+    })();
+  }, []);
 
   return (
     <div className="w-full h-full max-w-6xl mx-auto p-4 flex flex-col">
@@ -145,6 +156,7 @@ export default function ReservationPage() {
           <OuterReservationForm
             onSubmit={handleAddEvent}
             onCloseDialog={handleCloseDialog}
+            breeds={breeds}
           />
         </DefaultDialog>
       </Tabs>

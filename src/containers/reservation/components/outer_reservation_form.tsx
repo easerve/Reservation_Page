@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -23,15 +24,17 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
+import Select from "react-select";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/date_picker/date_picker";
+import { Dog, Customer } from "@/types/booking";
 
 export const outerFormSchema = z.object({
   time: z.date({
@@ -63,7 +66,21 @@ export const outerFormSchema = z.object({
 export default function OuterReservationForm(props: {
   onSubmit: (data: z.infer<typeof outerFormSchema>) => void;
   onCloseDialog: () => void;
+  breeds: { id: number; name: string; type: number }[];
 }) {
+  const [showDogList, setShowDogList] = useState(false);
+  const [userDogsData, setUserDogsData] = useState({
+    status: "" as string,
+    customers: {
+      id: "" as string,
+      name: "" as string,
+      phone: "" as string,
+      address: "" as string,
+      detailAddress: "" as string,
+      dogs: [] as Dog[],
+    } as Customer,
+  });
+  const [selectedDog, setSelectedDog] = useState<Dog>();
   const form = useForm<z.infer<typeof outerFormSchema>>({
     resolver: zodResolver(outerFormSchema),
     defaultValues: {
@@ -74,11 +91,58 @@ export default function OuterReservationForm(props: {
       additional_price: 0,
     },
   });
+  const { control, handleSubmit, setValue } = form;
+
+  // const { control, handleSubmit, setValue } = useForm<
+  //   z.infer<typeof outerFormSchema>
+  // >({
+  //   resolver: zodResolver(outerFormSchema),
+  //   defaultValues: {
+  //     phone: "",
+  //     name: "",
+  //     breed: "",
+  //     weight: 0,
+  //     birth: new Date(),
+  //     // neutering: false,
+  //     // sex: "",
+  //     // regNumber: "",
+  //   },
+  // });
+
+  const handleDogSelect = (dog: Dog) => {
+    setSelectedDog(dog);
+    setValue("name", dog.petName);
+    setValue("breed", dog.breed.toString());
+    setValue("weight", dog.weight);
+    setValue("birth", new Date(dog.birth));
+    // setValue("neutering", dog.neutering);
+    // setValue("sex", dog.sex);
+    // setValue("regNumber", dog.regNumber);
+  };
+
+  async function getUserData(values) {
+    try {
+      const res = await fetch("api/auth/profile?phone=" + values);
+      const data = await res.json();
+
+      setUserDogsData(data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   function onSubmit(data: z.infer<typeof outerFormSchema>) {
     console.log("submit done");
     props.onSubmit(data);
   }
+
+  const toggleDogList = async (phoneNumber) => {
+    if (!phoneNumber) {
+      return;
+    }
+    await getUserData(phoneNumber);
+    setShowDogList(true);
+  };
 
   return (
     <Form {...form}>
@@ -138,13 +202,69 @@ export default function OuterReservationForm(props: {
           render={({ field }) => (
             <FormItem>
               <FormLabel>전화번호</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="01012345678" />
-              </FormControl>
+              <div className="flex items-center">
+                <FormControl className="flex-1">
+                  <Input {...field} placeholder="01012345678" />
+                </FormControl>
+                <Button
+                  type="button"
+                  className="ml-2"
+                  onClick={() => {
+                    toggleDogList(field.value);
+                  }}
+                >
+                  강아지 찾기
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )}
         />
+        {showDogList && userDogsData.status === "fail" ? (
+          <div>검색결과가 없습니다</div>
+        ) : (
+          showDogList && (
+            <div className="overflow-hidden transition-all duration-500 ease-in-out">
+              <CardContent className="p-0">
+                {userDogsData.customers.dogs.map((dog, idx) => (
+                  <Button
+                    key={idx}
+                    variant="outline"
+                    className={`w-full justify-between h-auto py-4 ${
+                      selectedDog && selectedDog.petName === dog.petName
+                        ? "border-primary bg-primary/10"
+                        : ""
+                    }`}
+                    onClick={() => {
+                      handleDogSelect(dog);
+                    }}
+                  >
+                    <div className="text-left">
+                      <p>이름: {dog.petName}</p>
+                      <p>견종: {dog.breed}</p>
+                      <p>
+                        나이:
+                        {(() => {
+                          const birthDate = new Date(dog.birth);
+                          const today = new Date();
+                          const months =
+                            (today.getFullYear() - birthDate.getFullYear()) *
+                              12 +
+                            (today.getMonth() - birthDate.getMonth());
+                          const years = Math.floor(months / 12);
+                          const remainingMonths = months % 12;
+
+                          return ` ${years}년${remainingMonths}개월`;
+                        })()}
+                      </p>
+                      <p>체중: {dog.weight}kg</p>
+                    </div>
+                  </Button>
+                ))}
+              </CardContent>
+            </div>
+          )
+        )}
         <FormField
           control={form.control}
           name="name"
@@ -164,19 +284,33 @@ export default function OuterReservationForm(props: {
           render={({ field }) => (
             <FormItem>
               <FormLabel>견종</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="견종을 선택하세요" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="말티즈">말티즈</SelectItem>
-                  <SelectItem value="포메라니안">포메라니안</SelectItem>
-                  <SelectItem value="시츄">시츄</SelectItem>
-                  <SelectItem value="믹스">믹스</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <Controller
+                  name="breed"
+                  control={form.control}
+                  render={({ field }) => (
+                    <Select
+                      options={props.breeds.map((breed) => ({
+                        id: breed.id,
+                        name: breed.name,
+                        type: breed.type,
+                      }))}
+                      isSearchable
+                      isClearable
+                      placeholder="견종을 선택하세요"
+                      getOptionLabel={(option) => option.name}
+                      getOptionValue={(option) => option.name.toString()}
+                      value={props.breeds.find(
+                        (breed) => breed.name === field.value
+                      )} // 선택된 값
+                      onChange={(selectedOption) => {
+                        field.onChange(selectedOption?.name); // 선택된 옵션의 ID를 form 상태로 업데이트
+                      }}
+                      isDisabled={false}
+                    />
+                  )}
+                />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -192,8 +326,11 @@ export default function OuterReservationForm(props: {
                   {...field}
                   type="number"
                   step="0.1"
-                  onChange={(e) => field.onChange(e.target.value === "" ? "" : parseFloat(e.target.value))}
-
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value === "" ? "" : parseFloat(e.target.value)
+                    )
+                  }
                 />
               </FormControl>
               <FormMessage />
@@ -283,7 +420,11 @@ export default function OuterReservationForm(props: {
                   {...field}
                   type="number"
                   step="1"
-                  onChange={(e) => field.onChange(e.target.value === "" ? "" : parseInt(e.target.value))}
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value === "" ? "" : parseInt(e.target.value)
+                    )
+                  }
                 />
               </FormControl>
               <FormMessage />

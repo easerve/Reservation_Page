@@ -1,6 +1,6 @@
 export interface BookingData {
   phoneNumber: string;
-  petInfo: PetInfo;
+  dog: Dog;
   dateTime: BookingDateTime;
   mainService?: MainService;
   additionalServices: AdditionalService[];
@@ -42,7 +42,7 @@ export interface AdditionalService {
 }
 
 export interface Dog {
-  // id: String;
+  id: String;
   petName: string;
   weight: number;
   birth: string;
@@ -59,7 +59,7 @@ export interface Customer {
   phone: string;
   address: string;
   detailAddress: string;
-  dogs: PetInfo[];
+  dogs: Dog[];
 }
 
 export interface UserDogsData {
