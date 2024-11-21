@@ -53,6 +53,7 @@ export const editFormSchema = z.object({
 export default function EditReservationForm(props: {
   reservation: Reservation;
   onSubmit: (data: z.infer<typeof editFormSchema>) => void;
+  setReservations: React.Dispatch<React.SetStateAction<Reservation[]>>;
   onCloseDialog: () => void;
 }) {
   const form = useForm<z.infer<typeof editFormSchema>>({
@@ -60,14 +61,66 @@ export default function EditReservationForm(props: {
     defaultValues: {
       time: new Date(props.reservation.time),
       weight: props.reservation.weight,
-      additional_service: props.reservation.additional_service,
+      additional_service: props.reservation.additional_services,
       additional_price: props.reservation.additional_price,
       memo: props.reservation.memo,
     },
   });
+
+  const handleFormSubmit = async (data: z.infer<typeof editFormSchema>) => {
+    try {
+      const response = await fetch(
+        `/api/reservations?id=${props.reservation.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ReservationInfo: {
+              memo: data.memo,
+              additional_services: data.additional_service,
+              additional_price: data.additional_price,
+              reservation_date: data.time.toISOString(),
+              total_price:
+                props.reservation.total_price + data.additional_price,
+            },
+          }),
+        }
+      );
+      console.log(response);
+
+      if (response.ok) {
+        props.setReservations((prev) =>
+          prev.map((reservation) =>
+            reservation.id === props.reservation.id
+              ? {
+                  ...reservation,
+                  memo: data.memo,
+                  additional_services: data.additional_service,
+                  additional_price: data.additional_price,
+                  reservation_date: data.time.toISOString(),
+                  total_price:
+                    props.reservation.total_price + data.additional_price,
+                }
+              : reservation
+          )
+        );
+        props.onCloseDialog();
+      } else {
+        console.error("Failed to update reservation");
+      }
+    } catch (error) {
+      console.error("Error updating reservation:", error);
+    }
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(props.onSubmit)} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="time"

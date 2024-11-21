@@ -36,7 +36,6 @@ import InnerReservationForm, {
 import { z } from "zod";
 import DefaultDialog from "@/components/default_dialog/default_dialog";
 import { Reservation } from "@/types/interface";
-import { reservationData } from "@/data/data";
 import InfoDialog from "@/containers/reservation/components/info_dialog";
 import EditReservationForm, { editFormSchema } from "./edit_reservation_form";
 
@@ -52,41 +51,72 @@ function updateTimeInDate(date: Date, time: string): Date {
   return updatedDate;
 }
 
-const Calendar: React.FC = (props: {
+interface CalendarProps {
   currentMonth: { year: number; month: number };
   reservations: Reservation[];
   setReservations: React.Dispatch<React.SetStateAction<Reservation[]>>;
   setCurrentMonth: React.Dispatch<
     React.SetStateAction<{ year: number; month: number }>
   >;
+}
+
+const Calendar: React.FC<CalendarProps> = ({
+  currentMonth,
+  reservations,
+  setReservations,
+  setCurrentMonth,
 }) => {
-  const [currentEvents, setCurrentEvents] = useState<EventApi[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState<boolean>(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
-  const [newEventTitle, setNewEventTitle] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<DateSelectArg | null>(null);
   const [selectedReservation, setSelectedReservation] =
     useState<Reservation | null>(null);
+  const [monthEvents, setMonthEvents] = useState<EventInput[]>([]);
 
-  const [reservations, setReservations] = useState<EventInput[]>([]);
+  function handleDateSet(info: DatesSetArg) {
+    const year = info.view.currentStart.getFullYear();
+    const month = info.view.currentStart.getMonth() + 1;
 
+    setCurrentMonth({ year: year, month: month });
+
+    const filteredReservations = reservations.filter((data) => {
+      return (
+        data.time.getFullYear() === year && data.time.getMonth() + 1 === month
+      );
+    });
+
+    const events: EventInput[] = filteredReservations.map(
+      (data: Reservation) => ({
+        id: data.id,
+        title: `${data.name}(${data.breed})`,
+        start: data.time,
+        extendedProps: data,
+      })
+    );
+
+    setMonthEvents(events);
+  }
+
+  // useEffect to update monthEvents when reservations change
   useEffect(() => {
-    // Load events from local storage when the component mounts
-    if (typeof window !== "undefined") {
-      const savedEvents = localStorage.getItem("events");
-      if (savedEvents) {
-        setCurrentEvents(JSON.parse(savedEvents));
-      }
+    if (reservations.length > 0) {
+      const events: EventInput[] = reservations
+        .filter((data) => {
+          return (
+            data.time.getFullYear() === currentMonth.year &&
+            data.time.getMonth() + 1 === currentMonth.month
+          );
+        })
+        .map((data: Reservation) => ({
+          id: data.id,
+          title: `${data.name}(${data.breed})`,
+          start: data.time,
+          extendedProps: data,
+        }));
+      setMonthEvents(events);
     }
-  }, []);
-
-  useEffect(() => {
-    // Save events to local storage whenever they change
-    if (typeof window !== "undefined") {
-      localStorage.setItem("events", JSON.stringify(currentEvents));
-    }
-  }, [currentEvents]);
+  }, [reservations, currentMonth]);
 
   const handleDateClick = (selected: DateSelectArg) => {
     setSelectedDate(selected);
@@ -94,15 +124,12 @@ const Calendar: React.FC = (props: {
   };
 
   const handleEventClick = (selected: EventClickArg) => {
-    // Prompt user for confirmation before deleting an event
-    console.log(selected.event.extendedProps);
     setSelectedReservation(selected.event.extendedProps as Reservation);
     setIsInfoDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
-    setNewEventTitle("");
   };
 
   const handleSave = (id: string, updatedData: Partial<Reservation>) => {
@@ -120,13 +147,11 @@ const Calendar: React.FC = (props: {
   };
 
   function handleSubmit(data: z.infer<typeof editFormSchema>) {
-    console.log("submit done: ", data);
     handleSave(selectedReservation.id, data);
   }
 
   const handleAddEvent = (data: z.infer<typeof innerFormSchema>) => {
     // e.preventDefault();
-    console.log(data, newEventTitle, selectedDate); // debug
     if (selectedDate) {
       const calendarApi = selectedDate.view.calendar; // Get the calendar API instance.
       calendarApi.unselect(); // Unselect the date range.
@@ -143,33 +168,10 @@ const Calendar: React.FC = (props: {
         end: startTime.toISOString(),
       };
 
-      console.log(newEvent);
       calendarApi.addEvent(newEvent);
       handleCloseDialog();
     }
   };
-
-  function handleDateSet(info: DatesSetArg) {
-    const currentYear = info.view.currentStart.getFullYear(); // 현재 뷰의 시작 연도
-    const currentMonth = info.view.currentStart.getMonth() + 1; // 현재 뷰의 시작 월 (0부터 시작하므로 +1)
-
-    console.log(`Year: ${currentYear}, Month: ${currentMonth}`);
-    const currentMonthReservations = reservationData.filter((data) => {
-      return (
-        data.time.getFullYear() === currentYear &&
-        data.time.getMonth() + 1 === currentMonth
-      );
-    });
-    const monthReservations: EventInput[] = currentMonthReservations.map(
-      (data: Reservation) => ({
-        id: data.id,
-        title: `${data.name}(${data.breed})`,
-        start: data.time,
-        extendedProps: data,
-      })
-    );
-    setReservations(monthReservations);
-  }
 
   return (
     <div>
@@ -190,13 +192,7 @@ const Calendar: React.FC = (props: {
           dayMaxEvents={true} // Limit the number of events displayed per day.
           select={handleDateClick} // Handle date selection to create new events.
           eventClick={handleEventClick} // Handle clicking on events (e.g., to delete them).
-          eventsSet={(events) => setCurrentEvents(events)} // Update state with current events whenever they change.
-          events={reservations} // Events to display on the calendar.
-          initialEvents={
-            typeof window !== "undefined"
-              ? JSON.parse(localStorage.getItem("events") || "[]")
-              : []
-          } // Initial events loaded from local storage.
+          events={monthEvents} // Events to display on the calendar.
         />
       </div>
 
@@ -226,6 +222,7 @@ const Calendar: React.FC = (props: {
           <EditReservationForm
             reservation={selectedReservation}
             onSubmit={handleSubmit}
+            setReservations={setReservations}
             onCloseDialog={() => setIsEditDialogOpen(false)}
           />
         )}

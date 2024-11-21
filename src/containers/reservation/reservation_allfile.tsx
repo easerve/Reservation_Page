@@ -43,13 +43,13 @@ export default function ReservationPage() {
       service_name: [data.service_name],
       price: 0,
     } as Reservation;
-    console.log("submit done: ", newData);
+    // console.log("submit done: ", newData);
     setReservations([...reservations, newData]);
     handleCloseDialog();
   };
 
   const handleCloseDialog = () => {
-    console.log("close dialog");
+    // console.log("close dialog");
     setIsDialogOpen(false);
   };
 

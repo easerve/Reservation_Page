@@ -118,12 +118,12 @@ export default function InfoDialog(props: {
               <div className="flex items-center space-x-2">
                 <ScissorsIcon className="h-4 w-4 opacity-70" />
                 <span className="text-sm font-medium">
-                  {props.reservation.service_name.join(", ")}
+                  {props.reservation.service_name}
                 </span>
               </div>
-              {props.reservation.additional_service && (
+              {props.reservation.additional_services && (
                 <div className="text-sm font-medium">
-                  추가 서비스: {props.reservation.additional_service}
+                  추가 서비스: {props.reservation.additional_services}
                 </div>
               )}
               <div className="text-sm font-medium">
@@ -133,7 +133,7 @@ export default function InfoDialog(props: {
                 </span>
               </div>
               <div className="text-sm font-medium">
-                가격: {props.reservation.price.toLocaleString()}원
+                가격: {props.reservation.total_price.toLocaleString()}원
               </div>
               {props.reservation.additional_price > 0 && (
                 <div className="text-sm font-medium">
@@ -144,7 +144,7 @@ export default function InfoDialog(props: {
               <div className="text-sm font-medium">
                 총 금액:{" "}
                 {(
-                  props.reservation.price + props.reservation.additional_price
+                  props.reservation.total_price + props.reservation.additional_price
                 ).toLocaleString()}
                 원
               </div>
