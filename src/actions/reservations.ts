@@ -48,16 +48,63 @@ interface AdminReservationInfo {
     };
 }
 
+
+interface ReservationIdInfo {
+	uuid: string;
+	reservation_date: string;
+	memo: string | null;
+	status: string;
+	consent_form: boolean;
+	additional_services: string | null
+	additional_price: number | null
+	total_price: number;
+	service_name: string;
+	pet_id: {
+		uuid: string;
+		name: string | null;
+		birth: string | null;
+		weight: number | null;
+		memo: string | null;
+		neutering: boolean
+	}
+}
+
 function handleError(error: PostgrestError) {
   console.error('Error in /reservations:', error);
   throw new Error('Internal server error', error);
 }
 
-export async function getReservationId(reservationId: string) {
+export async function getReservationId(reservationId: string) : Promise<AdminReservationInfo>{
 	const supabase = await createServerSupabaseClient();
 	const {data: reservationData, error: reservationError} = await supabase
 		.from('reservations')
-		.select('*')
+		.select(`
+			uuid,
+			reservation_date,
+			memo,
+			status,
+			consent_form,
+			additional_services,
+			additional_price,
+			total_price,
+			service_name,
+			pet_id(
+				name,
+				birth,
+				weight,
+				memo,
+				neutering,
+				sex,
+				reg_number,
+				user_id(
+					name,
+					phone
+				),
+				breed_id(
+					name
+				)
+			)
+		`)
 		.eq('uuid', reservationId)
 		.single();
 
@@ -68,7 +115,7 @@ export async function getReservationId(reservationId: string) {
 		handleError(reservationError);
 	}
 
-	return reservationData as ReservationRow;
+	return reservationData as undefined as AdminReservationInfo;
 }
 
 export async function deleteReservation(reservationId: string) {
