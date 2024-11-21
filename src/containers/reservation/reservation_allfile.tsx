@@ -34,7 +34,17 @@ export default function ReservationPage() {
     year: number;
     month: number;
   }>({ year: new Date().getFullYear(), month: new Date().getMonth() + 1 });
+  const [breeds, setBreeds] = useState<
+    { id: number; name: string; type: number }[]
+  >([]);
 
+  useEffect(() => {
+    (async () => {
+      const res = await fetch(`/api/pets/breed`);
+      const data = await res.json();
+      setBreeds(data.data);
+    })();
+  }, []);
   const monthlyRevenue = useRef<string>("0");
 
   const handleAddEvent = (data: z.infer<typeof outerFormSchema>) => {
