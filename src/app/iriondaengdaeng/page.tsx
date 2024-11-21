@@ -77,8 +77,8 @@ export default function Booking() {
     setBookingData((prev) => ({
       ...prev,
       dateTime: {
-        ...prev.dateTime,
         date,
+        time: undefined,
       },
     }));
   };
@@ -802,9 +802,7 @@ export default function Booking() {
 
   async function getUserData(values: { phoneNumber: string }) {
     try {
-      const res = await fetch(
-        "/api/auth/profile?phone=" + values.phoneNumber
-      );
+      const res = await fetch("/api/auth/profile?phone=" + values.phoneNumber);
       const data = await res.json();
 
       setUserDogsData(data);
