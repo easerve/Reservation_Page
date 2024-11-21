@@ -127,14 +127,8 @@ export default function Booking() {
   });
 
   const [breeds, setBreeds] = useState<
-    { id: number; name: string; type: Number }[]
+    { id: number; name: string; type: number }[]
   >([]);
-
-  const [selectedBreed, setSelectedBreed] = useState<{
-    id: number;
-    name: string;
-    type: Number;
-  } | null>(null);
 
   useEffect(() => {
     const loadBreeds = async () => {
@@ -343,11 +337,13 @@ export default function Booking() {
         return (
           <Form {...phoneNumberForm}>
             <form
-              onSubmit={phoneNumberForm.handleSubmit(async (values) => {
-                updatePhoneNumber(values.phoneNumber);
-                await getUserData(values);
-                setCurrentStep(2);
-              })}
+              onSubmit={phoneNumberForm.handleSubmit(
+                async (values: { phoneNumber: string }) => {
+                  updatePhoneNumber(values.phoneNumber);
+                  await getUserData(values);
+                  setCurrentStep(2);
+                }
+              )}
               className="space-y-6"
             >
               <Card>
@@ -826,8 +822,8 @@ export default function Booking() {
 
       const data = await response.json();
 
-      data.data.mainServices.forEach((service: any) => {
-        service.options.forEach((option: any) => {
+      data.data.mainServices.forEach((service: MainService) => {
+        service.options.forEach((option: Option) => {
           const category = option.category;
           const existingCategory = newOptionCategories.find(
             (opt) => opt.category === category
@@ -868,13 +864,16 @@ export default function Booking() {
             status: userDogsData.status === "new" ? "예약대기" : "예약확정",
             consent_form: true,
             services: [
-              bookingData.mainService?.id,
-              bookingData.mainService?.options.map((option) => option.id),
-            ].flat(),
+              bookingData.mainService?.name,
+              bookingData.mainService?.options.map((option) => option.name),
+            ]
+              .flat()
+              .join(", "),
             additional_services: bookingData.additionalServices.map(
               (service) => service.id
             ),
             total_price: price[0],
+            additional_price: price[1] - price[0],
           },
         }),
       });
