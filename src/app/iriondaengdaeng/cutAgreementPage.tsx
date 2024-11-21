@@ -22,7 +22,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
   userUUID,
 }) => {
   const [dogInfo, setDogInfo] = useState<Dog>({
-    // id: "",
+    id: "",
     petName: "",
     weight: 0,
     birth: "",
