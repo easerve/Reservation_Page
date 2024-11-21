@@ -24,6 +24,7 @@ import { reservationData } from "@/data/data";
 import { getDate2 } from "@/components/utils/date_utils";
 import { getDate } from "date-fns";
 import CalendarBar from "./components/calendar_bar";
+import { getReservationsOfOneMonth } from "@/services/admin/get";
 
 export default function ReservationPage() {
   const [view, setView] = useState("list");
@@ -40,7 +41,7 @@ export default function ReservationPage() {
       status: "예약 대기",
       time: new Date(data.time),
       birth: getDate2(data.birth),
-      service_name: [data.service_name],
+      service_name: data.service_name,
       price: 0,
     } as Reservation;
     // console.log("submit done: ", newData);
@@ -53,30 +54,13 @@ export default function ReservationPage() {
     setIsDialogOpen(false);
   };
 
-  function getNextMonth(year, month) {
-    if (month === 12) {
-      return `${year + 1}-01-01`;
-    } else {
-      return `${year}-${month + 1}-01`;
-    }
-  }
-
   useEffect(() => {
     (async () => {
-      const res = await fetch(
-        `/api/reservations/range?start_date=${currentMonth.year}-${
-          currentMonth.month
-        }-01&end_date=${getNextMonth(currentMonth.year, currentMonth.month)}`
+      const reservations = await getReservationsOfOneMonth(
+        currentMonth.year,
+        currentMonth.month
       );
-      const data = await res.json();
-      setReservations(
-        data.data.map((item) => {
-          return {
-            ...item,
-            time: new Date(item.time),
-          };
-        })
-      );
+      setReservations(reservations);
     })();
   }, [currentMonth]);
 
