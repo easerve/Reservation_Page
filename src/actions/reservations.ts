@@ -18,6 +18,34 @@ interface ReservationInfo {
 	additional_price: number;
 }
 
+interface AdminReservationInfo {
+    uuid: string;
+    reservation_date: string;
+    memo: string | null;
+    status: string;
+    consent_form: boolean;
+	additional_services: string | null
+	additional_price: number | null
+    total_price: number;
+    service_name: string;
+    pet_id: {
+        name: string | null;
+        birth: string | null;
+        weight: number | null;
+        user_id: {
+            name: string | null;
+            phone: string;
+        };
+        breed_id: {
+            name: string;
+        };
+        memo: string | null;
+        neutering: boolean | null;
+		sex: string | null;
+		reg_number: string | null;
+    };
+}
+
 function handleError(error: Error) {
   console.error('Error in /reservations:', error);
   throw new Error('Internal server error');
@@ -90,4 +118,46 @@ export async function addReservation(reservationInfo: ReservationInfo) {
 		status: "success",
 		reservationId: insertData?.uuid,
 	}
+}
+
+export async function getReservationsByDateRange(start_date: string, end_date: string) : Promise<AdminReservationInfo[]> {
+	const supabase = await createServerSupabaseClient();
+
+	const { data: reservationData, error: reservationError } = await supabase
+		.from("reservations")
+		.select(`
+			uuid,
+			reservation_date,
+			memo,
+			status,
+			consent_form,
+			additional_services,
+			additional_price,
+			total_price,
+			service_name,
+			pet_id(
+				name,
+				birth,
+				weight,
+				memo,
+				neutering,
+				sex,
+				reg_number,
+				user_id(
+					name,
+					phone
+				),
+				breed_id(
+					name
+				)
+			)
+		`)
+		.gte("reservation_date", start_date)
+		.lte("reservation_date", end_date);
+
+	if (reservationError) {
+		handleError(reservationError);
+	}
+
+	return reservationData as AdminReservationInfo[];
 }

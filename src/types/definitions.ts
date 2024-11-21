@@ -191,18 +191,18 @@ export type Database = {
       reservation_services: {
         Row: {
           id: number
-          reservation_id: string | null
-          service_id: number | null
+          reservation_id: string
+          service_id: number
         }
         Insert: {
           id?: never
-          reservation_id?: string | null
-          service_id?: number | null
+          reservation_id: string
+          service_id: number
         }
         Update: {
           id?: never
-          reservation_id?: string | null
-          service_id?: number | null
+          reservation_id?: string
+          service_id?: number
         }
         Relationships: [
           {
@@ -256,39 +256,42 @@ export type Database = {
       }
       reservations: {
         Row: {
-          additional_option: string | null
           additional_price: number | null
+          additional_services: string | null
           consent_form: boolean
           created_at: string | null
           memo: string | null
-          pet_id: string | null
-          reservation_date: string | null
+          pet_id: string
+          reservation_date: string
+          service_name: string
           status: string
-          total_price: number | null
+          total_price: number
           uuid: string
         }
         Insert: {
-          additional_option?: string | null
           additional_price?: number | null
+          additional_services?: string | null
           consent_form: boolean
           created_at?: string | null
           memo?: string | null
-          pet_id?: string | null
-          reservation_date?: string | null
+          pet_id: string
+          reservation_date: string
+          service_name: string
           status: string
-          total_price?: number | null
+          total_price: number
           uuid?: string
         }
         Update: {
-          additional_option?: string | null
           additional_price?: number | null
+          additional_services?: string | null
           consent_form?: boolean
           created_at?: string | null
           memo?: string | null
-          pet_id?: string | null
-          reservation_date?: string | null
+          pet_id?: string
+          reservation_date?: string
+          service_name?: string
           status?: string
-          total_price?: number | null
+          total_price?: number
           uuid?: string
         }
         Relationships: [

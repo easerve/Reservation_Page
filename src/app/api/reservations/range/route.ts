@@ -1,12 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getReservationsByDateRange,
-  getMainServiceNameById,
-  getAdditionalServiceNameById,
-  getServiceOptionById,
-} from "@/actions/reservation";
-
+import { getReservationsByDateRange } from "@/actions/reservations";
 import { Database } from "@/types/definitions";
+
+interface AdminReservationInfo {
+    uuid: string;
+    reservation_date: string;
+    memo: string;
+    status: string;
+    consent_form: boolean;
+    additional_services: string;
+    additional_price: number;
+    total_price: number;
+    service_name: string;
+    pet_id: {
+        name: string;
+        birth: string;
+        weight: number;
+        user_id: {
+            name: string;
+            phone: string;
+        };
+        breed_id: {
+            name: string;
+        };
+        memo: string;
+        neutering: boolean;
+    };
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,19 +45,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ data: [] }, { status: 200 });
     }
     const result = await Promise.all(
-      reservations.map(async (reservation) => {
-        const serviceName = await getMainServiceNameById(reservation.uuid);
-        const serviceOptionName = await getServiceOptionById(reservation.uuid);
-        const additionalServiceName = await getAdditionalServiceNameById(
-          reservation.uuid
-        );
-        const concatenatedNames = [
-          serviceName,
-          serviceOptionName,
-          additionalServiceName,
-        ]
-          .filter((name) => name && name.trim() !== "") // 빈 값 제거
-          .join(", ");
+      reservations.map(async (reservation: AdminReservationInfo) => {
         return {
           id: reservation.uuid,
           time: reservation.reservation_date,
@@ -46,9 +54,10 @@ export async function GET(request: NextRequest) {
           weight: reservation.pet_id.weight,
           birth: reservation.pet_id.birth,
           phone: reservation.pet_id.user_id.phone,
-          service_name: concatenatedNames,
+          service_name: reservation.service_name,
+          additional_services: reservation.additional_services,
           additional_price: reservation.additional_price,
-          additional_option: reservation.additional_option,
+          total_price: reservation.total_price,
           status: reservation.status,
           consent_form: reservation.consent_form,
           memo: reservation.memo,
