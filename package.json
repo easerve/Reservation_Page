@@ -13,10 +13,19 @@
     "@fullcalendar/core": "^6.1.15",
     "@fullcalendar/daygrid": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
-    "@hookform/resolvers": "^3.9.1",
+    "@fullcalendar/interaction": "^6.1.15",
+    "@fullcalendar/timegrid": "^6.1.15",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-dropdown-menu": "^2.1.2",
+    "@radix-ui/react-popover": "^1.1.2",
+    "@radix-ui/react-scroll-area": "^1.2.1",
+    "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-separator": "^1.1.0",
+    "@radix-ui/react-tabs": "^1.1.1",
+    "@radix-ui/react-tooltip": "^1.1.4",
+    "@hookform/resolvers": "^3.9.1",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.46.1",
     "@types/react-modal": "^3.16.3",
@@ -35,8 +44,12 @@
     "react-dom": "18.2.0",
     "react-modal": "^3.16.1",
     "react-select": "^5.8.3",
+    "react-hook-form": "^7.53.2",
     "rimraf": "^6.0.1",
     "shadcn-ui": "^0.2.3",
+    "@hookform/resolvers": "^3.9.1",
+    "pnpm": "^9.13.2",
+    "recoil": "^0.7.7",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8"
@@ -52,6 +65,8 @@
     "next-test-api-route-handler": "^4.0.14",
     "postcss": "^8.4.26",
     "tailwindcss": "^3.4.4",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.18"
   }
 }

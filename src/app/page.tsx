@@ -1,6 +1,14 @@
-import Link from 'next/link';
+"use client";
+
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import DefaultDialog from "@/components/default_dialog/default_dialog";
+import LoginForm from "@/containers/login/login_form";
 
 export default function Home() {
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
+
   return (
     <div className="min-h-screen bg-[#f5f7f4] flex flex-col">
       <header className="bg-primary text-primary-foreground w-full py-6 shadow-lg">
@@ -20,20 +28,31 @@ export default function Home() {
               도와줍니다. 시간을 절약하고 고객 만족도를 높여보세요.
             </p>
           </div>
-          
+
           <div className="text-center">
-            <Link href="/iriondaengdaeng">
-              <button className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg font-semibold py-4 px-8 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1">
-                지금 시작하기
-              </button>
-            </Link>
+            <Button
+              size="lg"
+              className="py-6"
+              onClick={() => setIsDialogOpen(true)}
+            >
+              <span className="text-lg font-bold">로그인 하기</span>
+            </Button>
+            <DefaultDialog
+              open={isDialogOpen}
+              onOpenChange={setIsDialogOpen}
+              title="로그인"
+            >
+              <LoginForm />
+            </DefaultDialog>
           </div>
         </div>
       </main>
 
       <footer className="bg-primary text-primary-foreground py-6 mt-auto">
         <div className="container mx-auto text-center">
-          <p className="text-sm opacity-90">&copy; {new Date().getFullYear()} Easerve. 모든 권리 보유.</p>
+          <p className="text-sm opacity-90">
+            &copy; {new Date().getFullYear()} Easerve. 모든 권리 보유.
+          </p>
         </div>
       </footer>
     </div>
