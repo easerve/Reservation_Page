@@ -46,7 +46,8 @@ export interface Dog {
   petName: string;
   weight: number;
   birth: string;
-  breed: number;
+  breed: string;
+  breedType: number;
   neutering: boolean;
   sex: string;
   regNumber: string;

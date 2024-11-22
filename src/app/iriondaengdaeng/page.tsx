@@ -833,9 +833,8 @@ export default function Booking() {
     try {
       const weightRangeId = getWeightRangeId(bookingData.dog.weight);
       // NOTE: 불필요한 while
-      const typeId = bookingData.dog.breed;
-      // breeds.find((breed) => breed.name === bookingData.dog.breed)
-      //   ?.type ?? 1;
+      const typeId =
+        breeds.find((breed) => breed.name === bookingData.dog.breed)?.type ?? 1;
 
       const response = await fetch(
         `/api/services?weightRangeId=${weightRangeId}&typeId=${typeId}`
