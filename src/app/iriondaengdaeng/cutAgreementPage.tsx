@@ -184,7 +184,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                       );
                       setDogInfo({
                         ...dogInfo,
-                        breed: option ? option.value : 0,
+                        breedType: option ? option.value : 0,
                       });
                     }}
                     value={
