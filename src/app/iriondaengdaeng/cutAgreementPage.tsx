@@ -26,7 +26,8 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
     petName: "",
     weight: 0,
     birth: "",
-    breed: 0,
+    breed: "",
+    breedType: 0,
     neutering: false,
     sex: "",
     regNumber: "",
@@ -183,7 +184,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                       );
                       setDogInfo({
                         ...dogInfo,
-                        breed: option ? option.value : 0,
+                        breedType: option ? option.value : 0,
                       });
                     }}
                     value={
