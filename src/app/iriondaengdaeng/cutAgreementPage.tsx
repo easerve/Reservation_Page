@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import ConsentForm from "@/app/iriondaengdaeng/ConsentForm";
 import Select from "react-select";
 import { FormControl } from "@/components/ui/form";
+import DaumPostcodeEmbed from "react-daum-postcode";
 
 interface CutAgreementPageProps {
   isOpen: boolean;
@@ -126,6 +127,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 />
+                <DaumPostcodeEmbed onComplete={(address) => {console.log(address)}} />
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">상세주소</label>
