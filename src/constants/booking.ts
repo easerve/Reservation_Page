@@ -11,7 +11,7 @@ export const INITIAL_BOOKING_STATE: BookingData = {
     time: undefined as string | undefined,
   },
   dog: {
-    id: "" as String,
+    id: "" as string,
     petName: "" as string,
     weight: 0 as number,
     birth: "" as string,
@@ -26,6 +26,7 @@ export const INITIAL_BOOKING_STATE: BookingData = {
   mainService: undefined as MainService | undefined,
   additionalServices: [] as AdditionalService[],
   inquiry: "",
+  price: [0, 0] as number[],
 };
 
 export const BIG_DOG_SERVICE_PRICES = [
@@ -34,3 +35,5 @@ export const BIG_DOG_SERVICE_PRICES = [
   { id: 3, price_per_kg: 13000 },
   { id: 4, price_per_kg: 20000 },
 ];
+
+export const ALL_TIME_SLOTS = ["10:00", "14:00", "17:00"];

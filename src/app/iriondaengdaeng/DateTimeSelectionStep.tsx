@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ALL_TIME_SLOTS } from "@/constants/booking";
 import { BookingData } from "@/types/booking";
 import React, { useMemo, useEffect, useState } from "react";
 
@@ -34,9 +35,7 @@ export default function DateTimeSelectionStep({
   useEffect(() => {
     fetchBookedDate();
     console.log("호출!");
-    
   }, []);
-  const allTimeSlots = ["10:00", "14:00", "17:00"];
 
   const getBookedTimesForDate = (date: Date | undefined): string[] => {
     if (!bookedDates.length || !date) return [];
@@ -45,10 +44,13 @@ export default function DateTimeSelectionStep({
     );
     return booking ? booking.times : [];
   };
+
   const fullyBookedDates = useMemo(() => {
     if (bookedDates.length === 0) return [];
     return bookedDates
-      .filter((booking) => (booking.times ?? []).length >= allTimeSlots.length)
+      .filter(
+        (booking) => (booking.times ?? []).length >= ALL_TIME_SLOTS.length
+      )
       .map((booking) => new Date(booking.date));
   }, [bookedDates]);
 
@@ -103,7 +105,7 @@ export default function DateTimeSelectionStep({
           />
           {bookingData.dateTime.date && (
             <div className="grid grid-cols-3 gap-2 mt-4">
-              {allTimeSlots.map((time) => {
+              {ALL_TIME_SLOTS.map((time) => {
                 const now = new Date();
                 const selectedDateTime = new Date(bookingData.dateTime.date);
 
