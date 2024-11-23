@@ -12,14 +12,6 @@ export interface BookingDateTime {
   time?: string;
 }
 
-export interface PetInfo {
-  id: string;
-  name: string;
-  weight: number;
-  birth: string;
-  breed: string;
-}
-
 export interface Option {
   id: number;
   name: string;
@@ -42,7 +34,7 @@ export interface AdditionalService {
 }
 
 export interface Dog {
-  id: String;
+  id: string;
   petName: string;
   weight: number;
   birth: string;

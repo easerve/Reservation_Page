@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { User, Dog } from "@/types/booking";
 import { useEffect } from "react";
-
 interface ConsentFormProps {
   setCurrentStep: (step: number) => void;
   dogInfo: Dog;
@@ -38,10 +37,14 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
       }
 
       const data = await response.json();
+      if (data.status !== "success") {
+        throw new Error("Failed to update user info");
+      }
     } catch (error) {
       console.error("Error updating user info:", error);
     }
   };
+
   const makeDogInfo = async () => {
     try {
       const response = await fetch("/api/pets/profile", {
@@ -50,7 +53,10 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          PetInfo: dogInfo,
+          PetInfo: {
+            ...dogInfo,
+            breed: dogInfo.breedType,
+          },
         }),
       });
 
@@ -59,6 +65,9 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
       }
 
       const data = await response.json();
+      if (data.status !== "success") {
+        throw new Error("Failed to update dog info");
+      }
     } catch (error) {
       console.error("Error updating dog info:", error);
     }

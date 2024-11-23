@@ -33,7 +33,6 @@ import {
   MainService,
   Option,
   AdditionalService,
-  PetInfo,
   Dog,
 } from "@/types/booking";
 import {
