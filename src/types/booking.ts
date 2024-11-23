@@ -5,6 +5,7 @@ export interface BookingData {
   mainService?: MainService;
   additionalServices: AdditionalService[];
   inquiry: string;
+  price: number[];
 }
 
 export interface BookingDateTime {
