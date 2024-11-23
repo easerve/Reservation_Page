@@ -12,7 +12,7 @@ import {
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
+import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
 import { Copy } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -71,7 +71,7 @@ const Calendar: React.FC<CalendarProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
   const [isInfoDialogOpen, setIsInfoDialogOpen] = useState<boolean>(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
-  const [selectedDate, setSelectedDate] = useState<DateSelectArg | null>(null);
+  const [selectedDate, setSelectedDate] = useState<DateClickArg | null>(null);
   const [selectedReservation, setSelectedReservation] =
     useState<Reservation | null>(null);
   const [monthEvents, setMonthEvents] = useState<EventInput[]>([]);
@@ -120,7 +120,7 @@ const Calendar: React.FC<CalendarProps> = ({
     }
   }, [reservations, currentMonth]);
 
-  const handleDateClick = (selected: DateSelectArg) => {
+  const handleDateClick = (selected: DateClickArg) => {
     setSelectedDate(selected);
     setIsDialogOpen(true);
   };
@@ -159,7 +159,7 @@ const Calendar: React.FC<CalendarProps> = ({
       calendarApi.unselect(); // Unselect the date range.
 
       const startTime = updateTimeInDate(
-        selectedDate.start,
+        selectedDate.date,
         data.reservationTime
       );
       const newEvent = {
@@ -192,7 +192,7 @@ const Calendar: React.FC<CalendarProps> = ({
           selectable={true} // Allow dates to be selectable.
           selectMirror={true} // Mirror selections visually.
           dayMaxEvents={true} // Limit the number of events displayed per day.
-          select={handleDateClick} // Handle date selection to create new events.
+          dateClick={handleDateClick} 
           eventClick={handleEventClick} // Handle clicking on events (e.g., to delete them).
           events={monthEvents} // Events to display on the calendar.
         />
