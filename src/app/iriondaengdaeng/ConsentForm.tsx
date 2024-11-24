@@ -1,7 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { User, Dog } from "@/types/booking";
-import { useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Dog, User } from "@/types/booking";
+import SignatureBox, { SignatureBoxRef } from "./signature-box";
+
 interface ConsentFormProps {
   setCurrentStep: (step: number) => void;
   dogInfo: Dog;
@@ -17,10 +27,23 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
   onClose,
   setIsPuppyAdd,
 }) => {
-  const [allChecked, setAllChecked] = useState(false);
-  const [requiredChecked, setRequiredChecked] = useState(false);
-  const [personalInfoChecked, setPersonalInfoChecked] = useState(false);
-  const [thirdPartyChecked, setThirdPartyChecked] = useState(false);
+  const [allChecked, setAllChecked] = useState<boolean>(false);
+  const [requiredChecked, setRequiredChecked] = useState<boolean>(false);
+  const [personalInfoChecked, setPersonalInfoChecked] =
+    useState<boolean>(false);
+  const [thirdPartyChecked, setThirdPartyChecked] = useState<boolean>(false);
+
+  const signaturePadRef = useRef<SignatureBoxRef>(null);
+
+  const handleClear = () => signaturePadRef.current?.clear();
+
+  // const handleUndo = () => {
+  //   const data = signaturePadRef.current?.toData();
+  //   if (data && data.length > 0) {
+  //     data.pop();
+  //     signaturePadRef.current?.fromData(data);
+  //   }
+  // };
 
   const updateUserInfo = async () => {
     try {
@@ -73,9 +96,16 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
     }
   };
 
-  const onClick = async () => {
-    console.log(dogInfo);
-    console.log(userInfo);
+  const handleSubmit = async () => {
+    if (signaturePadRef.current?.isEmpty()) {
+      alert("Please provide a signature first.");
+      return;
+    }
+
+    const signatureDataUrl =
+      signaturePadRef.current?.toDataURL("image/svg+xml");
+    // TODO: 서명 데이터 전송 / 저장 로직 추가
+
     await updateUserInfo();
     await makeDogInfo();
     setCurrentStep(1);
@@ -83,17 +113,17 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
     onClose();
   };
 
-  const handleAllCheckedChange = () => {
-    const newChecked = !allChecked;
-    setAllChecked(newChecked);
-    setRequiredChecked(newChecked);
-    setPersonalInfoChecked(newChecked);
-    setThirdPartyChecked(newChecked);
-  };
+  // const handleAllCheckedChange = () => {
+  //   const newChecked = !allChecked;
+  //   setAllChecked(newChecked);
+  //   setRequiredChecked(newChecked);
+  //   setPersonalInfoChecked(newChecked);
+  //   setThirdPartyChecked(newChecked);
+  // };
 
   const handleIndividualCheckedChange = (
     setChecked: React.Dispatch<React.SetStateAction<boolean>>,
-    checked: boolean
+    checked: boolean,
   ) => {
     setChecked(!checked);
     if (checked) {
@@ -110,13 +140,13 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
   }, [requiredChecked, personalInfoChecked, thirdPartyChecked]);
 
   return (
-    <div>
+    <Dialog>
       <div className="consent-wrap">
         <div className="consent-body">
           <div className="consent-inner-body">
             <div className="consent-terms">
               <div className="consent-terms">
-                <div className="consent-terms-content flex items-center mr-2">
+                <div className="consent-terms-content mr-2 flex items-center">
                   <div className="consent-terms-left flex-1 text-lg">
                     미용 동의서 (필수)
                   </div>
@@ -127,10 +157,10 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                       onChange={() =>
                         handleIndividualCheckedChange(
                           setRequiredChecked,
-                          requiredChecked
+                          requiredChecked,
                         )
                       }
-                      className="mr-2 w-6 h-6"
+                      className="mr-2 h-6 w-6"
                     />
                   </label>
                 </div>
@@ -287,7 +317,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                 </div>
               </div>
               <div className="consent-terms mt-4">
-                <div className="consent-terms-content flex items-center mr-2">
+                <div className="consent-terms-content mr-2 flex items-center">
                   <div className="consent-terms-left flex-1 text-lg">
                     개인정보 수집 및 이용 동의 (필수)
                   </div>
@@ -298,17 +328,17 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                       onChange={() =>
                         handleIndividualCheckedChange(
                           setPersonalInfoChecked,
-                          personalInfoChecked
+                          personalInfoChecked,
                         )
                       }
-                      className="mr-2 w-6 h-6"
+                      className="mr-2 h-6 w-6"
                     />
                   </label>
                 </div>
                 <div className="consent-terms-template-primary max-h-48 overflow-y-auto border p-4">
                   <p>
-                    이리온댕댕(이하 '회사')는 대상 매장 예약 처리를 위해 아래와
-                    같은 개인정보를 수집하고 있습니다.
+                    이리온댕댕(이하 &quot;회사&quot;)는 대상 매장 예약 처리를
+                    위해 아래와 같은 개인정보를 수집하고 있습니다.
                   </p>
                   <ol>
                     <li>
@@ -373,7 +403,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                 </div>
               </div>
               <div className="consent-terms mt-4">
-                <div className="consent-terms-content flex items-center mr-2">
+                <div className="consent-terms-content mr-2 flex items-center">
                   <div className="consent-terms-left flex-1 text-lg">
                     개인정보 제3자 제공 동의 (필수)
                   </div>
@@ -384,16 +414,16 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                       onChange={() =>
                         handleIndividualCheckedChange(
                           setThirdPartyChecked,
-                          thirdPartyChecked
+                          thirdPartyChecked,
                         )
                       }
-                      className="mr-2 w-6 h-6"
+                      className="mr-2 h-6 w-6"
                     />
                   </label>
                 </div>
                 <div className="consent-terms-template-primary max-h-48 overflow-y-auto border p-4">
                   <p>
-                    이리온댕댕(이하 "회사")는 이용자의 개인정보를 본
+                    이리온댕댕(이하 &quot;회사&quot;)는 이용자의 개인정보를 본
                     개인정보취급방침에서 고지한 범위 내에서 사용하며, 이용자의
                     사전 동의 없이 동 범위를 초과하여 이용하거나 이용자의 개인
                     정보를 제3자에게 제공하지 않습니다. 다만, 관련 법령에
@@ -428,7 +458,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
           </div>
         </div>
       </div>
-      <div className="flex gap-2 mt-12">
+      <div className="mt-12 flex gap-2">
         <Button
           type="button"
           variant="outline"
@@ -436,18 +466,39 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
         >
           이전
         </Button>
-        <Button
-          type="button"
-          className="flex-1 bg-primary"
-          disabled={
-            !requiredChecked || !personalInfoChecked || !thirdPartyChecked
-          }
-          onClick={onClick}
-        >
-          강아지 추가하기
-        </Button>
+        <DialogTrigger asChild>
+          <Button
+            type="button"
+            className="flex-1 bg-primary"
+            disabled={!allChecked}
+          >
+            강아지 추가하기
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader className="gap-2 text-start">
+            <DialogTitle>보호자 서명</DialogTitle>
+            <DialogDescription className="break-all">
+              애견 미용 시 발생할 수 있는 사고와 미용 후 스트레스 증후군에 대해,
+              보호자는 인지를 하고 이해를 했으며 애견 미용 서비스를 이용하는
+              것을 동의합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <SignatureBox ref={signaturePadRef} />
+          <DialogFooter className="gap-4">
+            {/* <Button type='button' variant='secondary' onClick={handleUndo}>
+              Undo
+            </Button> */}
+            <Button type="button" variant="secondary" onClick={handleClear}>
+              초기화
+            </Button>
+            <Button type="submit" onClick={handleSubmit}>
+              제출
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </div>
-    </div>
+    </Dialog>
   );
 };
 
