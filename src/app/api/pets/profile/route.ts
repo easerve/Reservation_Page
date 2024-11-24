@@ -1,18 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addPet, getPetId } from "@/actions/pets";
+import { addPet, getPetId, PetInfo } from "@/actions/pets";
 
 
 interface RequestBody {
-  PetInfo: {
-    petName: string;
-    weight: number;
-    phoneNumber: string;
-    birth: number;
-    breed: number;
-    neutering: boolean;
-    sex: string;
-    regNumber: string;
-  };
+  PetInfo: PetInfo;
 }
 
 interface PetData {
@@ -91,9 +82,13 @@ export async function POST(request: NextRequest) {
       neutering,
       sex,
       regNumber,
+      bite,
+      heart_disease,
+      underlying_disease,
     } = body.PetInfo;
 
-    if (!petName || !weight || !phoneNumber || !birth || !breed) {
+    if (!petName || !weight || !phoneNumber || !birth || !breed ) {
+      // TODD: Add more validation
       return NextResponse.json(
         { error: "Missing required fields in PetInfo" },
         { status: 400 }
@@ -109,6 +104,9 @@ export async function POST(request: NextRequest) {
       neutering,
       sex,
       regNumber,
+      bite,
+      heart_disease,
+      underlying_disease,
     };
 
     const result = await addPet(petInfo);

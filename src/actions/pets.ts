@@ -7,7 +7,7 @@ export type BreedRow = Database["public"]["Tables"]["breeds"]["Row"];
 export type PetInsert = Database["public"]["Tables"]["pets"]["Insert"];
 export type PetRow = Database["public"]["Tables"]["pets"]["Row"];
 
-interface PetInfo {
+export interface PetInfo {
 	petName: string;
 	weight: number;
 	birth: string;
@@ -16,6 +16,9 @@ interface PetInfo {
 	neutering: boolean;
 	sex: string;
 	regNumber: string;
+	bite: boolean;
+	heart_disease: boolean;
+	underlying_disease: Text;
 }
 
 interface PetIdData {
@@ -120,6 +123,9 @@ export async function addPet(petInfo: PetInfo) {
 			neutering: petInfo.neutering,
 			sex: petInfo.sex,
 			reg_number: petInfo.regNumber,
+			bite: petInfo.bite,
+			heart_disease: petInfo.heart_disease,
+			underlying_disease: petInfo.underlying_disease,
 		});
 
 	if (insertError) {
