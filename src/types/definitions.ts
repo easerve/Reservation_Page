@@ -101,39 +101,48 @@ export type Database = {
       pets: {
         Row: {
           birth: string | null
+          bite: boolean | null
           breed_id: number | null
           created_at: string | null
+          heart_disease: boolean | null
           memo: string | null
           name: string | null
           neutering: boolean | null
           reg_number: string | null
           sex: string | null
+          underlying_disease: string | null
           user_id: string | null
           uuid: string
           weight: number | null
         }
         Insert: {
           birth?: string | null
+          bite?: boolean | null
           breed_id?: number | null
           created_at?: string | null
+          heart_disease?: boolean | null
           memo?: string | null
           name?: string | null
           neutering?: boolean | null
           reg_number?: string | null
           sex?: string | null
+          underlying_disease?: string | null
           user_id?: string | null
           uuid?: string
           weight?: number | null
         }
         Update: {
           birth?: string | null
+          bite?: boolean | null
           breed_id?: number | null
           created_at?: string | null
+          heart_disease?: boolean | null
           memo?: string | null
           name?: string | null
           neutering?: boolean | null
           reg_number?: string | null
           sex?: string | null
+          underlying_disease?: string | null
           user_id?: string | null
           uuid?: string
           weight?: number | null
@@ -152,105 +161,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user"
             referencedColumns: ["uuid"]
-          },
-        ]
-      }
-      reservation_additional_services: {
-        Row: {
-          additional_service_id: number | null
-          id: number
-          reservation_id: string | null
-        }
-        Insert: {
-          additional_service_id?: number | null
-          id?: never
-          reservation_id?: string | null
-        }
-        Update: {
-          additional_service_id?: number | null
-          id?: never
-          reservation_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reservation_additional_services_additional_service_id_fkey"
-            columns: ["additional_service_id"]
-            isOneToOne: false
-            referencedRelation: "additional_services"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reservation_additional_services_reservation_id_fkey"
-            columns: ["reservation_id"]
-            isOneToOne: false
-            referencedRelation: "reservations"
-            referencedColumns: ["uuid"]
-          },
-        ]
-      }
-      reservation_services: {
-        Row: {
-          id: number
-          reservation_id: string
-          service_id: number
-        }
-        Insert: {
-          id?: never
-          reservation_id: string
-          service_id: number
-        }
-        Update: {
-          id?: never
-          reservation_id?: string
-          service_id?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reservation_services_reservation_id_fkey"
-            columns: ["reservation_id"]
-            isOneToOne: false
-            referencedRelation: "reservations"
-            referencedColumns: ["uuid"]
-          },
-          {
-            foreignKeyName: "reservation_services_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      reservation_services_option: {
-        Row: {
-          id: number
-          reservation_id: string | null
-          service_option_id: number | null
-        }
-        Insert: {
-          id?: never
-          reservation_id?: string | null
-          service_option_id?: number | null
-        }
-        Update: {
-          id?: never
-          reservation_id?: string | null
-          service_option_id?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reservation_services_option_reservation_id_fkey"
-            columns: ["reservation_id"]
-            isOneToOne: false
-            referencedRelation: "reservations"
-            referencedColumns: ["uuid"]
-          },
-          {
-            foreignKeyName: "reservation_services_option_service_option_id_fkey"
-            columns: ["service_option_id"]
-            isOneToOne: false
-            referencedRelation: "service_options"
-            referencedColumns: ["id"]
           },
         ]
       }
