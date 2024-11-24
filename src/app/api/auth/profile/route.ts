@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserDogs, addUser } from '@/actions/auth';
+import { getDogsByUserPhone, addUser } from '@/actions/auth';
 
 export async function GET(request: NextRequest) {
   const phoneNumber = request.nextUrl.searchParams.get('phone');
@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const result = await getUserDogs(phoneNumber);
+    const result = await getDogsByUserPhone(phoneNumber);
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error in /auth/profile:', error);

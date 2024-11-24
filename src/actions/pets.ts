@@ -6,6 +6,7 @@ import { createServerSupabaseClient } from '@/utils/supabase/server';
 export type BreedRow = Database["public"]["Tables"]["breeds"]["Row"];
 export type PetInsert = Database["public"]["Tables"]["pets"]["Insert"];
 export type PetRow = Database["public"]["Tables"]["pets"]["Row"];
+export type UserRow = Database["public"]["Tables"]["user"]["Row"];
 
 export interface PetInfo {
 	petName: string;
@@ -18,34 +19,35 @@ export interface PetInfo {
 	regNumber: string;
 	bite: boolean;
 	heart_disease: boolean;
-	underlying_disease: Text;
+	underlying_disease: string;
 }
 
-interface PetIdData {
-	birth: string | null;
-	breed_id: number | null;
-	created_at: string | null;
-	memo: string | null;
-	name: string | null;
-	neutering: boolean | null;
-	reg_number: string | null;
-	sex: string | null;
-	uuid: string;
-	weight: number | null;
-	user_id: string | null;
+export interface PetIdData {
+	birth: string | null
+	bite: boolean | null
+	breed_id: number | null
+	created_at: string | null
+	heart_disease: boolean | null
+	memo: string | null
+	name: string | null
+	neutering: boolean | null
+	reg_number: string | null
+	sex: string | null
+	underlying_disease: string | null
+	user_id: string | null
+	uuid: string
+	weight: number | null
 	user: {
-	  address: string | null;
-	  detail_address: string | null;
-	  name: string | null;
-	  phone: string | null;
-	  uuid: string;
+		uuid: string
+		name: string | null
+		phone: string
+		address: string | null
+		detail_address: string | null
 	};
 	breeds: {
-	  name: string | null;
-	  type: {
-		type: string | null;
-	  };
-	}
+		name: string
+		type: string
+	};
   }
 
 
@@ -75,7 +77,6 @@ export async function getPetId(petId: string): Promise<PetIdData> {
 		`)
 		.eq('uuid', petId)
 		.single();
-
 	if (petError) {
 		if (petError.code === 'PGRST116') {
 			throw new Error('Reservation not found');
