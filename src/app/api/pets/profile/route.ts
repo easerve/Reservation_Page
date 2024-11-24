@@ -9,7 +9,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const petId = searchParams.get("id");
-    console.log("petId", petId);
     if (!petId) {
       return NextResponse.json({ error: "Pet ID is required" }, { status: 400 });
     }
