@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { uploadFile } from "@/actions/storage";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -102,9 +103,17 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
       return;
     }
 
-    const signatureDataUrl =
-      signaturePadRef.current?.toDataURL("image/svg+xml");
-    // TODO: 서명 데이터 전송 / 저장 로직 추가
+    const signatureDataSvg = signaturePadRef.current?.toSVG();
+    const fileName = Math.random().toString(36).slice(2, 9);
+    const file = new File([signatureDataSvg], `${fileName}.svg`, {
+      type: "image/svg+xml",
+    });
+    const imageUrl = await uploadFile({
+      file,
+      bucket: "signature",
+      // folder: "signatures",
+    });
+    // TODO: map imageUrl to Document / User / Dog
 
     await updateUserInfo();
     await makeDogInfo();
