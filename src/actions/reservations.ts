@@ -1,14 +1,15 @@
 "use server";
 
+import { Database } from "@/types/definitions";
+import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { PostgrestError } from "@supabase/supabase-js";
 
-import { Database } from '@/types/definitions';
-import { createServerSupabaseClient } from '@/utils/supabase/server';
-import { PostgrestError } from '@supabase/supabase-js';
-
-export type ReservationRow = Database["public"]["Tables"]["reservations"]["Row"];
-export type ReservationInsert = Database["public"]["Tables"]["reservations"]["Insert"];
-export type ReservationUpdate = Database["public"]["Tables"]["reservations"]["Update"];
-
+export type ReservationRow =
+  Database["public"]["Tables"]["reservations"]["Row"];
+export type ReservationInsert =
+  Database["public"]["Tables"]["reservations"]["Insert"];
+export type ReservationUpdate =
+  Database["public"]["Tables"]["reservations"]["Update"];
 
 interface ReservationInfo {
   pet_id: string;
@@ -48,44 +49,43 @@ interface AdminReservationInfo {
   };
 }
 
-
 interface ReservationIdInfo {
-	uuid: string;
-	reservation_date: string;
-	memo: string | null;
-	status: string;
-	additional_services: string | null
-	additional_price: number | null
-	total_price: number;
-	service_name: string;
-	pet_id: {
-		uuid: string;
-		name: string | null;
-		birth: string | null;
-		weight: number | null;
-		memo: string | null;
-		neutering: boolean
-	}
+  uuid: string;
+  reservation_date: string;
+  memo: string | null;
+  status: string;
+  additional_services: string | null;
+  additional_price: number | null;
+  total_price: number;
+  service_name: string;
+  pet_id: {
+    uuid: string;
+    name: string | null;
+    birth: string | null;
+    weight: number | null;
+    memo: string | null;
+    neutering: boolean;
+  };
 }
 
 function handleError(error: PostgrestError) {
-  console.error('Error in /reservations:', error);
-  throw new Error('Internal server error', error);
+  console.error("Error in /reservations:", error);
+  throw new Error("Internal server error", error);
 }
 
 export async function getReservationsByPhone(
-	phone: string,
-	limit: number = 10
-) : Promise<AdminReservationInfo[]> {
-	const supabase = await createServerSupabaseClient();
-	const { data: reservationsData, error: reservationsError } = await supabase
-		.from('reservations')
-		.select(`
+  phone: string,
+  limit: number = 10
+): Promise<AdminReservationInfo[]> {
+  const supabase = await createServerSupabaseClient();
+  const { data: reservationsData, error: reservationsError } = await supabase
+    .from("reservations")
+    .select(
+      `
 			uuid,
 			reservation_date,
 			memo,
 			status,
-			consent_form,
 			additional_services,
 			additional_price,
 			total_price,
@@ -106,29 +106,32 @@ export async function getReservationsByPhone(
 					name
 				)
 			)
-		`)
-		.eq('pet_id.user_id.phone', phone)
-		.limit(limit);
+		`
+    )
+    .eq("pet_id.user_id.phone", phone)
+    .limit(limit);
 
-	if (reservationsError) {
-		if (reservationsError.code === 'PGRST116') {
-			throw new Error('Reservation not found');
-		}
-		handleError(reservationsError);
-	}
-	return reservationsData as undefined as AdminReservationInfo[];
+  if (reservationsError) {
+    if (reservationsError.code === "PGRST116") {
+      throw new Error("Reservation not found");
+    }
+    handleError(reservationsError);
+  }
+  return reservationsData as undefined as AdminReservationInfo[];
 }
 
-export async function getReservationId(reservationId: string) : Promise<AdminReservationInfo>{
-	const supabase = await createServerSupabaseClient();
-	const {data: reservationData, error: reservationError} = await supabase
-		.from('reservations')
-		.select(`
+export async function getReservationId(
+  reservationId: string
+): Promise<AdminReservationInfo> {
+  const supabase = await createServerSupabaseClient();
+  const { data: reservationData, error: reservationError } = await supabase
+    .from("reservations")
+    .select(
+      `
 			uuid,
 			reservation_date,
 			memo,
 			status,
-			consent_form,
 			additional_services,
 			additional_price,
 			total_price,
@@ -149,89 +152,92 @@ export async function getReservationId(reservationId: string) : Promise<AdminRes
 					name
 				)
 			)
-		`)
-		.eq('uuid', reservationId)
-		.single();
+		`
+    )
+    .eq("uuid", reservationId)
+    .single();
 
-	if (reservationError) {
-		if (reservationError.code === 'PGRST116') {
-			throw new Error('Reservation not found');
-		}
-		handleError(reservationError);
-	}
+  if (reservationError) {
+    if (reservationError.code === "PGRST116") {
+      throw new Error("Reservation not found");
+    }
+    handleError(reservationError);
+  }
 
-	return reservationData as undefined as AdminReservationInfo;
+  return reservationData as undefined as AdminReservationInfo;
 }
 
 export async function deleteReservation(reservationId: string) {
-	const supabase = await createServerSupabaseClient();
-	const {data: deleteData, error: reservationError} = await supabase
-		.from('reservations')
-		.delete()
-		.eq('uuid', reservationId);
+  const supabase = await createServerSupabaseClient();
+  const { data: deleteData, error: reservationError } = await supabase
+    .from("reservations")
+    .delete()
+    .eq("uuid", reservationId);
 
-	if (reservationError) {
-		if (reservationError.code === 'PGRST116') {
-			throw new Error('Reservation not found');
-		}
-		handleError(reservationError);
-	}
+  if (reservationError) {
+    if (reservationError.code === "PGRST116") {
+      throw new Error("Reservation not found");
+    }
+    handleError(reservationError);
+  }
 }
 
 export async function updateReservation(
-	reservationId: string,
-	reservationInfo: ReservationUpdate
+  reservationId: string,
+  reservationInfo: ReservationUpdate
 ) {
-	const supabase = await createServerSupabaseClient();
-	const {data: updateData, error: reservationError} = await supabase
-		.from('reservations')
-		.update(reservationInfo)
-		.eq('uuid', reservationId);
+  const supabase = await createServerSupabaseClient();
+  const { data: updateData, error: reservationError } = await supabase
+    .from("reservations")
+    .update(reservationInfo)
+    .eq("uuid", reservationId);
 
-	if (reservationError) {
-		if (reservationError.code === 'PGRST116') {
-			throw new Error('Reservation not found');
-		}
-		handleError(reservationError);
-	}
+  if (reservationError) {
+    if (reservationError.code === "PGRST116") {
+      throw new Error("Reservation not found");
+    }
+    handleError(reservationError);
+  }
 }
 
 export async function getScopeReservations(scope: number) {
-	const supabase = await createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
-	const today = new Date();
-	const endDate = new Date();
-	endDate.setMonth(today.getMonth() + scope);
+  const today = new Date();
+  const endDate = new Date();
+  endDate.setMonth(today.getMonth() + scope);
 
-	const formatDate = (date: Date) => date.toISOString().split('T')[0];
+  const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
-	const { data: reservationsData, error: reservationsError } = await supabase
-		.from('reservations')
-		.select('*')
-		.gte('reservation_date', today.toISOString())
-		.lte('reservation_date', endDate.toISOString());
+  const { data: reservationsData, error: reservationsError } = await supabase
+    .from("reservations")
+    .select("*")
+    .gte("reservation_date", today.toISOString())
+    .lte("reservation_date", endDate.toISOString());
 
-	if (reservationsError) {
-		handleError(reservationsError);
-	}
+  if (reservationsError) {
+    handleError(reservationsError);
+  }
 
-	const reservationsMap: { [key: string]: string[] } = {};
+  const reservationsMap: { [key: string]: string[] } = {};
 
-	reservationsData?.forEach((reservation) => {
-		const [date, time] = reservation.reservation_date!.split('T');
-		const formattedTime = time.slice(0, 5);
+  reservationsData?.forEach((reservation) => {
+    const [date, time] = reservation.reservation_date!.split("T");
+    const formattedTime = time.slice(0, 5);
 
-		if (!reservationsMap[date]) {
-			reservationsMap[date] = [];
-		}
-		reservationsMap[date].push(formattedTime);
-	});
+    if (!reservationsMap[date]) {
+      reservationsMap[date] = [];
+    }
+    reservationsMap[date].push(formattedTime);
+  });
 
-	const formattedReservations = Object.entries(reservationsMap).map(([date, times]) => ({
-		date,
-		times,
-	}));
-	return formattedReservations;
+  const formattedReservations = Object.entries(reservationsMap).map(
+    ([date, times]) => ({
+      date,
+      times,
+    })
+  );
+  return formattedReservations;
 }
 
 export async function addReservation(reservationInfo: ReservationInfo) {
@@ -277,7 +283,6 @@ export async function getReservationsByDateRange(
 			reservation_date,
 			memo,
 			status,
-			consent_form,
 			additional_services,
 			additional_price,
 			total_price,
@@ -298,13 +303,14 @@ export async function getReservationsByDateRange(
 					name
 				)
 			)
-		`)
-		.gte("reservation_date", start_date)
-		.lte("reservation_date", end_date);
+		`
+    )
+    .gte("reservation_date", start_date)
+    .lte("reservation_date", end_date);
 
-	if (reservationError) {
-		handleError(reservationError);
-	}
+  if (reservationError) {
+    handleError(reservationError);
+  }
 
-	return reservationData as undefined as AdminReservationInfo[];
+  return reservationData as undefined as AdminReservationInfo[];
 }

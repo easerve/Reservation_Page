@@ -31,7 +31,6 @@ export async function getReservationsOfOneMonth(
       additional_price: reservation.additional_price,
       price: reservation.total_price,
       status: reservation.status,
-      consent_form: reservation.consent_form,
       memo: reservation.memo,
     })) as Reservation[];
   } catch (e) {
@@ -58,7 +57,6 @@ export async function getReservationsByPhoneNumber(
       additional_price: reservation.additional_price,
       price: reservation.total_price,
       status: reservation.status,
-      consent_form: reservation.consent_form,
       memo: reservation.memo,
     })) as Reservation[];
   } catch (e) {

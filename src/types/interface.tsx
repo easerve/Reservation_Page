@@ -27,7 +27,6 @@ export interface AdminReservationInfo {
   reservation_date: string;
   memo: string;
   status: string;
-  consent_form: boolean;
   additional_services: string;
   additional_price: number;
   total_price: number;

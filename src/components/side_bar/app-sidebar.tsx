@@ -41,22 +41,19 @@ export function AppSidebar({ open, onOpenChange }: IAppSidebar) {
       variant="sidebar"
       collapsible="icon"
     >
-      <SidebarHeader>
-        <Link href="/admin" className="p-2 flex items-center gap-2">
+      <SidebarHeader className="h-16">
+        <Link
+          href="/admin"
+          className="flex items-center justify-start gap-2 overflow-hidden"
+        >
           <Image
-            src="/svgs/easerve.svg"
+            src="/logo.jpeg"
             alt="Logo"
-            width={24}
-            height={24}
-            className="rounded-md bg-primary"
+            width={48}
+            height={48}
+            className="rounded-full bg-white border border-gray-200"
           />
-          <span
-            className={`text-2xl font-semibold ${
-              open ? "block" : "hidden"
-            } transition-all duration-200`}
-          >
-            이리온 댕댕
-          </span>
+          <span className={`text-2xl font-semibold truncate`}>이리온 댕댕</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -71,7 +68,7 @@ export function AppSidebar({ open, onOpenChange }: IAppSidebar) {
                       className="p-2 flex items-center gap-2"
                     >
                       <item.icon />
-                      <span className="text-xl">{item.title}</span>
+                      <span className="text-lg truncate">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -81,11 +78,11 @@ export function AppSidebar({ open, onOpenChange }: IAppSidebar) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <Link href="/" className="p-2 flex items-center gap-2">
-          <LogOut />
-          <span className={`text-lg ${open ? "block" : "hidden"}`}>
-            Log out
-          </span>
+        <Link href="/" className="p-2 flex justify-start items-center gap-2">
+          <div className="min-w-5 min-h-5">
+            <LogOut width={20} height={20} />
+          </div>
+          <span className={`text-lg truncate`}>Log out</span>
         </Link>
       </SidebarFooter>
     </Sidebar>
