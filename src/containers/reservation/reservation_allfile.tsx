@@ -21,9 +21,12 @@ import App from "next/app";
 
 import { Reservation } from "@/types/interface";
 import { getDate2 } from "@/components/utils/date_utils";
-import { getDate } from "date-fns";
+import { getDate, set } from "date-fns";
 import CalendarBar from "./components/calendar_bar";
-import { getReservationsOfOneMonth } from "@/services/admin/get";
+import {
+  getReservationsByPhoneNumber,
+  getReservationsOfOneMonth,
+} from "@/services/admin/get";
 import { ReservationUpdate } from "@/actions/reservations";
 
 export default function ReservationPage() {
@@ -37,6 +40,8 @@ export default function ReservationPage() {
   const [breeds, setBreeds] = useState<
     { id: number; name: string; type: number }[]
   >([]);
+
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
 
   useEffect(() => {
     (async () => {
@@ -91,6 +96,16 @@ export default function ReservationPage() {
     setReservations(newReservations);
   }
 
+  function searchReservationByPhoneNumber() {
+    if (phoneNumber === "") {
+      return;
+    }
+    (async () => {
+      const newReservations = await getReservationsByPhoneNumber(phoneNumber);
+      setReservations(newReservations);
+    })();
+  }
+
   monthlyRevenue.current = reservations
     .reduce(
       (acc, cur) =>
@@ -114,8 +129,17 @@ export default function ReservationPage() {
 
           <div className="flex items-center gap-2 ml-auto">
             <span className="flex border rounded-sm">
-              <Input type="text" className="border-none ml-2"></Input>
-              <Button variant="ghost" size="icon">
+              <Input
+                type="text"
+                className="border-none ml-2"
+                placeholder="전화번호로 검색하기"
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              ></Input>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={searchReservationByPhoneNumber}
+              >
                 <Search className="h-4 w-4" />
               </Button>
             </span>
@@ -141,7 +165,7 @@ export default function ReservationPage() {
               currentMonth={currentMonth}
               setCurrentMonth={setCurrentMonth}
             />
-            <div className="h-[calc(100vh-12rem)] border-solid border-2 border-gray-200 mt-4 flex flex-col justify-between">
+            <div className="h-[calc(100vh-12rem)] border-solid border-y-2 border-gray-200 mt-4 flex flex-col justify-between">
               <ReservationList
                 reservations={reservations}
                 updateReservation={updateReservation}

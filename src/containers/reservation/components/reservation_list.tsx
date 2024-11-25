@@ -142,7 +142,7 @@ export default function ReservationList(props: {
   return (
     <div className="h-[calc(100vh-18rem)]">
       <Table>
-        <TableHeader className="sticky top-0 z-10 bg-white">
+        <TableHeader className="sticky top-0 bg-white">
           <TableRow className="whitespace-nowrap">
             {headers.map((header, idx) => (
               <TableHead key={idx}>{header}</TableHead>

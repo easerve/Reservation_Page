@@ -14,7 +14,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
+
+import { IAppSidebar } from "@/types/interface";
 
 // Menu items.
 const items = [
@@ -31,19 +34,29 @@ const items = [
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ open, onOpenChange }: IAppSidebar) {
   return (
-    <Sidebar>
+    <Sidebar
+      className="bg-white absolute z-10"
+      variant="sidebar"
+      collapsible="icon"
+    >
       <SidebarHeader>
         <Link href="/admin" className="p-2 flex items-center gap-2">
           <Image
             src="/svgs/easerve.svg"
             alt="Logo"
-            width={48}
-            height={48}
-            className="rounded-md"
+            width={24}
+            height={24}
+            className="rounded-md bg-primary"
           />
-          <span className="text-2xl font-semibold">이리온 댕댕</span>
+          <span
+            className={`text-2xl font-semibold ${
+              open ? "block" : "hidden"
+            } transition-all duration-200`}
+          >
+            이리온 댕댕
+          </span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -70,7 +83,9 @@ export function AppSidebar() {
       <SidebarFooter>
         <Link href="/" className="p-2 flex items-center gap-2">
           <LogOut />
-          <span className="text-lg">Log out</span>
+          <span className={`text-lg ${open ? "block" : "hidden"}`}>
+            Log out
+          </span>
         </Link>
       </SidebarFooter>
     </Sidebar>

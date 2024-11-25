@@ -70,3 +70,8 @@ export const ReservationStatus = [
     css: "bg-blue-200",
   },
 ];
+
+export interface IAppSidebar {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
