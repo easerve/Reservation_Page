@@ -34,7 +34,6 @@ export default function DateTimeSelectionStep({
 
   useEffect(() => {
     fetchBookedDate();
-    console.log("호출!");
   }, []);
 
   const getBookedTimesForDate = (date: Date | undefined): string[] => {

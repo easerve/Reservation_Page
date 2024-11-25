@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { uploadFile } from "@/actions/storage";
+import { mappingConsentFormPetId } from "@/actions/consent_form";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,6 +13,10 @@ import {
 } from "@/components/ui/dialog";
 import { Dog, User } from "@/types/booking";
 import SignatureBox, { SignatureBoxRef } from "./signature-box";
+import { create } from "domain";
+import { Database } from "@/types/definitions";
+
+type PetRow = Database["public"]["Tables"]["pets"]["Row"];
 
 interface ConsentFormProps {
   setCurrentStep: (step: number) => void;
@@ -19,6 +24,11 @@ interface ConsentFormProps {
   userInfo: User;
   onClose: () => void;
   setIsPuppyAdd: (isAdd: boolean) => void;
+}
+
+interface addPetResponse {
+  status: string;
+  petInfo: PetRow;
 }
 
 const ConsentForm: React.FC<ConsentFormProps> = ({
@@ -59,7 +69,6 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
       if (!response.ok) {
         throw new Error("Failed to update user info");
       }
-
       const data = await response.json();
       if (data.status !== "success") {
         throw new Error("Failed to update user info");
@@ -69,7 +78,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
     }
   };
 
-  const makeDogInfo = async () => {
+  const makeDogInfo = async () : Promise<string>  => {
     try {
       const response = await fetch("/api/pets/profile", {
         method: "POST",
@@ -88,10 +97,11 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
         throw new Error("Failed to update dog info");
       }
 
-      const data = await response.json();
+      const data : addPetResponse = await response.json();
       if (data.status !== "success") {
         throw new Error("Failed to update dog info");
       }
+      return data.petInfo.uuid;
     } catch (error) {
       console.error("Error updating dog info:", error);
     }
@@ -116,7 +126,8 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
     // TODO: map imageUrl to Document / User / Dog
 
     await updateUserInfo();
-    await makeDogInfo();
+    dogInfo.id = await makeDogInfo();
+    await mappingConsentFormPetId(dogInfo.id, imageUrl);
     setCurrentStep(1);
     setIsPuppyAdd(true);
     onClose();
@@ -155,8 +166,8 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
           <div className="consent-inner-body">
             <div className="consent-terms">
               <div className="consent-terms">
-                <div className="consent-terms-content mr-2 flex items-center">
-                  <div className="consent-terms-left flex-1 text-lg">
+                <div className="flex items-center mr-2 consent-terms-content">
+                  <div className="flex-1 text-lg consent-terms-left">
                     미용 동의서 (필수)
                   </div>
                   <label>
@@ -169,11 +180,11 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                           requiredChecked,
                         )
                       }
-                      className="mr-2 h-6 w-6"
+                      className="w-6 h-6 mr-2"
                     />
                   </label>
                 </div>
-                <div className="consent-terms-template-primary max-h-48 overflow-y-auto border p-4">
+                <div className="p-4 overflow-y-auto border consent-terms-template-primary max-h-48">
                   {(() => {
                     const birthDate = new Date(dogInfo.birth);
                     const today = new Date();
@@ -325,9 +336,9 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                   )}
                 </div>
               </div>
-              <div className="consent-terms mt-4">
-                <div className="consent-terms-content mr-2 flex items-center">
-                  <div className="consent-terms-left flex-1 text-lg">
+              <div className="mt-4 consent-terms">
+                <div className="flex items-center mr-2 consent-terms-content">
+                  <div className="flex-1 text-lg consent-terms-left">
                     개인정보 수집 및 이용 동의 (필수)
                   </div>
                   <label>
@@ -340,11 +351,11 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                           personalInfoChecked,
                         )
                       }
-                      className="mr-2 h-6 w-6"
+                      className="w-6 h-6 mr-2"
                     />
                   </label>
                 </div>
-                <div className="consent-terms-template-primary max-h-48 overflow-y-auto border p-4">
+                <div className="p-4 overflow-y-auto border consent-terms-template-primary max-h-48">
                   <p>
                     이리온댕댕(이하 &quot;회사&quot;)는 대상 매장 예약 처리를
                     위해 아래와 같은 개인정보를 수집하고 있습니다.
@@ -411,9 +422,9 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                   </p>
                 </div>
               </div>
-              <div className="consent-terms mt-4">
-                <div className="consent-terms-content mr-2 flex items-center">
-                  <div className="consent-terms-left flex-1 text-lg">
+              <div className="mt-4 consent-terms">
+                <div className="flex items-center mr-2 consent-terms-content">
+                  <div className="flex-1 text-lg consent-terms-left">
                     개인정보 제3자 제공 동의 (필수)
                   </div>
                   <label>
@@ -426,11 +437,11 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                           thirdPartyChecked,
                         )
                       }
-                      className="mr-2 h-6 w-6"
+                      className="w-6 h-6 mr-2"
                     />
                   </label>
                 </div>
-                <div className="consent-terms-template-primary max-h-48 overflow-y-auto border p-4">
+                <div className="p-4 overflow-y-auto border consent-terms-template-primary max-h-48">
                   <p>
                     이리온댕댕(이하 &quot;회사&quot;)는 이용자의 개인정보를 본
                     개인정보취급방침에서 고지한 범위 내에서 사용하며, 이용자의
@@ -467,7 +478,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
           </div>
         </div>
       </div>
-      <div className="mt-12 flex gap-2">
+      <div className="flex gap-2 mt-12">
         <Button
           type="button"
           variant="outline"

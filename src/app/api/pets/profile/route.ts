@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addPet, getPetId } from "@/actions/pets";
+import { Database } from "@/types/definitions";
+
+type PetRow = Database["public"]["Tables"]["pets"]["Row"];
 
 
 interface RequestBody {
@@ -40,6 +43,11 @@ interface PetData {
       type: string | null;
     };
   }
+}
+
+interface addPetResponse {
+  status: string;
+  petInfo: PetRow;
 }
 
 
@@ -111,7 +119,7 @@ export async function POST(request: NextRequest) {
       regNumber,
     };
 
-    const result = await addPet(petInfo);
+    const result : addPetResponse = await addPet(petInfo);
     if (result.status === "success") {
       return NextResponse.json(result, { status: 200 });
     } else {

@@ -43,11 +43,16 @@ interface PetIdData {
 		type: string | null;
 	  };
 	}
-  }
+}
+
+interface addPetResponse {
+	status: string;
+	petInfo: PetRow;
+}
 
 
 function handleError(error: Error) {
-  console.error('Error in /pets/breed:', error);
+  console.error('Error in pets action:', error);
   throw new Error('Internal server error');
 }
 
@@ -84,7 +89,7 @@ export async function getPetId(petId: string): Promise<PetIdData> {
 
 
 
-export async function addPet(petInfo: PetInfo) {
+export async function addPet(petInfo: PetInfo) : Promise<addPetResponse> {
 	const supabase = await createServerSupabaseClient();
 
 	// Fetch user data
@@ -120,14 +125,16 @@ export async function addPet(petInfo: PetInfo) {
 			neutering: petInfo.neutering,
 			sex: petInfo.sex,
 			reg_number: petInfo.regNumber,
-		});
+		})
+		.select()
+		.single();
 
 	if (insertError) {
 		handleError(insertError);
 	}
-
 	return {
-		status: "success"
+		status: "success",
+		petInfo: insertData,
 	};
 }
 
