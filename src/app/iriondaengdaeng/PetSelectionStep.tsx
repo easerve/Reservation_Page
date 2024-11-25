@@ -126,7 +126,13 @@ export default function PetSelectionStep({
                 onClose={closeModal}
                 breeds={breeds}
                 setIsPuppyAdd={setIsPuppyAdd}
-                userUUID={userDogsData.customers.id}
+                customerData={{
+                  id: userDogsData.customers.id,
+                  name: userDogsData.customers.name,
+                  phone: userDogsData.customers.phone,
+                  address: userDogsData.customers.address,
+                  detailAddress: userDogsData.customers.detailAddress,
+                }}
               />
             </CardContent>
           </Card>
