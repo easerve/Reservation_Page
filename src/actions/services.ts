@@ -1,6 +1,15 @@
 "use server";
-
+import { QueryResult, QueryData, QueryError } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from "@/utils/supabase/server";
+
+type MainService = {
+	id: number;
+	price: number;
+	service_name_id: {
+		id: number;
+		name: string;
+	};
+}
 
 function handleError(error: Error) {
 	console.log('Error in /services:', error);
@@ -15,22 +24,9 @@ export async function getServicesByWeightAndType(weightRageId: number, typeId: n
 		.select(`
 			id,
 			price,
-			service_name_id(
+			service_name_id (
 				id,
-				name,
-				service_option_group (
-					service_option_id,
-					service_options (
-						id,
-						name,
-						price,
-						category_id,
-						service_option_category (
-							id,
-							name
-						)
-					)
-				)
+				name
 			)
 		`)
 		.eq("breed_type", typeId)
@@ -39,25 +35,33 @@ export async function getServicesByWeightAndType(weightRageId: number, typeId: n
 	if (servicesError) {
 		handleError(servicesError);
 	}
-
-	return services;
+	console.log(services);
+	return services as unknown as MainService[];
 }
 
-export async function getAdditionalService() {
+export async function getServiceOptionById(serviceId: number) {
 	const supabase = await createServerSupabaseClient();
 
-	const { data: additionalServices, error: additionalServicesError } = await supabase
-		.from("additional_services")
+	const serviceOptions = supabase
+		.from('service_option_group')
 		.select(`
-			id,
-			service_name,
-			price_min,
-			price_max
-		`);
+			service_options(
+				id,
+				name,
+				price,
+				service_option_category(
+					id,
+					name
+				)
+			)
+		`)
+		.eq("services_name_id", serviceId);
 
-	if (additionalServicesError) {
-		handleError(additionalServicesError);
+	type ServiceOptions = QueryData<typeof serviceOptions>;
+	const { data, error } = await serviceOptions;
+	if (error) {
+		handleError(error);
 	}
-
-	return additionalServices;
+	const options : ServiceOptions = data;
+	return options;
 }

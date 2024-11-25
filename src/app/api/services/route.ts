@@ -1,25 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServicesByWeightAndType, getAdditionalService } from "@/actions/services";
+import { getServicesByWeightAndType } from "@/actions/services";
 
-function transformMainServices(services: any[]) {
+type MainService = {
+	id: number,
+	price: number,
+	service_name_id: {
+		id: number,
+		name: string
+	}
+}
+
+type ParsedMainService = {
+	id: number,
+	name: string,
+	price: number,
+}
+
+function parseMainServices(services: MainService[]) : ParsedMainService[] {
 	return services.map((service) => {
-		const options: any[] = [];
-
-		service.service_name_id.service_option_group.forEach((group: any) => {
-			const option = group.service_options;
-			options.push({
-				id: option.id,
-				name: option.name,
-				price: option.price,
-				category: option.service_option_category.name,
-			});
-		});
-
 		return {
-			id: service.id,
+			id: service.service_name_id.id,
 			name: service.service_name_id.name,
 			price: service.price,
-			options,
 		};
 	});
 }
@@ -41,13 +43,11 @@ export async function GET(request: NextRequest) {
 		if (!services) {
 			return NextResponse.json({ error: "No services found" }, { status: 404 });
 		}
-		const parsedServices = transformMainServices(services);
-		const additional_services = await getAdditionalService();
+		const parsedServices : ParsedMainService[] = parseMainServices(services);
 		return NextResponse.json({
 			status: 'success',
 			data: {
 				mainServices: parsedServices,
-				additional_services: additional_services
 			}
 		});
 	} catch (error) {
