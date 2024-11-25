@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Modal from "react-modal";
-import { User, Dog } from "@/types/booking";
+import { Dog, Customer } from "@/types/booking";
 import { Button } from "@/components/ui/button";
-import ConsentForm from "@/app/iriondaengdaeng/ConsentForm";
+import ConsentForm from "@/app/iriondaengdaeng/components/ConsentForm";
 import Select from "react-select";
 import { FormControl } from "@/components/ui/form";
 import DaumPostcodeEmbed from "react-daum-postcode";
@@ -12,7 +12,9 @@ interface CutAgreementPageProps {
   onClose: () => void;
   breeds: { id: number; name: string; type: number }[];
   setIsPuppyAdd: (isAdd: boolean) => void;
-  userUUID: string;
+  customer: Customer;
+  updateCustomer: (newCustomer: Customer) => void;
+  phoneNumber: string;
 }
 
 const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
@@ -20,7 +22,9 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
   onClose,
   breeds,
   setIsPuppyAdd,
-  userUUID,
+  customer,
+  updateCustomer,
+  phoneNumber,
 }) => {
   const [dogInfo, setDogInfo] = useState<Dog>({
     id: "",
@@ -33,14 +37,6 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
     sex: "",
     regNumber: "",
     phoneNumber: "",
-  });
-
-  const [userInfo, setUserInfo] = useState<User>({
-    id: userUUID,
-    name: "",
-    phone: "",
-    address: "",
-    detailAddress: "",
   });
 
   const [selectedBreed, setSelectedBreed] = useState<{
@@ -64,8 +60,8 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
 
   const handleUserInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setUserInfo({
-      ...userInfo,
+    updateCustomer({
+      ...customer,
       [name]: value,
     });
   };
@@ -75,16 +71,41 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
     setCurrentStep(2);
   };
 
-  const handleDogSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setDogInfo({
-      ...dogInfo,
-      phoneNumber: userInfo.phone,
+  useEffect(() => {
+    setDogInfo((prev) => ({
+      ...prev,
+      phoneNumber,
+    }));
+  }, [phoneNumber]);
+
+  const handleComplete = (newAddress: string) => {
+    updateCustomer({
+      ...customer,
+      address: newAddress,
     });
-    setCurrentStep(3);
   };
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [showLocationSelect, setShowLocationSelect] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
+        setShowLocationSelect(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
 
   const renderStep = () => {
     switch (currentStep) {
@@ -100,7 +121,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                 <input
                   type="text"
                   name="name"
-                  value={userInfo.name}
+                  value={customer.name}
                   onChange={handleUserInfoChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -109,9 +130,10 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">전화번호</label>
                 <input
+                  disabled={true}
                   type="tel"
                   name="phone"
-                  value={userInfo.phone}
+                  value={phoneNumber}
                   onChange={handleUserInfoChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -122,19 +144,31 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                 <input
                   type="text"
                   name="address"
-                  value={userInfo.address}
-                  onChange={handleUserInfoChange}
+                  //
+                  value={customer.address}
+                  onChange={() => {}}
+                  onClick={() => setShowLocationSelect(true)}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 />
-                <DaumPostcodeEmbed onComplete={(address) => {console.log(address)}} />
+                {showLocationSelect && (
+                  <div ref={wrapperRef}>
+                    <DaumPostcodeEmbed
+                      onComplete={(address) => {
+                        handleComplete(address.address);
+                        setShowLocationSelect(false);
+                        console.log(address);
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">상세주소</label>
                 <input
                   type="text"
                   name="detailAddress"
-                  value={userInfo.detailAddress}
+                  value={customer.detailAddress}
                   onChange={handleUserInfoChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -142,7 +176,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
               </div>
               <div className="mt-12 flex gap-2">
                 <Button type="button" variant="outline" onClick={onClose}>
-                  이전
+                  닫기
                 </Button>
                 <Button type="submit" className="flex-1 bg-primary">
                   다음
@@ -155,7 +189,11 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
         return (
           <div>
             <h2 className="text-xl font-bold mb-4">강아지 정보입력</h2>
-            <form onSubmit={handleDogSubmit}>
+            <form
+              onSubmit={() => {
+                setCurrentStep(3);
+              }}
+            >
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">이름</label>
                 <input
@@ -207,7 +245,8 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                   type="number"
                   name="weight"
                   min="0"
-                  max="30"
+                  max="25"
+                  step={0.1}
                   value={dogInfo.weight || ""}
                   onChange={handleDogInfoChange}
                   required
@@ -289,7 +328,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">
-                  동물등룩 번호
+                  동물등록 번호
                 </label>
                 <input
                   type="text"
@@ -321,7 +360,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
             <ConsentForm
               setCurrentStep={setCurrentStep}
               dogInfo={dogInfo}
-              userInfo={userInfo}
+              customer={customer}
               onClose={onClose}
               setIsPuppyAdd={setIsPuppyAdd}
             />

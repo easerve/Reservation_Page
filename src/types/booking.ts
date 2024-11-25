@@ -48,9 +48,7 @@ export interface Dog {
 }
 
 export interface Customer {
-  id: string;
   name: string;
-  phone: string;
   address: string;
   detailAddress: string;
   dogs: Dog[];
@@ -59,14 +57,6 @@ export interface Customer {
 export interface UserDogsData {
   status: string;
   customers: Customer;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  phone: string;
-  address: string;
-  detailAddress: string;
 }
 
 export interface ReservationData {
