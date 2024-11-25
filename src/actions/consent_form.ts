@@ -1,11 +1,11 @@
 "use server";
 
-import { Database } from '@/types/definitions';
+import { Tables, TablesInsert } from '@/types/definitions';
 import { createServerSupabaseClient } from '@/utils/supabase/server';
 
 
-type ConsentFormRow = Database["public"]["Tables"]["consent_form"]["Row"];
-type ConsentFormInsert = Database["public"]["Tables"]["consent_form"]["Insert"];
+type ConsentFormRow = Tables<'consent_form'>;
+type ConsentFormInsert = TablesInsert<'consent_form'>;
 
 export async function mappingConsentFormPetId(petId: string, consentFormUrl: string) {
 	try {

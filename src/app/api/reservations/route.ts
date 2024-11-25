@@ -22,30 +22,6 @@ interface RequestBody {
 	}
 }
 
-interface AdminReservationInfo {
-    uuid: string;
-    reservation_date: string;
-    memo: string;
-    status: string;
-    additional_services: string;
-    additional_price: number;
-    total_price: number;
-    service_name: string;
-    pet_id: {
-        name: string;
-        birth: string;
-        weight: number;
-        user_id: {
-            name: string;
-            phone: string;
-        };
-        breed_id: {
-            name: string;
-        };
-        memo: string;
-        neutering: boolean;
-    };
-}
 
 export async function DELETE(request: NextRequest) {
 	try {
@@ -107,15 +83,18 @@ export async function GET(request: NextRequest) {
 			return NextResponse.json({ status: 'success', data: reservations });
 		}
 		else if (reservationId) {
-			const reservation: AdminReservationInfo = await getReservationId(reservationId);
+			const reservation = await getReservationId(reservationId);
+			if (!reservation) {
+				return NextResponse.json({ error: "No reservation found" }, { status: 404 });
+			}
 			const result = {
 				id: reservation.uuid,
 				time: reservation.reservation_date,
-				breed: reservation.pet_id.breed_id.name,
-				name: reservation.pet_id.name,
-				weight: reservation.pet_id.weight,
-				birth: reservation.pet_id.birth,
-				phone: reservation.pet_id.user_id.phone,
+				breed: reservation.pets.breeds.name,
+				name: reservation.pets.name,
+				weight: reservation.pets.weight,
+				birth: reservation.pets.birth,
+				phone: reservation.pets.user.phone,
 				service_name: reservation.service_name,
 				additional_services: reservation.additional_services,
 				additional_price: reservation.additional_price,
@@ -130,16 +109,15 @@ export async function GET(request: NextRequest) {
 			if (!reservations) {
 				return NextResponse.json({ data: [] }, { status: 200 });
 			}
-			const result = await Promise.all(
-				reservations.map(async (reservation: AdminReservationInfo) => {
+			const result = reservations.map(reservation => {
 				return {
 					id: reservation.uuid,
 					time: reservation.reservation_date,
-					breed: reservation.pet_id.breed_id.name,
-					name: reservation.pet_id.name,
-					weight: reservation.pet_id.weight,
-					birth: reservation.pet_id.birth,
-					phone: reservation.pet_id.user_id.phone,
+					breed: reservation.pets.breeds.name,
+					name: reservation.pets.name,
+					weight: reservation.pets.weight,
+					birth: reservation.pets.birth,
+					phone: reservation.pets.user.phone,
 					service_name: reservation.service_name,
 					additional_services: reservation.additional_services,
 					additional_price: reservation.additional_price,
@@ -147,8 +125,7 @@ export async function GET(request: NextRequest) {
 					status: reservation.status,
 					memo: reservation.memo,
 				};
-				})
-			);
+			});
 			return NextResponse.json({ status: 'success', data: result });
 		}
 

@@ -9,30 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      additional_services: {
-        Row: {
-          created_at: string | null
-          id: number
-          price_max: number | null
-          price_min: number | null
-          service_name: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: number
-          price_max?: number | null
-          price_min?: number | null
-          service_name: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: number
-          price_max?: number | null
-          price_min?: number | null
-          service_name?: string
-        }
-        Relationships: []
-      }
       breed_types: {
         Row: {
           id: number
@@ -265,7 +241,7 @@ export type Database = {
           services_name_id: number | null
         }
         Insert: {
-          id?: number
+          id: number
           service_option_id?: number | null
           services_name_id?: number | null
         }
@@ -293,22 +269,22 @@ export type Database = {
       }
       service_options: {
         Row: {
-          category_id: number | null
-          created_at: string | null
+          category_id: number
+          created_at: string
           id: number
           name: string
           price: number
         }
         Insert: {
-          category_id?: number | null
-          created_at?: string | null
+          category_id: number
+          created_at?: string
           id?: number
           name: string
           price: number
         }
         Update: {
-          category_id?: number | null
-          created_at?: string | null
+          category_id?: number
+          created_at?: string
           id?: number
           name?: string
           price?: number
