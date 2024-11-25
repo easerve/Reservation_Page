@@ -15,7 +15,6 @@ interface ReservationInfo {
   reservation_date: string;
   memo: string;
   status: string;
-  consent_form: boolean;
   service_name: string;
   additional_services: string;
   total_price: number;
@@ -27,7 +26,6 @@ interface AdminReservationInfo {
   reservation_date: string;
   memo: string | null;
   status: string;
-  consent_form: boolean;
   additional_services: string | null;
   additional_price: number | null;
   total_price: number;
@@ -56,7 +54,6 @@ interface ReservationIdInfo {
 	reservation_date: string;
 	memo: string | null;
 	status: string;
-	consent_form: boolean;
 	additional_services: string | null
 	additional_price: number | null
 	total_price: number;
@@ -248,7 +245,6 @@ export async function addReservation(reservationInfo: ReservationInfo) {
       reservation_date: reservationInfo.reservation_date,
       memo: reservationInfo.memo,
       status: reservationInfo.status,
-      consent_form: reservationInfo.consent_form,
       service_name: reservationInfo.service_name,
       additional_services: reservationInfo.additional_services,
       total_price: reservationInfo.total_price,

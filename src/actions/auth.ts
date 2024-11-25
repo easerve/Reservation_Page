@@ -12,11 +12,11 @@ function handleError(error: any) {
   throw new Error(error.message);
 }
 
-export async function addUser(request: Request) {
+export async function updateUser(request: Request) {
   try {
-    const { name, phone, address, detailAddress } = await request.json();
+    const { id, name, phone, address, detailAddress } = await request.json();
 
-    if (!name || !phone || !address || !detailAddress) {
+    if (!id || !name || !phone || !address || !detailAddress) {
       return {
         status: "fail",
       };
@@ -25,7 +25,7 @@ export async function addUser(request: Request) {
     const supabase = await createServerSupabaseClient();
     const { data: userData, error: userError } = await supabase
       .from("user")
-      .upsert({
+      .update({
         name,
         phone,
         address,
