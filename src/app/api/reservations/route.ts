@@ -15,7 +15,6 @@ interface RequestBody {
 	  reservation_date: string;
 	  memo: string;
 	  status: string;
-	  consent_form: boolean;
 	  service_name: string;
 	  additional_services: string;
 	  total_price: number;
@@ -28,7 +27,6 @@ interface AdminReservationInfo {
     reservation_date: string;
     memo: string;
     status: string;
-    consent_form: boolean;
     additional_services: string;
     additional_price: number;
     total_price: number;
@@ -123,7 +121,6 @@ export async function GET(request: NextRequest) {
 				additional_price: reservation.additional_price,
 				total_price: reservation.total_price,
 				status: reservation.status,
-				consent_form: reservation.consent_form,
 				memo: reservation.memo,
 			}
 			return NextResponse.json({ status: 'success', data: result });
@@ -148,7 +145,6 @@ export async function GET(request: NextRequest) {
 					additional_price: reservation.additional_price,
 					total_price: reservation.total_price,
 					status: reservation.status,
-					consent_form: reservation.consent_form,
 					memo: reservation.memo,
 				};
 				})
@@ -173,9 +169,9 @@ export async function POST(request: NextRequest) {
 				{ status: 400 }
 			);
 		}
-		const { pet_id, reservation_date, memo, status, consent_form, service_name, additional_services, total_price, additional_price } = body.ReservationInfo;
+		const { pet_id, reservation_date, memo, status, service_name, additional_services, total_price, additional_price } = body.ReservationInfo;
 
-		if (!pet_id || !reservation_date || !status || !consent_form || !service_name || !total_price) {
+		if (!pet_id || !reservation_date || !status || !service_name || !total_price) {
 			console.log(body.ReservationInfo);
 			return NextResponse.json(
 				{ error: "Missing required fields in ReservationInfo" },
@@ -188,7 +184,6 @@ export async function POST(request: NextRequest) {
 			reservation_date,
 			memo,
 			status,
-			consent_form,
 			service_name,
 			additional_services,
 			total_price,
