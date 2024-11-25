@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, Plus } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 export default function OptionBar() {
   return (
@@ -19,9 +20,12 @@ export default function OptionBar() {
       </TabsList>
 
       <div className="flex items-center gap-2 ml-auto">
-        <Button variant="outline" size="icon">
-          <Search className="h-4 w-4" />
-        </Button>
+        <span>
+          <Input type="text"></Input>
+          <Button variant="ghost" size="icon">
+            <Search className="h-4 w-4" />
+          </Button>
+        </span>
         <Button variant="outline" size="icon">
           <Filter className="h-4 w-4" />
         </Button>

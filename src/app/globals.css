@@ -96,6 +96,14 @@ body {
   .scrollbar-hide::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera에서 스크롤바 숨기기 */
   }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera에서 스크롤바 숨기기 */
+  }
+  .scrollbar-hide-v::-webkit-scrollbar {
+    height: 0px;
+    width: 8px;
+    border: 1px solid #fff;
+  }
 }
 
 /* ReservationList.css */
