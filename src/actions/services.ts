@@ -1,5 +1,5 @@
 "use server";
-import { QueryResult, QueryData, QueryError } from '@supabase/supabase-js';
+import { QueryData } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 
 type MainService = {
@@ -19,12 +19,12 @@ function handleError(error: Error) {
 export async function getServicesByWeightAndType(weightRageId: number, typeId: number) {
 	const supabase = await createServerSupabaseClient();
 
-	const { data: services, error: servicesError } = await supabase
+	const targetService = supabase
 		.from("services")
 		.select(`
 			id,
 			price,
-			service_name_id (
+			services_names(
 				id,
 				name
 			)
@@ -32,11 +32,13 @@ export async function getServicesByWeightAndType(weightRageId: number, typeId: n
 		.eq("breed_type", typeId)
 		.eq("weight_range", weightRageId);
 
-	if (servicesError) {
-		handleError(servicesError);
+	type Services = QueryData<typeof targetService>;
+	const { data, error } = await targetService;
+	if (error) {
+		handleError(error);
 	}
-	console.log(services);
-	return services as unknown as MainService[];
+	const services : Services = data;
+	return services;
 }
 
 export async function getServiceOptionById(serviceId: number) {

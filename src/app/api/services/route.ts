@@ -1,31 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServicesByWeightAndType } from "@/actions/services";
 
-type MainService = {
-	id: number,
-	price: number,
-	service_name_id: {
-		id: number,
-		name: string
-	}
-}
-
-type ParsedMainService = {
-	id: number,
-	name: string,
-	price: number,
-}
-
-function parseMainServices(services: MainService[]) : ParsedMainService[] {
-	return services.map((service) => {
-		return {
-			id: service.service_name_id.id,
-			name: service.service_name_id.name,
-			price: service.price,
-		};
-	});
-}
-
 export async function GET(request: NextRequest) {
 	try {
 		const { searchParams } = new URL(request.url);
@@ -43,12 +18,17 @@ export async function GET(request: NextRequest) {
 		if (!services) {
 			return NextResponse.json({ error: "No services found" }, { status: 404 });
 		}
-		const parsedServices : ParsedMainService[] = parseMainServices(services);
+
+		const result = services.map((service) => {
+			return {
+				id: service.services_names.id,
+				name: service.services_names.name,
+				price: service.price,
+			};
+		});
 		return NextResponse.json({
 			status: 'success',
-			data: {
-				mainServices: parsedServices,
-			}
+			data: result,
 		});
 	} catch (error) {
 		console.error("Error in /services:", error);

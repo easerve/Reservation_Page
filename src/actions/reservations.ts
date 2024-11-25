@@ -1,72 +1,13 @@
 "use server";
 
 
-import { Database } from '@/types/definitions';
+import { TablesUpdate, TablesInsert } from '@/types/definitions';
 import { createServerSupabaseClient } from '@/utils/supabase/server';
 import { PostgrestError } from '@supabase/supabase-js';
+import { QueryData } from '@supabase/supabase-js';
 
-export type ReservationRow = Database["public"]["Tables"]["reservations"]["Row"];
-export type ReservationInsert = Database["public"]["Tables"]["reservations"]["Insert"];
-export type ReservationUpdate = Database["public"]["Tables"]["reservations"]["Update"];
-
-
-interface ReservationInfo {
-  pet_id: string;
-  reservation_date: string;
-  memo: string;
-  status: string;
-  service_name: string;
-  additional_services: string;
-  total_price: number;
-  additional_price: number;
-}
-
-interface AdminReservationInfo {
-  uuid: string;
-  reservation_date: string;
-  memo: string | null;
-  status: string;
-  additional_services: string | null;
-  additional_price: number | null;
-  total_price: number;
-  service_name: string;
-  pet_id: {
-    name: string | null;
-    birth: string | null;
-    weight: number | null;
-    user_id: {
-      name: string | null;
-      phone: string;
-    };
-    breed_id: {
-      name: string;
-    };
-    memo: string | null;
-    neutering: boolean | null;
-    sex: string | null;
-    reg_number: string | null;
-  };
-}
-
-
-interface ReservationIdInfo {
-	uuid: string;
-	reservation_date: string;
-	memo: string | null;
-	status: string;
-	additional_services: string | null
-	additional_price: number | null
-	total_price: number;
-	service_name: string;
-	pet_id: {
-		uuid: string;
-		name: string | null;
-		birth: string | null;
-		weight: number | null;
-		memo: string | null;
-		neutering: boolean
-	}
-}
+type ReservationUpdate = TablesUpdate<'reservations'>;
+type ReservationInsert = TablesInsert<'reservations'>;
 
 function handleError(error: PostgrestError) {
   console.error('Error in /reservations:', error);
@@ -76,21 +17,20 @@ function handleError(error: PostgrestError) {
 export async function getReservationsByPhone(
 	phone: string,
 	limit: number = 10
-) : Promise<AdminReservationInfo[]> {
+) {
 	const supabase = await createServerSupabaseClient();
-	const { data: reservationsData, error: reservationsError } = await supabase
+	const reservationData = supabase
 		.from('reservations')
 		.select(`
 			uuid,
 			reservation_date,
 			memo,
 			status,
-			consent_form,
 			additional_services,
 			additional_price,
 			total_price,
 			service_name,
-			pet_id!inner(
+			pets(
 				name,
 				birth,
 				weight,
@@ -98,28 +38,35 @@ export async function getReservationsByPhone(
 				neutering,
 				sex,
 				reg_number,
-				user_id!inner(
+				bite,
+				heart_disease,
+				underlying_disease,
+				user(
 					name,
 					phone
 				),
-				breed_id(
+				breeds(
 					name
 				)
 			)
 		`)
-		.eq('pet_id.user_id.phone', phone)
+		.eq('pets.user.phone', phone)
 		.limit(limit);
 
-	if (reservationsError) {
-		if (reservationsError.code === 'PGRST116') {
+
+	type ReservationData = QueryData<typeof reservationData>;
+	const { data, error } = await reservationData;
+	if (error) {
+		if (error.code === 'PGRST116') {
 			throw new Error('Reservation not found');
 		}
-		handleError(reservationsError);
+		handleError(error);
 	}
-	return reservationsData as undefined as AdminReservationInfo[];
+	const result : ReservationData = data;
+	return result;
 }
 
-export async function getReservationId(reservationId: string) : Promise<AdminReservationInfo>{
+export async function getReservationId(reservationId: string) {
 	const supabase = await createServerSupabaseClient();
 	const {data: reservationData, error: reservationError} = await supabase
 		.from('reservations')
@@ -128,12 +75,11 @@ export async function getReservationId(reservationId: string) : Promise<AdminRes
 			reservation_date,
 			memo,
 			status,
-			consent_form,
 			additional_services,
 			additional_price,
 			total_price,
 			service_name,
-			pet_id(
+			pets(
 				name,
 				birth,
 				weight,
@@ -141,11 +87,14 @@ export async function getReservationId(reservationId: string) : Promise<AdminRes
 				neutering,
 				sex,
 				reg_number,
-				user_id(
+				bite,
+				heart_disease,
+				underlying_disease,
+				user(
 					name,
 					phone
 				),
-				breed_id(
+				breeds(
 					name
 				)
 			)
@@ -160,7 +109,7 @@ export async function getReservationId(reservationId: string) : Promise<AdminRes
 		handleError(reservationError);
 	}
 
-	return reservationData as undefined as AdminReservationInfo;
+	return reservationData;
 }
 
 export async function deleteReservation(reservationId: string) {
@@ -183,7 +132,7 @@ export async function updateReservation(
 	reservationInfo: ReservationUpdate
 ) {
 	const supabase = await createServerSupabaseClient();
-	const {data: updateData, error: reservationError} = await supabase
+	const { error: reservationError} = await supabase
 		.from('reservations')
 		.update(reservationInfo)
 		.eq('uuid', reservationId);
@@ -202,8 +151,6 @@ export async function getScopeReservations(scope: number) {
 	const today = new Date();
 	const endDate = new Date();
 	endDate.setMonth(today.getMonth() + scope);
-
-	const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
 	const { data: reservationsData, error: reservationsError } = await supabase
 		.from('reservations')
@@ -234,7 +181,8 @@ export async function getScopeReservations(scope: number) {
 	return formattedReservations;
 }
 
-export async function addReservation(reservationInfo: ReservationInfo) {
+// TODO: 예약 정보 추가해서 정리하기
+export async function addReservation(reservationInfo : ReservationInsert) {
   const supabase = await createServerSupabaseClient();
 
   // Insert reservation data
@@ -266,45 +214,46 @@ export async function addReservation(reservationInfo: ReservationInfo) {
 export async function getReservationsByDateRange(
   start_date: string,
   end_date: string
-): Promise<AdminReservationInfo[]> {
+) {
   const supabase = await createServerSupabaseClient();
 
   const { data: reservationData, error: reservationError } = await supabase
     .from("reservations")
-    .select(
-      `
-			uuid,
-			reservation_date,
+    .select(`
+		uuid,
+		reservation_date,
+		memo,
+		status,
+		additional_services,
+		additional_price,
+		total_price,
+		service_name,
+		pets(
+			name,
+			birth,
+			weight,
 			memo,
-			status,
-			consent_form,
-			additional_services,
-			additional_price,
-			total_price,
-			service_name,
-			pet_id(
+			neutering,
+			sex,
+			reg_number,
+			bite,
+			heart_disease,
+			underlying_disease,
+			user(
 				name,
-				birth,
-				weight,
-				memo,
-				neutering,
-				sex,
-				reg_number,
-				user_id(
-					name,
-					phone
-				),
-				breed_id(
-					name
-				)
+				phone
+			),
+			breeds(
+				name
 			)
-		`)
-		.gte("reservation_date", start_date)
-		.lte("reservation_date", end_date);
+		)
+	`)
+	.gte("reservation_date", start_date)
+	.lte("reservation_date", end_date);
 
 	if (reservationError) {
 		handleError(reservationError);
 	}
 
-	return reservationData as undefined as AdminReservationInfo[];
+	return reservationData;
 }
