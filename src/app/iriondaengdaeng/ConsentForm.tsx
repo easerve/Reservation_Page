@@ -123,8 +123,6 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
       bucket: "signature",
       // folder: "signatures",
     });
-    // TODO: map imageUrl to Document / User / Dog
-
     await updateUserInfo();
     dogInfo.id = await makeDogInfo();
     await mappingConsentFormPetId(dogInfo.id, imageUrl);
