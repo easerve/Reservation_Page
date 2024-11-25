@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Modal from "react-modal";
 import { User, Dog } from "@/types/booking";
 import { Button } from "@/components/ui/button";
-import ConsentForm from "@/app/iriondaengdaeng/ConsentForm";
+import ConsentForm from "@/app/iriondaengdaeng/components/ConsentForm";
 import Select from "react-select";
 import { FormControl } from "@/components/ui/form";
 import DaumPostcodeEmbed from "react-daum-postcode";
@@ -142,7 +142,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
               </div>
               <div className="mt-12 flex gap-2">
                 <Button type="button" variant="outline" onClick={onClose}>
-                  이전
+                  닫기
                 </Button>
                 <Button type="submit" className="flex-1 bg-primary">
                   다음
@@ -207,8 +207,8 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                   type="number"
                   name="weight"
                   min="0"
-                  max="30"
-                  value={dogInfo.weight || ""}
+                  max="25"
+                  step={0.1}
                   onChange={handleDogInfoChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"

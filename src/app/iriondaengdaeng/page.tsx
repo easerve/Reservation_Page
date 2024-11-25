@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-
-import PhoneNumberStep from "./PhoneNumberStep";
-import PetSelectionStep from "./PetSelectionStep";
-import DateTimeSelectionStep from "./DateTimeSelectionStep";
-
+import PhoneNumberStep from "./components/PhoneNumberStep";
+import PetSelectionStep from "./components/PetSelectionStep";
+import DateTimeSelectionStep from "./components/DateTimeSelectionStep";
+import ServiceSelectionStep from "./components/ServiceSelectionStep";
+import ConfirmationStep from "./components/ConfirmationStep";
 import { BookingData, Customer, UserDogsData, Dog } from "@/types/booking";
 import { INITIAL_BOOKING_STATE } from "@/constants/booking";
-import ServiceSelectionStep from "./ServiceSelectionStep";
-import ConfirmationStep from "./ConfirmationStep";
 
 export default function Booking() {
   const [isPuppyAdd, setIsPuppyAdd] = useState(false);
@@ -134,6 +132,7 @@ export default function Booking() {
     try {
       const res = await fetch("/api/auth/profile?phone=" + values.phoneNumber);
       const data = await res.json();
+      console.log(data);
 
       setUserDogsData(data);
     } catch (error) {

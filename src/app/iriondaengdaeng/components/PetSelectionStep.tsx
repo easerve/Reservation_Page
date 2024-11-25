@@ -3,7 +3,7 @@ import * as z from "zod";
 
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import CutAgreementPage from "@/app/iriondaengdaeng/cutAgreementPage";
+import CutAgreementPage from "./CutAgreementPage";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { BookingData, UserDogsData, Dog } from "@/types/booking";
@@ -67,6 +67,10 @@ export default function PetSelectionStep({
       breed: bookingData.dog.breed.toString(),
     },
   });
+  console.group("UserDogsData");
+  console.log(userDogsData.customers);
+  console.groupEnd();
+  
   return (
     <Form {...petInfoForm}>
       <form

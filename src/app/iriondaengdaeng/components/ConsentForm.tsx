@@ -307,7 +307,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                 </div>
                 <div className="consent-terms-template-primary max-h-48 overflow-y-auto border p-4">
                   <p>
-                    이리온댕댕(이하 '회사')는 대상 매장 예약 처리를 위해 아래와
+                    이리온댕댕(이하 &apos;회사&apos;)는 대상 매장 예약 처리를 위해 아래와
                     같은 개인정보를 수집하고 있습니다.
                   </p>
                   <ol>
@@ -393,7 +393,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                 </div>
                 <div className="consent-terms-template-primary max-h-48 overflow-y-auto border p-4">
                   <p>
-                    이리온댕댕(이하 "회사")는 이용자의 개인정보를 본
+                    이리온댕댕(이하 &apos;회사&apos;)는 이용자의 개인정보를 본
                     개인정보취급방침에서 고지한 범위 내에서 사용하며, 이용자의
                     사전 동의 없이 동 범위를 초과하여 이용하거나 이용자의 개인
                     정보를 제3자에게 제공하지 않습니다. 다만, 관련 법령에

@@ -42,12 +42,14 @@ export default function PhoneNumberStep({
       phoneNumber: bookingData.phoneNumber,
     },
   });
+
   const updatePhoneNumber = (phoneNumber: string) => {
     setBookingData((prev) => ({
       ...prev,
       phoneNumber,
     }));
   };
+
   return (
     <Form {...phoneNumberForm}>
       <form
