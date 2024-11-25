@@ -27,7 +27,7 @@ interface PhoneNumberStepProps {
   bookingData: BookingData;
   setCurrentStep: (step: number) => void;
   setBookingData: React.Dispatch<React.SetStateAction<BookingData>>;
-  getUserData: (values: { phoneNumber: string }) => Promise<void>;
+  getUserData: (phoneNumber: string) => Promise<void>;
 }
 
 export default function PhoneNumberStep({
@@ -53,13 +53,11 @@ export default function PhoneNumberStep({
   return (
     <Form {...phoneNumberForm}>
       <form
-        onSubmit={phoneNumberForm.handleSubmit(
-          async (values: { phoneNumber: string }) => {
-            updatePhoneNumber(values.phoneNumber);
-            await getUserData(values);
-            setCurrentStep(2);
-          }
-        )}
+        onSubmit={phoneNumberForm.handleSubmit(async (data) => {
+          updatePhoneNumber(data.phoneNumber);
+          await getUserData(data.phoneNumber);
+          setCurrentStep(2);
+        })}
         className="space-y-6"
       >
         <Card>

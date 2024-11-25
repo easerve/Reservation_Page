@@ -10,33 +10,20 @@ import { BookingData, Customer, UserDogsData, Dog } from "@/types/booking";
 import { INITIAL_BOOKING_STATE } from "@/constants/booking";
 
 export default function Booking() {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [bookingData, setBookingData] = useState<BookingData>(
+    INITIAL_BOOKING_STATE
+  );
   const [isPuppyAdd, setIsPuppyAdd] = useState(false);
-
   const [userDogsData, setUserDogsData] = useState<UserDogsData>({
     status: "" as string,
     customers: {
-      id: "" as string,
       name: "" as string,
-      phone: "" as string,
       address: "" as string,
       detailAddress: "" as string,
       dogs: [] as Dog[],
     } as Customer,
   });
-
-  useEffect(() => {
-    if (isPuppyAdd) {
-      getUserData({ phoneNumber: userDogsData.customers.phone }).then(() => {
-        setIsPuppyAdd(!isPuppyAdd);
-      });
-    }
-  }, [isPuppyAdd, userDogsData]);
-
-  const [currentStep, setCurrentStep] = useState(1);
-  const [bookingData, setBookingData] = useState<BookingData>(
-    INITIAL_BOOKING_STATE
-  );
-
   const [breeds, setBreeds] = useState<
     { id: number; name: string; type: number }[]
   >([]);
@@ -53,6 +40,15 @@ export default function Booking() {
     };
     loadBreeds();
   }, []);
+
+  useEffect(() => {
+    if (isPuppyAdd) {
+      getUserData(bookingData.phoneNumber).then(() => {
+        setIsPuppyAdd(!isPuppyAdd);
+      });
+    }
+  }, [isPuppyAdd, userDogsData, bookingData.phoneNumber]);
+  
 
   const renderStep = () => {
     switch (currentStep) {
@@ -73,6 +69,7 @@ export default function Booking() {
             setBookingData={setBookingData}
             setCurrentStep={setCurrentStep}
             userDogsData={userDogsData}
+            setUserDogsData={setUserDogsData}
             breeds={breeds}
             setIsPuppyAdd={setIsPuppyAdd}
           />
@@ -128,11 +125,10 @@ export default function Booking() {
     </div>
   );
 
-  async function getUserData(values: { phoneNumber: string }) {
+  async function getUserData(phoneNumber: string) {
     try {
-      const res = await fetch("/api/auth/profile?phone=" + values.phoneNumber);
+      const res = await fetch("/api/auth/profile?phone=" + phoneNumber);
       const data = await res.json();
-      console.log(data);
 
       setUserDogsData(data);
     } catch (error) {
