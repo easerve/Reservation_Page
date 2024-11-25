@@ -5,14 +5,29 @@ import React, {
   useImperativeHandle,
   useRef,
 } from "react";
-import SignaturePad from "signature_pad";
+import SignaturePad, {
+  FromDataOptions,
+  PointGroup,
+  ToSVGOptions,
+} from "signature_pad";
 
 export interface SignatureBoxRef {
   clear: () => void;
-  toData: () => any;
-  fromData: (data: any) => void;
+  toData(): PointGroup[];
+  fromData(pointGroups: PointGroup[], { clear }?: FromDataOptions): void;
   isEmpty: () => boolean;
-  toDataURL: (type?: string) => string | undefined;
+  toDataURL(type?: string, encoderOptions?: number): string;
+  fromDataURL(
+    dataUrl: string,
+    options?: {
+      ratio?: number;
+      width?: number;
+      height?: number;
+      xOffset?: number;
+      yOffset?: number;
+    },
+  ): Promise<void>;
+  toSVG({ includeBackgroundColor }?: ToSVGOptions): string;
 }
 
 const SignatureBox = forwardRef<SignatureBoxRef>((_, ref) => {
@@ -27,6 +42,10 @@ const SignatureBox = forwardRef<SignatureBoxRef>((_, ref) => {
       fromData: (data: any) => signaturePadRef.current?.fromData(data),
       isEmpty: () => signaturePadRef.current?.isEmpty() ?? true,
       toDataURL: (type?: string) => signaturePadRef.current?.toDataURL(type),
+      fromDataURL: (dataURL: string) =>
+        signaturePadRef.current?.fromDataURL(dataURL),
+      toSVG: (options?: ToSVGOptions) =>
+        signaturePadRef.current?.toSVG(options) ?? "",
     }),
     [],
   );
