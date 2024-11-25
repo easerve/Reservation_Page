@@ -100,22 +100,25 @@ export default function ReservationPage() {
     )
     .toLocaleString();
   return (
-    <div className="w-full h-full max-w-6xl mx-auto p-4 flex flex-col">
-      <div className="flex justify-between items-center mb-6">
+    <div className="w-full h-full mx-auto flex flex-col">
+      <div className="flex justify-between items-center mb-6 p-4">
         <h1 className="text-2xl font-semibold">예약</h1>
       </div>
 
       <Tabs value={view} onValueChange={setView} className="w-full flex-grow">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-4 mb-4 px-4">
           <TabsList>
             <TabsTrigger value="calendar">캘린더</TabsTrigger>
             <TabsTrigger value="list">리스트</TabsTrigger>
           </TabsList>
 
           <div className="flex items-center gap-2 ml-auto">
-            <Button variant="outline" size="icon">
-              <Search className="h-4 w-4" />
-            </Button>
+            <span className="flex border rounded-sm">
+              <Input type="text" className="border-none ml-2"></Input>
+              <Button variant="ghost" size="icon">
+                <Search className="h-4 w-4" />
+              </Button>
+            </span>
             <Button variant="outline" size="icon">
               <Filter className="h-4 w-4" />
             </Button>
@@ -132,33 +135,37 @@ export default function ReservationPage() {
             </Button>
           </div>
         </div>
-        <TabsContent value="list" className="mt-0 flex flex-col">
-          <CalendarBar
-            currentMonth={currentMonth}
-            setCurrentMonth={setCurrentMonth}
-          />
-          <div className="border-solid border-2 rounded-2xl border-gray-200 mt-4 mb-12 flex flex-col flex-grow justify-between overflow-hidden">
-            <ReservationList
-              reservations={reservations}
-              updateReservation={updateReservation}
-              deleteReservation={deleteReservation}
+        <TabsContent value="list">
+          <div className="h-[calc(100vh-8.5rem)] flex flex-col">
+            <CalendarBar
+              currentMonth={currentMonth}
+              setCurrentMonth={setCurrentMonth}
             />
-            <div className="bg-primary/50 flex justify-between p-4 text-primary-foreground">
-              <span className="font-bold">월 매출</span>
-              <span className="font-extrabold">
-                {monthlyRevenue.current} 원
-              </span>
+            <div className="h-[calc(100vh-12rem)] border-solid border-2 border-gray-200 mt-4 flex flex-col justify-between">
+              <ReservationList
+                reservations={reservations}
+                updateReservation={updateReservation}
+                deleteReservation={deleteReservation}
+              />
+              <div className="bg-primary/50 flex justify-between p-8 text-primary-foreground">
+                <span className="font-bold text-xl">월 매출</span>
+                <span className="font-extrabold text-xl">
+                  {monthlyRevenue.current} 원
+                </span>
+              </div>
             </div>
           </div>
         </TabsContent>
-        <TabsContent value="calendar" className="mt-0 flex flex-col">
-          <Calendar
-            currentMonth={currentMonth}
-            setCurrentMonth={setCurrentMonth}
-            reservations={reservations}
-            setReservations={setReservations}
-            updateReservation={updateReservation}
-          />
+        <TabsContent value="calendar" className="">
+          <div className="flex flex-col">
+            <Calendar
+              currentMonth={currentMonth}
+              setCurrentMonth={setCurrentMonth}
+              reservations={reservations}
+              setReservations={setReservations}
+              updateReservation={updateReservation}
+            />
+          </div>
         </TabsContent>
         <DefaultDialog
           open={isDialogOpen}

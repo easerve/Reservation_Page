@@ -48,7 +48,7 @@ export async function updateUser(request: Request) {
   }
 }
 
-export async function getUserDogs(phone: String) {
+export async function getDogsByUserPhone(phone: String) {
   const supabase = await createServerSupabaseClient();
 
   // Fetch user data
@@ -103,6 +103,9 @@ export async function getUserDogs(phone: String) {
     neutering: pet.neutering,
     sex: pet.sex,
     regNumber: pet.reg_number,
+    bite: pet.bite,
+    heart_disease: pet.heart_disease,
+    underlying_disease: pet.underlying_disease,
   }));
 
   return {

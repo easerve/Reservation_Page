@@ -140,7 +140,7 @@ export default function ReservationList(props: {
   ];
 
   return (
-    <div className="w-full h-[60vh] overflow-y-auto scrollbar-hide flex-grow">
+    <div className="h-[calc(100vh-18rem)]">
       <Table>
         <TableHeader className="sticky top-0 z-10 bg-white">
           <TableRow className="whitespace-nowrap">
@@ -194,8 +194,7 @@ export default function ReservationList(props: {
                             {reservation.status}
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent className="p-2">
-                          <DropdownMenuSeparator />
+                        <DropdownMenuContent className="">
                           <DropdownMenuRadioGroup
                             value={reservation.status}
                             onValueChange={(value) => {
@@ -210,13 +209,13 @@ export default function ReservationList(props: {
                                 }
                               });
                             }}
-                            className="bg-white bg-opacity-50 backdrop-blur-md p-2 rounded-lg border"
+                            className="p-2"
                           >
                             {ReservationStatus.map((status) => (
                               <DropdownMenuRadioItem
                                 key={status.value}
                                 value={status.value}
-                                className={`${status.css} py-1 px-3 rounded-full m-1 cursor-pointer`}
+                                className={`${status.css} py-1 px-3 rounded-full m-1 cursor-pointer justify-center`}
                                 onClick={(event) => {
                                   event.stopPropagation();
                                 }}
@@ -260,38 +259,40 @@ export default function ReservationList(props: {
                       </div>
                     </TableCell>
                   </TableRow>
-                  {expandedRow === reservation.id && (
-                    <TableRow className="transition">
-                      <TableCell colSpan={headers.length}>
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-2xl font-bold">
-                              {reservation.name}
-                            </CardTitle>
-                            <CardDescription>
-                              {reservation.breed} • {reservation.weight}kg
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent className="grid gap-4">
-                            <div>
-                              <h4 className="text-sm font-semibold mb-2">
-                                {`기본 미용: ${reservation.service_name}`}
-                              </h4>
-                              <h4 className="text-sm font-semibold mb-2">
-                                {`추가 미용: ${reservation.additional_services}`}
-                              </h4>
-                              <h4 className="text-sm font-semibold mb-2">
-                                특이사항
-                              </h4>
-                              <p className="text-sm text-gray-600">
-                                {reservation.memo}
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </TableCell>
-                    </TableRow>
-                  )}
+                  <TableRow
+                    className={`${
+                      expandedRow === reservation.id
+                        ? "max-h-[500px] opacity-100"
+                        : "max-h-0 opacity-0 hidden"
+                    } overflow-hidden transition-all duration-300 ease-in-out`}
+                  >
+                    <TableCell colSpan={headers.length}>
+                      <CardHeader>
+                        <CardTitle className="text-2xl font-bold">
+                          {reservation.name}
+                        </CardTitle>
+                        <CardDescription>
+                          {reservation.breed} • {reservation.weight}kg
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="grid gap-4">
+                        <div>
+                          <h4 className="text-sm font-semibold mb-2">
+                            {`기본 미용: ${reservation.service_name}`}
+                          </h4>
+                          <h4 className="text-sm font-semibold mb-2">
+                            {`추가 미용: ${reservation.additional_services}`}
+                          </h4>
+                          <h4 className="text-sm font-semibold mb-2">
+                            특이사항
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {reservation.memo}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </TableCell>
+                  </TableRow>
                 </React.Fragment>
               ))}
             </React.Fragment>

@@ -1,48 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addPet, getPetId } from "@/actions/pets";
+import { addPet, getPetId, PetInfo, PetIdData } from "@/actions/pets";
 import { Database } from "@/types/definitions";
 
 type PetRow = Database["public"]["Tables"]["pets"]["Row"];
 
 
 interface RequestBody {
-  PetInfo: {
-    petName: string;
-    weight: number;
-    phoneNumber: string;
-    birth: number;
-    breed: number;
-    neutering: boolean;
-    sex: string;
-    regNumber: string;
-  };
-}
-
-interface PetData {
-  birth: string | null;
-  breed_id: number | null;
-  created_at: string | null;
-  memo: string | null;
-  name: string | null;
-  neutering: boolean | null;
-  reg_number: string | null;
-  sex: string | null;
-  uuid: string;
-  weight: number | null;
-  user_id: string | null;
-  user: {
-    address: string | null;
-    detail_address: string | null;
-    name: string | null;
-    phone: string | null;
-    uuid: string;
-  };
-  breeds: {
-    name: string | null;
-    type: {
-      type: string | null;
-    };
-  }
+  PetInfo: PetInfo;
 }
 
 interface addPetResponse {
@@ -50,23 +14,20 @@ interface addPetResponse {
   petInfo: PetRow;
 }
 
-
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const petId = searchParams.get("id");
-
     if (!petId) {
       return NextResponse.json({ error: "Pet ID is required" }, { status: 400 });
     }
-    const petData: PetData = await getPetId(petId);
+    const petData: PetIdData = await getPetId(petId);
     const result = {
       petId: petData.uuid,
       petName: petData.name,
       weight: petData.weight,
       breed_name: petData.breeds.name,
-      breed_type: petData.breeds.type.type,
+      breed_type: petData.breeds.type,
       user: petData.user,
     }
     return NextResponse.json({ PetProfile: result }, { status: 200 });
@@ -99,9 +60,13 @@ export async function POST(request: NextRequest) {
       neutering,
       sex,
       regNumber,
+      bite,
+      heart_disease,
+      underlying_disease,
     } = body.PetInfo;
 
-    if (!petName || !weight || !phoneNumber || !birth || !breed) {
+    if (!petName || !weight || !phoneNumber || !birth || !breed ) {
+      // TODD: Add more validation
       return NextResponse.json(
         { error: "Missing required fields in PetInfo" },
         { status: 400 }
@@ -117,6 +82,9 @@ export async function POST(request: NextRequest) {
       neutering,
       sex,
       regNumber,
+      bite,
+      heart_disease,
+      underlying_disease,
     };
 
     const result : addPetResponse = await addPet(petInfo);
