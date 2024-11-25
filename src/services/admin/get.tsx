@@ -32,6 +32,7 @@ export async function getReservationsOfOneMonth(
       price: reservation.total_price,
       status: reservation.status,
       memo: reservation.memo,
+      address: `${reservation.pet_id.user_id.address} ${reservation.pet_id.user_id.detail_address}`,
     })) as Reservation[];
   } catch (e) {
     console.error(e);

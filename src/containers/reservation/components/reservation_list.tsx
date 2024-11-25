@@ -284,6 +284,9 @@ export default function ReservationList(props: {
                             {`추가 미용: ${reservation.additional_services}`}
                           </h4>
                           <h4 className="text-sm font-semibold mb-2">
+                            {`주소: ${reservation.address}`}
+                          </h4>
+                          <h4 className="text-sm font-semibold mb-2">
                             특이사항
                           </h4>
                           <p className="text-sm text-gray-600">

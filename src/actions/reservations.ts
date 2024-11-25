@@ -38,6 +38,8 @@ interface AdminReservationInfo {
     user_id: {
       name: string | null;
       phone: string;
+      address: string;
+      detail_address: string;
     };
     breed_id: {
       name: string;
@@ -146,7 +148,9 @@ export async function getReservationId(
 				reg_number,
 				user_id(
 					name,
-					phone
+					phone,
+          address,
+          detail_address
 				),
 				breed_id(
 					name
@@ -297,7 +301,9 @@ export async function getReservationsByDateRange(
 				reg_number,
 				user_id(
 					name,
-					phone
+					phone,
+          address,
+          detail_address
 				),
 				breed_id(
 					name

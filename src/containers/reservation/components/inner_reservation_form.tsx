@@ -92,7 +92,7 @@ export default function InnerReservationForm(props: {
             <FormItem>
               <FormLabel>전화번호</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="01012345678" />
+                <Input {...field} placeholder="전화번호를 입력하세요" />
               </FormControl>
               <FormMessage />
             </FormItem>

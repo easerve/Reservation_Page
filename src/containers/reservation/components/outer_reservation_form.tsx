@@ -54,9 +54,9 @@ export const outerFormSchema = z.object({
     })
     .positive()
     .multipleOf(0.1),
-  birth: z.date({
-    required_error: "생일을 선택해주세요.",
-  }),
+  // birth: z.date({
+  //   required_error: "생일을 선택해주세요.",
+  // }),
   service_name: z.string().min(1, "미용 내용을 입력해주세요."),
   additional_service: z.string().min(1, "추가 미용 내용을 입력해주세요."),
   additional_price: z.number().nonnegative("추가 서비스 금액을 입력해주세요."),
@@ -114,7 +114,6 @@ export default function OuterReservationForm(props: {
     setValue("name", dog.petName);
     setValue("breed", dog.breed.toString());
     setValue("weight", dog.weight);
-    setValue("birth", new Date(dog.birth));
     // setValue("neutering", dog.neutering);
     // setValue("sex", dog.sex);
     // setValue("regNumber", dog.regNumber);
@@ -182,6 +181,7 @@ export default function OuterReservationForm(props: {
                   <div className="p-3 border-t">
                     <Input
                       type="time"
+                      step="1800"
                       onChange={(e) => {
                         const date = field.value || new Date();
                         const [hours, minutes] = e.target.value.split(":");
@@ -204,7 +204,7 @@ export default function OuterReservationForm(props: {
               <FormLabel>전화번호</FormLabel>
               <div className="flex items-center">
                 <FormControl className="flex-1">
-                  <Input {...field} placeholder="01012345678" />
+                  <Input {...field} placeholder="전화번호를 입력하세요" />
                 </FormControl>
                 <Button
                   type="button"
@@ -337,7 +337,7 @@ export default function OuterReservationForm(props: {
             </FormItem>
           )}
         />
-        <FormField
+        {/* <FormField
           control={form.control}
           name="birth"
           render={({ field }) => (
@@ -374,7 +374,7 @@ export default function OuterReservationForm(props: {
               <FormMessage />
             </FormItem>
           )}
-        />
+        /> */}
         <FormField
           control={form.control}
           name="service_name"
