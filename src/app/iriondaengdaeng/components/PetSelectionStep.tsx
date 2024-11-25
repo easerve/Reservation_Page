@@ -3,10 +3,10 @@ import * as z from "zod";
 
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import CutAgreementPage from "@/app/iriondaengdaeng/cutAgreementPage";
+import CutAgreementPage from "./CutAgreementPage";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { BookingData, UserDogsData, Dog } from "@/types/booking";
+import { BookingData, UserDogsData, Dog, Customer } from "@/types/booking";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -15,6 +15,7 @@ interface PetSelectionStepProps {
   bookingData: BookingData;
   setBookingData: React.Dispatch<React.SetStateAction<BookingData>>;
   userDogsData: UserDogsData;
+  setUserDogsData: React.Dispatch<React.SetStateAction<UserDogsData>>;
   breeds: { id: number; name: string; type: number }[];
   setIsPuppyAdd: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -24,10 +25,12 @@ export default function PetSelectionStep({
   bookingData,
   setBookingData,
   userDogsData,
+  setUserDogsData,
   breeds,
   setIsPuppyAdd,
 }: PetSelectionStepProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   const openModal = () => {
     setIsModalOpen(true);
   };
@@ -35,6 +38,7 @@ export default function PetSelectionStep({
   const closeModal = () => {
     setIsModalOpen(false);
   };
+
   const updatePetInfo = (info: Dog) => {
     setBookingData((prev) => ({
       ...prev,
@@ -44,6 +48,14 @@ export default function PetSelectionStep({
       },
     }));
   };
+
+  const updateCustomer = (newCustomer: Customer) => {
+    setUserDogsData((prev) => ({
+      ...prev,
+      customers: newCustomer,
+    }));
+  };
+
   const petInfoSchema = z.object({
     name: z.string().min(1, "반려견의 이름을 입력해주세요"),
     weight: z.string().refine((val) => {
@@ -67,6 +79,7 @@ export default function PetSelectionStep({
       breed: bookingData.dog.breed.toString(),
     },
   });
+
   return (
     <Form {...petInfoForm}>
       <form
@@ -126,13 +139,9 @@ export default function PetSelectionStep({
                 onClose={closeModal}
                 breeds={breeds}
                 setIsPuppyAdd={setIsPuppyAdd}
-                customerData={{
-                  id: userDogsData.customers.id,
-                  name: userDogsData.customers.name,
-                  phone: userDogsData.customers.phone,
-                  address: userDogsData.customers.address,
-                  detailAddress: userDogsData.customers.detailAddress,
-                }}
+                customer={userDogsData.customers}
+                updateCustomer={updateCustomer}
+                phoneNumber={bookingData.phoneNumber}
               />
             </CardContent>
           </Card>

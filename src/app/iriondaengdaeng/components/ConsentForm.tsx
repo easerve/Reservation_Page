@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { uploadFile } from "@/actions/storage";
 import { mappingConsentFormPetId } from "@/actions/consent_form";
 import { Button } from "@/components/ui/button";
+import { Dog, Customer } from "@/types/booking";
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Dog, User } from "@/types/booking";
 import SignatureBox, { SignatureBoxRef } from "./signature-box";
 import { create } from "domain";
 import { Database } from "@/types/definitions";
@@ -21,7 +21,7 @@ type PetRow = Database["public"]["Tables"]["pets"]["Row"];
 interface ConsentFormProps {
   setCurrentStep: (step: number) => void;
   dogInfo: Dog;
-  userInfo: User;
+  customer: Customer;
   onClose: () => void;
   setIsPuppyAdd: (isAdd: boolean) => void;
 }
@@ -34,16 +34,10 @@ interface addPetResponse {
 const ConsentForm: React.FC<ConsentFormProps> = ({
   setCurrentStep,
   dogInfo,
-  userInfo,
+  customer,
   onClose,
   setIsPuppyAdd,
 }) => {
-  const [allChecked, setAllChecked] = useState<boolean>(false);
-  const [requiredChecked, setRequiredChecked] = useState<boolean>(false);
-  const [personalInfoChecked, setPersonalInfoChecked] =
-    useState<boolean>(false);
-  const [thirdPartyChecked, setThirdPartyChecked] = useState<boolean>(false);
-
   const signaturePadRef = useRef<SignatureBoxRef>(null);
 
   const handleClear = () => signaturePadRef.current?.clear();
@@ -63,7 +57,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(userInfo),
+        body: JSON.stringify({ ...customer, phone: dogInfo.phoneNumber }),
       });
 
       if (!response.ok) {
@@ -78,7 +72,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
     }
   };
 
-  const makeDogInfo = async () : Promise<string>  => {
+  const makeDogInfo = async (): Promise<string> => {
     try {
       const response = await fetch("/api/pets/profile", {
         method: "POST",
@@ -97,7 +91,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
         throw new Error("Failed to update dog info");
       }
 
-      const data : addPetResponse = await response.json();
+      const data: addPetResponse = await response.json();
       if (data.status !== "success") {
         throw new Error("Failed to update dog info");
       }
@@ -131,31 +125,39 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
     onClose();
   };
 
-  // const handleAllCheckedChange = () => {
-  //   const newChecked = !allChecked;
-  //   setAllChecked(newChecked);
-  //   setRequiredChecked(newChecked);
-  //   setPersonalInfoChecked(newChecked);
-  //   setThirdPartyChecked(newChecked);
-  // };
+  const [checkboxes, setCheckboxes] = useState({
+    all: false,
+    required: false,
+    personalInfo: false,
+    thirdParty: false,
+  });
 
-  const handleIndividualCheckedChange = (
-    setChecked: React.Dispatch<React.SetStateAction<boolean>>,
-    checked: boolean,
-  ) => {
-    setChecked(!checked);
-    if (checked) {
-      setAllChecked(false);
+  const handleCheckboxChange = (name: keyof typeof checkboxes) => {
+    if (name === "all") {
+      const newValue = !checkboxes.all;
+      setCheckboxes({
+        all: newValue,
+        required: newValue,
+        personalInfo: newValue,
+        thirdParty: newValue,
+      });
+    } else {
+      const newCheckboxes = {
+        ...checkboxes,
+        [name]: !checkboxes[name],
+      };
+
+      const allChecked =
+        newCheckboxes.required &&
+        newCheckboxes.personalInfo &&
+        newCheckboxes.thirdParty;
+
+      setCheckboxes({
+        ...newCheckboxes,
+        all: allChecked,
+      });
     }
   };
-
-  useEffect(() => {
-    if (requiredChecked && personalInfoChecked && thirdPartyChecked) {
-      setAllChecked(true);
-    } else {
-      setAllChecked(false);
-    }
-  }, [requiredChecked, personalInfoChecked, thirdPartyChecked]);
 
   return (
     <Dialog>
@@ -164,21 +166,29 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
           <div className="consent-inner-body">
             <div className="consent-terms">
               <div className="consent-terms">
-                <div className="flex items-center mr-2 consent-terms-content">
-                  <div className="flex-1 text-lg consent-terms-left">
+                <div className="consent-terms-content flex items-center mr-2 mb-4">
+                  <div className="consent-terms-left flex-1 text-lg">
+                    전체 동의
+                  </div>
+                  <label>
+                    <input
+                      type="checkbox"
+                      className="mr-2 w-6 h-6"
+                      checked={checkboxes.all}
+                      onChange={() => handleCheckboxChange("all")}
+                    />
+                  </label>
+                </div>
+                <div className="consent-terms-content flex items-center mr-2">
+                  <div className="consent-terms-left flex-1 text-lg">
                     미용 동의서 (필수)
                   </div>
                   <label>
                     <input
                       type="checkbox"
-                      checked={requiredChecked}
-                      onChange={() =>
-                        handleIndividualCheckedChange(
-                          setRequiredChecked,
-                          requiredChecked,
-                        )
-                      }
-                      className="w-6 h-6 mr-2"
+                      className="mr-2 w-6 h-6"
+                      checked={checkboxes.required}
+                      onChange={() => handleCheckboxChange("required")}
                     />
                   </label>
                 </div>
@@ -342,14 +352,9 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                   <label>
                     <input
                       type="checkbox"
-                      checked={personalInfoChecked}
-                      onChange={() =>
-                        handleIndividualCheckedChange(
-                          setPersonalInfoChecked,
-                          personalInfoChecked,
-                        )
-                      }
-                      className="w-6 h-6 mr-2"
+                      className="mr-2 w-6 h-6"
+                      checked={checkboxes.personalInfo}
+                      onChange={() => handleCheckboxChange("personalInfo")}
                     />
                   </label>
                 </div>
@@ -428,14 +433,9 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                   <label>
                     <input
                       type="checkbox"
-                      checked={thirdPartyChecked}
-                      onChange={() =>
-                        handleIndividualCheckedChange(
-                          setThirdPartyChecked,
-                          thirdPartyChecked,
-                        )
-                      }
-                      className="w-6 h-6 mr-2"
+                      className="mr-2 w-6 h-6"
+                      checked={checkboxes.thirdParty}
+                      onChange={() => handleCheckboxChange("thirdParty")}
                     />
                   </label>
                 </div>
@@ -488,7 +488,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
           <Button
             type="button"
             className="flex-1 bg-primary"
-            disabled={!allChecked}
+            disabled={!checkboxes.all}
           >
             강아지 추가하기
           </Button>
