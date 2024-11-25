@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Modal from "react-modal";
 import { User, Dog } from "@/types/booking";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ interface CutAgreementPageProps {
   onClose: () => void;
   breeds: { id: number; name: string; type: number }[];
   setIsPuppyAdd: (isAdd: boolean) => void;
-  userUUID: string;
+  customerData: User;
 }
 
 const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
@@ -20,7 +20,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
   onClose,
   breeds,
   setIsPuppyAdd,
-  userUUID,
+  customerData,
 }) => {
   const [dogInfo, setDogInfo] = useState<Dog>({
     id: "",
@@ -35,13 +35,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
     phoneNumber: "",
   });
 
-  const [userInfo, setUserInfo] = useState<User>({
-    id: userUUID,
-    name: "",
-    phone: "",
-    address: "",
-    detailAddress: "",
-  });
+  const [userInfo, setUserInfo] = useState<User>(customerData);
 
   const [selectedBreed, setSelectedBreed] = useState<{
     id: number;
@@ -84,7 +78,34 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
     setCurrentStep(3);
   };
 
+  const handleComplete = (address: string) => {
+    setUserInfo({
+      ...userInfo,
+      address: address,
+    });
+  };
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [showLocationSelect, setShowLocationSelect] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target as Node)
+      ) {
+        setShowLocationSelect(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, []);
 
   const renderStep = () => {
     switch (currentStep) {
@@ -109,6 +130,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">전화번호</label>
                 <input
+                  disabled={true}
                   type="tel"
                   name="phone"
                   value={userInfo.phone}
@@ -123,11 +145,22 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                   type="text"
                   name="address"
                   value={userInfo.address}
-                  onChange={handleUserInfoChange}
+                  onChange={() => {}}
+                  onClick={() => setShowLocationSelect(true)}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 />
-                <DaumPostcodeEmbed onComplete={(address) => {console.log(address)}} />
+                {showLocationSelect && (
+                  <div ref={wrapperRef}>
+                    <DaumPostcodeEmbed
+                      onComplete={(address) => {
+                        handleComplete(address.address);
+                        setShowLocationSelect(false);
+                        console.log(address);
+                      }}
+                    />
+                  </div>
+                )}
               </div>
               <div className="mb-4">
                 <label className="block text-gray-700 mb-2">상세주소</label>
