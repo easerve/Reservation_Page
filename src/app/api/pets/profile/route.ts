@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addPet, getPetId, PetInfo, PetIdData } from "@/actions/pets";
+import { Database } from "@/types/definitions";
+
+type PetRow = Database["public"]["Tables"]["pets"]["Row"];
+
 
 interface RequestBody {
   PetInfo: PetInfo;
+}
+
+interface addPetResponse {
+  status: string;
+  petInfo: PetRow;
 }
 
 export async function GET(request: NextRequest) {
@@ -78,7 +87,7 @@ export async function POST(request: NextRequest) {
       underlying_disease,
     };
 
-    const result = await addPet(petInfo);
+    const result : addPetResponse = await addPet(petInfo);
     if (result.status === "success") {
       return NextResponse.json(result, { status: 200 });
     } else {

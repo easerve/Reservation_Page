@@ -1,3 +1,4 @@
+import BottomNavBar from "@/components/bottom_nav_bar/bottom_nav_bar";
 import SideBar from "@/components/side_bar/side_bar";
 
 export default function AdminLayout({
@@ -6,11 +7,10 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex h-screen flex-col overflow-hidden">
-      {/* <div className="w-full flex-none md:w-64">
-        <SideBar />
-      </div> */}
-      <div className="flex-grow">{children}</div>
+    <div className="flex h-screen overflow-hidden">
+      <SideBar />
+      {/* <BottomNavBar /> */}
+      <div className="flex-1 h-full w-full md:pl-12">{children}</div>
     </div>
   );
 }

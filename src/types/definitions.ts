@@ -77,6 +77,35 @@ export type Database = {
           },
         ]
       }
+      consent_form: {
+        Row: {
+          consent_form_url: string
+          created_at: string
+          id: number
+          pet_id: string
+        }
+        Insert: {
+          consent_form_url: string
+          created_at?: string
+          id?: number
+          pet_id: string
+        }
+        Update: {
+          consent_form_url?: string
+          created_at?: string
+          id?: number
+          pet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consent_form_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["uuid"]
+          },
+        ]
+      }
       images: {
         Row: {
           created_at: string | null
@@ -168,7 +197,6 @@ export type Database = {
         Row: {
           additional_price: number | null
           additional_services: string | null
-          consent_form: boolean
           created_at: string | null
           memo: string | null
           pet_id: string
@@ -181,7 +209,6 @@ export type Database = {
         Insert: {
           additional_price?: number | null
           additional_services?: string | null
-          consent_form: boolean
           created_at?: string | null
           memo?: string | null
           pet_id: string
@@ -194,7 +221,6 @@ export type Database = {
         Update: {
           additional_price?: number | null
           additional_services?: string | null
-          consent_form?: boolean
           created_at?: string | null
           memo?: string | null
           pet_id?: string

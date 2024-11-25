@@ -1,12 +1,34 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import { uploadFile } from "@/actions/storage";
+import { mappingConsentFormPetId } from "@/actions/consent_form";
 import { Button } from "@/components/ui/button";
 import { Dog, Customer } from "@/types/booking";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import SignatureBox, { SignatureBoxRef } from "./signature-box";
+import { create } from "domain";
+import { Database } from "@/types/definitions";
+
+type PetRow = Database["public"]["Tables"]["pets"]["Row"];
+
 interface ConsentFormProps {
   setCurrentStep: (step: number) => void;
   dogInfo: Dog;
   customer: Customer;
   onClose: () => void;
   setIsPuppyAdd: (isAdd: boolean) => void;
+}
+
+interface addPetResponse {
+  status: string;
+  petInfo: PetRow;
 }
 
 const ConsentForm: React.FC<ConsentFormProps> = ({
@@ -16,6 +38,18 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
   onClose,
   setIsPuppyAdd,
 }) => {
+  const signaturePadRef = useRef<SignatureBoxRef>(null);
+
+  const handleClear = () => signaturePadRef.current?.clear();
+
+  // const handleUndo = () => {
+  //   const data = signaturePadRef.current?.toData();
+  //   if (data && data.length > 0) {
+  //     data.pop();
+  //     signaturePadRef.current?.fromData(data);
+  //   }
+  // };
+
   const updateUserInfo = async () => {
     try {
       const response = await fetch("/api/auth/profile", {
@@ -29,7 +63,6 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
       if (!response.ok) {
         throw new Error("Failed to update user info");
       }
-
       const data = await response.json();
       if (data.status !== "success") {
         throw new Error("Failed to update user info");
@@ -39,7 +72,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
     }
   };
 
-  const makeDogInfo = async () => {
+  const makeDogInfo = async (): Promise<string> => {
     try {
       const response = await fetch("/api/pets/profile", {
         method: "POST",
@@ -58,18 +91,35 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
         throw new Error("Failed to update dog info");
       }
 
-      const data = await response.json();
+      const data: addPetResponse = await response.json();
       if (data.status !== "success") {
         throw new Error("Failed to update dog info");
       }
+      return data.petInfo.uuid;
     } catch (error) {
       console.error("Error updating dog info:", error);
     }
   };
 
-  const onClick = async () => {
+  const handleSubmit = async () => {
+    if (signaturePadRef.current?.isEmpty()) {
+      alert("Please provide a signature first.");
+      return;
+    }
+
+    const signatureDataSvg = signaturePadRef.current?.toSVG();
+    const fileName = Math.random().toString(36).slice(2, 9);
+    const file = new File([signatureDataSvg], `${fileName}.svg`, {
+      type: "image/svg+xml",
+    });
+    const imageUrl = await uploadFile({
+      file,
+      bucket: "signature",
+      // folder: "signatures",
+    });
     await updateUserInfo();
-    await makeDogInfo();
+    dogInfo.id = await makeDogInfo();
+    await mappingConsentFormPetId(dogInfo.id, imageUrl);
     setCurrentStep(1);
     setIsPuppyAdd(true);
     onClose();
@@ -110,7 +160,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
   };
 
   return (
-    <div>
+    <Dialog>
       <div className="consent-wrap">
         <div className="consent-body">
           <div className="consent-inner-body">
@@ -142,7 +192,7 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                     />
                   </label>
                 </div>
-                <div className="consent-terms-template-primary max-h-48 overflow-y-auto border p-4">
+                <div className="p-4 overflow-y-auto border consent-terms-template-primary max-h-48">
                   {(() => {
                     const birthDate = new Date(dogInfo.birth);
                     const today = new Date();
@@ -294,9 +344,9 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                   )}
                 </div>
               </div>
-              <div className="consent-terms mt-4">
-                <div className="consent-terms-content flex items-center mr-2">
-                  <div className="consent-terms-left flex-1 text-lg">
+              <div className="mt-4 consent-terms">
+                <div className="flex items-center mr-2 consent-terms-content">
+                  <div className="flex-1 text-lg consent-terms-left">
                     개인정보 수집 및 이용 동의 (필수)
                   </div>
                   <label>
@@ -308,9 +358,9 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                     />
                   </label>
                 </div>
-                <div className="consent-terms-template-primary max-h-48 overflow-y-auto border p-4">
+                <div className="p-4 overflow-y-auto border consent-terms-template-primary max-h-48">
                   <p>
-                    이리온댕댕(이하 &apos;회사&apos;)는 대상 매장 예약 처리를
+                    이리온댕댕(이하 &quot;회사&quot;)는 대상 매장 예약 처리를
                     위해 아래와 같은 개인정보를 수집하고 있습니다.
                   </p>
                   <ol>
@@ -375,9 +425,9 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                   </p>
                 </div>
               </div>
-              <div className="consent-terms mt-4">
-                <div className="consent-terms-content flex items-center mr-2">
-                  <div className="consent-terms-left flex-1 text-lg">
+              <div className="mt-4 consent-terms">
+                <div className="flex items-center mr-2 consent-terms-content">
+                  <div className="flex-1 text-lg consent-terms-left">
                     개인정보 제3자 제공 동의 (필수)
                   </div>
                   <label>
@@ -389,9 +439,9 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
                     />
                   </label>
                 </div>
-                <div className="consent-terms-template-primary max-h-48 overflow-y-auto border p-4">
+                <div className="p-4 overflow-y-auto border consent-terms-template-primary max-h-48">
                   <p>
-                    이리온댕댕(이하 &apos;회사&apos;)는 이용자의 개인정보를 본
+                    이리온댕댕(이하 &quot;회사&quot;)는 이용자의 개인정보를 본
                     개인정보취급방침에서 고지한 범위 내에서 사용하며, 이용자의
                     사전 동의 없이 동 범위를 초과하여 이용하거나 이용자의 개인
                     정보를 제3자에게 제공하지 않습니다. 다만, 관련 법령에
@@ -434,16 +484,39 @@ const ConsentForm: React.FC<ConsentFormProps> = ({
         >
           이전
         </Button>
-        <Button
-          type="button"
-          className="flex-1 bg-primary"
-          disabled={checkboxes.all === false}
-          onClick={onClick}
-        >
-          강아지 추가하기
-        </Button>
+        <DialogTrigger asChild>
+          <Button
+            type="button"
+            className="flex-1 bg-primary"
+            disabled={!checkboxes.all}
+          >
+            강아지 추가하기
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader className="gap-2 text-start">
+            <DialogTitle>보호자 서명</DialogTitle>
+            <DialogDescription className="break-all">
+              애견 미용 시 발생할 수 있는 사고와 미용 후 스트레스 증후군에 대해,
+              보호자는 인지를 하고 이해를 했으며 애견 미용 서비스를 이용하는
+              것을 동의합니다.
+            </DialogDescription>
+          </DialogHeader>
+          <SignatureBox ref={signaturePadRef} />
+          <DialogFooter className="gap-4">
+            {/* <Button type='button' variant='secondary' onClick={handleUndo}>
+              Undo
+            </Button> */}
+            <Button type="button" variant="secondary" onClick={handleClear}>
+              초기화
+            </Button>
+            <Button type="submit" onClick={handleSubmit}>
+              제출
+            </Button>
+          </DialogFooter>
+        </DialogContent>
       </div>
-    </div>
+    </Dialog>
   );
 };
 

@@ -5,7 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Filter, Plus, Search } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Plus,
+  Search,
+  X,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
@@ -21,9 +28,12 @@ import App from "next/app";
 
 import { Reservation } from "@/types/interface";
 import { getDate2 } from "@/components/utils/date_utils";
-import { getDate } from "date-fns";
+import { getDate, set } from "date-fns";
 import CalendarBar from "./components/calendar_bar";
-import { getReservationsOfOneMonth } from "@/services/admin/get";
+import {
+  getReservationsByPhoneNumber,
+  getReservationsOfOneMonth,
+} from "@/services/admin/get";
 import { ReservationUpdate } from "@/actions/reservations";
 
 export default function ReservationPage() {
@@ -37,6 +47,8 @@ export default function ReservationPage() {
   const [breeds, setBreeds] = useState<
     { id: number; name: string; type: number }[]
   >([]);
+
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
 
   useEffect(() => {
     (async () => {
@@ -69,13 +81,15 @@ export default function ReservationPage() {
 
   useEffect(() => {
     (async () => {
-      const reservations = await getReservationsOfOneMonth(
-        currentMonth.year,
-        currentMonth.month
-      );
-      setReservations(reservations);
+      if (phoneNumber === "") {
+        const reservations = await getReservationsOfOneMonth(
+          currentMonth.year,
+          currentMonth.month
+        );
+        setReservations(reservations);
+      }
     })();
-  }, [currentMonth]);
+  }, [currentMonth, phoneNumber]);
 
   function updateReservation(id: string, data: Partial<Reservation>) {
     const newReservations = reservations.map((reservation) => {
@@ -89,6 +103,16 @@ export default function ReservationPage() {
       (reservation) => reservation.id !== id
     );
     setReservations(newReservations);
+  }
+
+  function searchReservationByPhoneNumber() {
+    if (phoneNumber === "") {
+      return;
+    }
+    (async () => {
+      const newReservations = await getReservationsByPhoneNumber(phoneNumber);
+      setReservations(newReservations);
+    })();
   }
 
   monthlyRevenue.current = reservations
@@ -113,11 +137,32 @@ export default function ReservationPage() {
           </TabsList>
 
           <div className="flex items-center gap-2 ml-auto">
-            <span className="flex border rounded-sm">
-              <Input type="text" className="border-none ml-2"></Input>
-              <Button variant="ghost" size="icon">
-                <Search className="h-4 w-4" />
-              </Button>
+            <span className="flex border rounded-sm px-2 justify-between">
+              <Input
+                type="text"
+                className="border-none"
+                value={phoneNumber}
+                placeholder="전화번호로 검색하기"
+                onChange={(e) => setPhoneNumber(e.target.value)}
+              ></Input>
+              <div className="flex">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setPhoneNumber("");
+                  }}
+                >
+                  <X className="h-3 w-3" color="gray" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={searchReservationByPhoneNumber}
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
             </span>
             <Button variant="outline" size="icon">
               <Filter className="h-4 w-4" />
@@ -141,7 +186,7 @@ export default function ReservationPage() {
               currentMonth={currentMonth}
               setCurrentMonth={setCurrentMonth}
             />
-            <div className="h-[calc(100vh-12rem)] border-solid border-2 border-gray-200 mt-4 flex flex-col justify-between">
+            <div className="h-[calc(100vh-12rem)] border-solid border-y-2 border-gray-200 mt-4 flex flex-col justify-between">
               <ReservationList
                 reservations={reservations}
                 updateReservation={updateReservation}

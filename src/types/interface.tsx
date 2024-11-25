@@ -27,7 +27,6 @@ export interface AdminReservationInfo {
   reservation_date: string;
   memo: string;
   status: string;
-  consent_form: boolean;
   additional_services: string;
   additional_price: number;
   total_price: number;
@@ -70,3 +69,8 @@ export const ReservationStatus = [
     css: "bg-blue-200",
   },
 ];
+
+export interface IAppSidebar {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
