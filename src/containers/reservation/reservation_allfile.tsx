@@ -5,7 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight, Filter, Plus, Search } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Plus,
+  Search,
+  X,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { z } from "zod";
@@ -74,13 +81,15 @@ export default function ReservationPage() {
 
   useEffect(() => {
     (async () => {
-      const reservations = await getReservationsOfOneMonth(
-        currentMonth.year,
-        currentMonth.month
-      );
-      setReservations(reservations);
+      if (phoneNumber === "") {
+        const reservations = await getReservationsOfOneMonth(
+          currentMonth.year,
+          currentMonth.month
+        );
+        setReservations(reservations);
+      }
     })();
-  }, [currentMonth]);
+  }, [currentMonth, phoneNumber]);
 
   function updateReservation(id: string, data: Partial<Reservation>) {
     const newReservations = reservations.map((reservation) => {
@@ -128,20 +137,32 @@ export default function ReservationPage() {
           </TabsList>
 
           <div className="flex items-center gap-2 ml-auto">
-            <span className="flex border rounded-sm">
+            <span className="flex border rounded-sm px-2 justify-between">
               <Input
                 type="text"
-                className="border-none ml-2"
+                className="border-none"
+                value={phoneNumber}
                 placeholder="전화번호로 검색하기"
                 onChange={(e) => setPhoneNumber(e.target.value)}
               ></Input>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={searchReservationByPhoneNumber}
-              >
-                <Search className="h-4 w-4" />
-              </Button>
+              <div className="flex">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setPhoneNumber("");
+                  }}
+                >
+                  <X className="h-3 w-3" color="gray" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={searchReservationByPhoneNumber}
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
             </span>
             <Button variant="outline" size="icon">
               <Filter className="h-4 w-4" />
