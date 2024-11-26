@@ -112,7 +112,6 @@ export async function GET(request: NextRequest) {
 		}
 		else if (phone) {
 			const reservations = await getReservationsByPhone(phone);
-			console.log(reservations);
 			if (!reservations) {
 				return NextResponse.json({ data: [] }, { status: 200 });
 			}

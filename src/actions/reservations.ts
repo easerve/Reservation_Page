@@ -17,7 +17,6 @@ export async function getReservationsByPhone(
 	phone: string,
 	limit: number = 10
 ) {
-	console.log('phone:', phone);
 	const supabase = await createServerSupabaseClient();
 	const reservationWithPetQuery = supabase
 		.from('reservations')
