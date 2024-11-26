@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -35,6 +35,8 @@ import Select from "react-select";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/date_picker/date_picker";
 import { Dog, Customer } from "@/types/booking";
+import { getUserDataByPhoneNumber } from "@/services/admin/get";
+import EditPetForm from "./edit_pet_form";
 
 export const outerFormSchema = z.object({
   time: z.date({
@@ -58,7 +60,7 @@ export const outerFormSchema = z.object({
   //   required_error: "생일을 선택해주세요.",
   // }),
   service_name: z.string().min(1, "미용 내용을 입력해주세요."),
-  additional_service: z.string().min(1, "추가 미용 내용을 입력해주세요."),
+  additional_services: z.string().min(1, "추가 미용 내용을 입력해주세요."),
   additional_price: z.number().nonnegative("추가 서비스 금액을 입력해주세요."),
   memo: z.string().optional(),
 });
@@ -69,18 +71,15 @@ export default function OuterReservationForm(props: {
   breeds: { id: number; name: string; type: number }[];
 }) {
   const [showDogList, setShowDogList] = useState(false);
-  const [userDogsData, setUserDogsData] = useState({
-    status: "" as string,
-    customers: {
-      id: "" as string,
-      name: "" as string,
-      phone: "" as string,
-      address: "" as string,
-      detailAddress: "" as string,
-      dogs: [] as Dog[],
-    } as Customer,
+  const [userData, setUserData] = useState<Customer>({
+    id: "",
+    name: "",
+    phone: "",
+    address: "",
+    detailAddress: "",
+    dogs: [],
   });
-  const [selectedDog, setSelectedDog] = useState<Dog>();
+  const [selectedDogIdx, setSelectedDogIdx] = useState<number | null>(null);
   const form = useForm<z.infer<typeof outerFormSchema>>({
     resolver: zodResolver(outerFormSchema),
     defaultValues: {
@@ -109,8 +108,8 @@ export default function OuterReservationForm(props: {
   //   },
   // });
 
-  const handleDogSelect = (dog: Dog) => {
-    setSelectedDog(dog);
+  const handleDogSelect = (dog: Dog, idx: number) => {
+    setSelectedDogIdx(idx);
     setValue("name", dog.petName);
     setValue("breed", dog.breed.toString());
     setValue("weight", dog.weight);
@@ -124,7 +123,7 @@ export default function OuterReservationForm(props: {
       const res = await fetch("api/auth/profile?phone=" + values);
       const data = await res.json();
 
-      setUserDogsData(data);
+      setUserData(data);
     } catch (error) {
       console.error(error);
     }
@@ -139,9 +138,14 @@ export default function OuterReservationForm(props: {
     if (!phoneNumber) {
       return;
     }
-    await getUserData(phoneNumber);
+    setSelectedDogIdx(null);
+    // await getUserData(phoneNumber);
+    const data = (await getUserDataByPhoneNumber(phoneNumber)) as Customer;
+    setUserData(data);
     setShowDogList(true);
   };
+
+  const ifAddNewDog = selectedDogIdx === userData.dogs.length;
 
   return (
     <Form {...form}>
@@ -159,7 +163,7 @@ export default function OuterReservationForm(props: {
                       variant={"outline"}
                       className={cn(
                         "w-full pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
+                        !field.value && "text-muted-foreground",
                       )}
                     >
                       {field.value ? (
@@ -220,161 +224,199 @@ export default function OuterReservationForm(props: {
             </FormItem>
           )}
         />
-        {showDogList && userDogsData.status === "fail" ? (
-          <div>검색결과가 없습니다</div>
-        ) : (
-          showDogList && (
-            <div className="overflow-hidden transition-all duration-500 ease-in-out">
-              <CardContent className="p-0">
-                {userDogsData.customers.dogs.map((dog, idx) => (
-                  <Button
-                    key={idx}
-                    variant="outline"
-                    className={`w-full justify-between h-auto py-4 ${
-                      selectedDog && selectedDog.petName === dog.petName
-                        ? "border-primary bg-primary/10"
-                        : ""
-                    }`}
-                    onClick={() => {
-                      handleDogSelect(dog);
-                    }}
-                  >
-                    <div className="text-left">
-                      <p>이름: {dog.petName}</p>
-                      <p>견종: {dog.breed}</p>
-                      <p>
-                        나이:
-                        {(() => {
-                          const birthDate = new Date(dog.birth);
-                          const today = new Date();
-                          const months =
-                            (today.getFullYear() - birthDate.getFullYear()) *
-                              12 +
-                            (today.getMonth() - birthDate.getMonth());
-                          const years = Math.floor(months / 12);
-                          const remainingMonths = months % 12;
+        <div className="overflow-hidden transition-all duration-500 ease-in-out">
+          <CardContent className="p-0">
+            {showDogList && (
+              <>
+                {userData.dogs.length === 0 ? (
+                  <div className="text-xs text-red-600">
+                    검색결과가 없습니다
+                  </div>
+                ) : (
+                  <>
+                    {userData.dogs.map((dog, idx) => (
+                      <>
+                        <Button
+                          key={idx}
+                          variant="outline"
+                          className={`w-full justify-between h-auto py-4 ${
+                            selectedDogIdx === idx
+                              ? "border-primary bg-primary/10"
+                              : ""
+                          }`}
+                          onClick={() => {
+                            handleDogSelect(dog, idx);
+                          }}
+                        >
+                          <div className="flex justify-between items-center w-full">
+                            <div className="text-left">
+                              <p>이름: {dog.petName}</p>
+                              <p>견종: {dog.breed}</p>
+                              <p>
+                                나이:
+                                {(() => {
+                                  const birthDate = new Date(dog.birth);
+                                  const today = new Date();
+                                  const months =
+                                    (today.getFullYear() -
+                                      birthDate.getFullYear()) *
+                                      12 +
+                                    (today.getMonth() - birthDate.getMonth());
+                                  const years = Math.floor(months / 12);
+                                  const remainingMonths = months % 12;
 
-                          return ` ${years}년${remainingMonths}개월`;
-                        })()}
-                      </p>
-                      <p>체중: {dog.weight}kg</p>
-                    </div>
-                  </Button>
-                ))}
-              </CardContent>
-            </div>
-          )
-        )}
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>동물 이름</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="반려동물 이름을 입력하세요" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="breed"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>견종</FormLabel>
-              <FormControl>
-                <Controller
-                  name="breed"
-                  control={form.control}
-                  render={({ field }) => (
-                    <Select
-                      options={props.breeds.map((breed) => ({
-                        id: breed.id,
-                        name: breed.name,
-                        type: breed.type,
-                      }))}
-                      isSearchable
-                      isClearable
-                      placeholder="견종을 선택하세요"
-                      getOptionLabel={(option) => option.name}
-                      getOptionValue={(option) => option.name.toString()}
-                      value={props.breeds.find(
-                        (breed) => breed.name === field.value
-                      )} // 선택된 값
-                      onChange={(selectedOption) => {
-                        field.onChange(selectedOption?.name); // 선택된 옵션의 ID를 form 상태로 업데이트
-                      }}
-                      isDisabled={false}
-                    />
-                  )}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="weight"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>몸무게 (kg)</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="number"
-                  step="0.1"
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value === "" ? "" : parseFloat(e.target.value)
-                    )
-                  }
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {/* <FormField
-          control={form.control}
-          name="birth"
-          render={({ field }) => (
-            <FormItem className="flex flex-col">
-              <FormLabel>생일</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
+                                  return ` ${years}년${remainingMonths}개월`;
+                                })()}
+                              </p>
+                              <p>체중: {dog.weight}kg</p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              수정하기
+                            </Button>
+                          </div>
+                        </Button>
+                        <EditPetForm />
+                      </>
+                    ))}
+                  </>
+                )}
+                <Button
+                  variant="outline"
+                  className={`w-full justify-between h-auto py-4 ${
+                    ifAddNewDog ? "border-primary bg-primary/10" : ""
+                  }`}
+                  onClick={() => {
+                    setSelectedDogIdx(userData.dogs.length);
+                  }}
+                >
+                  <div className="flex items-center">
+                    <Plus className="h-6 w-6 mr-2" />
+                    <p className="text-center">새로운 강아지 등록</p>
+                  </div>
+                </Button>
+              </>
+            )}
+          </CardContent>
+        </div>
+        {ifAddNewDog && (
+          <>
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>동물 이름</FormLabel>
                   <FormControl>
-                    <Button
-                      variant={"outline"}
+                    <Input
+                      {...field}
+                      placeholder="반려동물 이름을 입력하세요"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="breed"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>견종</FormLabel>
+                  <FormControl>
+                    <Controller
+                      name="breed"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Select
+                          options={props.breeds.map((breed) => ({
+                            id: breed.id,
+                            name: breed.name,
+                            type: breed.type,
+                          }))}
+                          isSearchable
+                          isClearable
+                          placeholder="견종을 선택하세요"
+                          getOptionLabel={(option) => option.name}
+                          getOptionValue={(option) => option.name.toString()}
+                          value={props.breeds.find(
+                            (breed) => breed.name === field.value,
+                          )} // 선택된 값
+                          onChange={(selectedOption) => {
+                            field.onChange(selectedOption?.name); // 선택된 옵션의 ID를 form 상태로 업데이트
+                          }}
+                          isDisabled={false}
+                        />
+                      )}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="weight"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>몸무게 (kg)</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="number"
+                      step="0.1"
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value === ""
+                            ? ""
+                            : parseFloat(e.target.value),
+                        )
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
+        {/* <FormField
+        control={form.control}
+        name="birth"
+        render={({ field }) => (
+            <FormItem className="flex flex-col">
+            <FormLabel>생일</FormLabel>
+            <Popover>
+            <PopoverTrigger asChild>
+            <FormControl>
+            <Button
+            variant={"outline"}
                       className={cn(
                         "w-full pl-3 text-left font-normal",
                         !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        format(field.value, "yyyy년 MM월 dd일 HH:mm")
-                      ) : (
-                        <span>생일을 선택하세요</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={field.value}
-                    onSelect={field.onChange}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        /> */}
+                        )}
+                        >
+                        {field.value ? (
+                          format(field.value, "yyyy년 MM월 dd일 HH:mm")
+                          ) : (
+                            <span>생일을 선택하세요</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                            </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                            />
+                            </PopoverContent>
+                            </Popover>
+                            <FormMessage />
+                            </FormItem>
+                            )}
+                          /> */}
         <FormField
           control={form.control}
           name="service_name"
@@ -394,7 +436,7 @@ export default function OuterReservationForm(props: {
         />
         <FormField
           control={form.control}
-          name="additional_service"
+          name="additional_services"
           render={({ field }) => (
             <FormItem>
               <FormLabel>추가 미용</FormLabel>
@@ -422,7 +464,7 @@ export default function OuterReservationForm(props: {
                   step="1"
                   onChange={(e) =>
                     field.onChange(
-                      e.target.value === "" ? "" : parseInt(e.target.value)
+                      e.target.value === "" ? "" : parseInt(e.target.value),
                     )
                   }
                 />

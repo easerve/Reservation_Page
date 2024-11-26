@@ -85,7 +85,7 @@ export async function getDogsByUserPhone(phone: String) {
 			  name,
 			  type
 			)
-		`
+		`,
     )
     .eq("user_id", userData.uuid);
 

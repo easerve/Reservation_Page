@@ -74,14 +74,18 @@ export default function ReservationPage() {
       heart_disease: null,
       underlying_disease: null,
     } as PetInfo;
-    const newData = {
-      ...data,
+
+    // if 이미 등록된 강아지라서 pet_id가 있을 때
+    const reservationData = {
+      // pet_id: data.pet_id,
+      reservation_date: data.time,
+      memo: data.memo,
       status: "예약확정",
-      time: new Date(data.time),
       service_name: data.service_name,
-      price: 0,
-    } as Reservation;
-    console.log("submit done: ", newData);
+      additional_services: data.additional_services,
+      total_price: 0,
+      additional_price: data.additional_price,
+    };
     // setReservations([...reservations, newData]);
     // handleCloseDialog();
   };

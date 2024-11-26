@@ -7,10 +7,12 @@ import {
 import { getFirstDayOfNextMonth } from "@/utils/functions";
 
 import { AdminReservationInfo, Reservation } from "@/types/interface";
+import { getDogsByUserPhone } from "@/actions/auth";
+import { Customer } from "@/types/booking";
 
 export async function getReservationsOfOneMonth(
   year: number,
-  month: number
+  month: number,
 ): Promise<Reservation[]> {
   const startDate = `${year}-${month}-01`;
   const endDate = getFirstDayOfNextMonth(year, month);
@@ -32,7 +34,7 @@ export async function getReservationsOfOneMonth(
       price: reservation.total_price,
       status: reservation.status,
       memo: reservation.memo,
-      address: `${reservation.pet_id.user_id.address} ${reservation.pet_id.user_id.detail_address}`,
+      address: `${reservation.pet_id.user_id.address ?? "등록된 주소가 없습니다."} ${reservation.pet_id.user_id.detail_address ?? ""}`,
     })) as Reservation[];
   } catch (e) {
     console.error(e);
@@ -41,7 +43,7 @@ export async function getReservationsOfOneMonth(
 }
 
 export async function getReservationsByPhoneNumber(
-  phoneNumber: string
+  phoneNumber: string,
 ): Promise<Reservation[]> {
   try {
     const res = await getReservationsByPhone(phoneNumber);
@@ -63,5 +65,20 @@ export async function getReservationsByPhoneNumber(
   } catch (e) {
     console.error(e);
     return [];
+  }
+}
+
+export async function getUserDataByPhoneNumber(phoneNumber: string) {
+  try {
+    const res = await getDogsByUserPhone(phoneNumber);
+    if (res.status === "success") {
+      // User 이미 존재
+      return res.customers as Customer;
+    } else {
+      return res.customers as Customer;
+    }
+  } catch (e) {
+    console.error(e);
+    return {};
   }
 }
