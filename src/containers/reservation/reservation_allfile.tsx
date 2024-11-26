@@ -133,12 +133,7 @@ export default function ReservationPage() {
   }
 
   monthlyRevenue.current = reservations
-    .reduce(
-      (acc, cur) =>
-        acc +
-        (cur.status === "미용완료" ? cur.price + cur.additional_price : 0),
-      0,
-    )
+    .reduce((acc, cur) => acc + (cur.status === "미용완료" ? cur.price : 0), 0)
     .toLocaleString();
   return (
     <div className="w-full h-full mx-auto flex flex-col">

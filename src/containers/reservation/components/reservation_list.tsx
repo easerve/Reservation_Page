@@ -133,8 +133,6 @@ export default function ReservationList(props: {
     "추가 미용",
     "특이사항",
     "예약 상태",
-    "기본 가격",
-    "추가 가격",
     "총계",
     "관리",
   ];
@@ -237,14 +235,6 @@ export default function ReservationList(props: {
                     </TableCell>
                     <TableCell>
                       {reservation.price?.toLocaleString()}원
-                    </TableCell>
-                    <TableCell>
-                      {reservation.price?.toLocaleString()}원
-                    </TableCell>
-                    <TableCell>
-                      {`${(
-                        reservation.price + reservation.price
-                      ).toLocaleString()}원`}
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-center items-center gap-2">
