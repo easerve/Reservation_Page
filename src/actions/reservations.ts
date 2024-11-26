@@ -88,7 +88,6 @@ export async function getReservationId(reservationId: string) {
 		handleError(error);
 	}
 	const result : ReservationWithPet = data;
-	console.log(result);
 	return result;
 }
 
@@ -163,23 +162,12 @@ export async function getScopeReservations(scope: number) {
   return formattedReservations;
 }
 
-// TODO: 예약 정보 추가해서 정리하기
 export async function addReservation(reservationInfo: ReservationInsert) {
   const supabase = await createServerSupabaseClient();
 
-  // Insert reservation data
   const { data: insertData, error: insertError } = await supabase
     .from("reservations")
-    .insert({
-      pet_id: reservationInfo.pet_id,
-      reservation_date: reservationInfo.reservation_date,
-      memo: reservationInfo.memo,
-      status: reservationInfo.status,
-      service_name: reservationInfo.service_name,
-      additional_services: reservationInfo.additional_services,
-      total_price: reservationInfo.total_price,
-      additional_price: reservationInfo.additional_price,
-    })
+    .insert(reservationInfo)
     .select()
     .single();
 
