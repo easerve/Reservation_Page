@@ -73,28 +73,12 @@ export async function getReservationsByPhone(
 
 export async function getReservationId(reservationId: string) {
   const supabase = await createServerSupabaseClient();
-  const { data: reservationData, error: reservationError } = await supabase
-    .from("reservations")
-    .select(`
-			uuid,
-			reservation_date,
-			memo,
-			status,
-			additional_services,
-			additional_price,
-			total_price,
-			service_name,
-			pets(
-				name,
-				birth,
-				weight,
-				memo,
-				neutering,
-				sex,
-				reg_number,
-				bite,
-				heart_disease,
-				underlying_disease,
+  const reservationWithPetQuery =  supabase
+	.from("reservations")
+	.select(`
+			*,
+			pets:pets(
+				*,
 				user(
 					name,
 					phone,
@@ -107,7 +91,7 @@ export async function getReservationId(reservationId: string) {
 					line_cut
 				)
 			)
-		`)
+	`)
     .eq("uuid", reservationId)
     .single();
 

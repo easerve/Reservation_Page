@@ -8,6 +8,7 @@ import {
 	deleteReservation,
 	getReservationsByPhone,
 } from "@/actions/reservations";
+import { add } from "date-fns";
 
 interface RequestBody {
 	ReservationInfo: {
@@ -87,26 +88,34 @@ export async function GET(request: NextRequest) {
 				return NextResponse.json({ error: "No reservation found" }, { status: 404 });
 			}
 			const result = {
-				id: reservation.uuid,
-				time: reservation.reservation_date,
-				breed: reservation.pets.breeds.name,
-				name: reservation.pets.name,
-				weight: reservation.pets.weight,
-				birth: reservation.pets.birth,
-				pet_memo: reservation.pets.memo,
-				neutering: reservation.pets.neutering,
-				sex: reservation.pets.sex,
-				reg_number: reservation.pets.reg_number,
-				bite: reservation.pets.bite,
-				heart_disease: reservation.pets.heart_disease,
-				underlying_disease: reservation.pets.underlying_disease,
-				phone: reservation.pets.user.phone,
-				service_name: reservation.service_name,
-				additional_services: reservation.additional_services,
-				additional_price: reservation.additional_price,
-				total_price: reservation.total_price,
-				status: reservation.status,
-				memo: reservation.memo,
+				reservation: {
+					id: reservation.uuid,
+					time: reservation.reservation_date,
+					service_name: reservation.service_name,
+					additional_service_name: reservation.additional_service_name,
+					service_id: reservation.service_id,
+					service_option_ids: reservation.service_option_ids,
+					inquiry: reservation.inquiry,
+					memo: reservation.memo,
+					status: reservation.status,
+					price: reservation.price,
+				},
+				pet: {
+					name: reservation.pets.name,
+					breed: reservation.pets.breeds.name,
+					weight: reservation.weight,
+					birth: reservation.pets.birth,
+					pet_memo: reservation.pets.memo,
+					neutering: reservation.pets.neutering,
+					sex: reservation.pets.sex,
+					reg_number: reservation.pets.reg_number,
+					bite: reservation.pets.bite,
+					heart_disease: reservation.pets.heart_disease,
+					underlying_disease: reservation.pets.underlying_disease,
+					disk: reservation.pets.disk,
+					phone: reservation.pets.user.phone,
+				}
+
 			}
 			return NextResponse.json({ status: 'success', data: result });
 		}
