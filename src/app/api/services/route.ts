@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
 
 		const result = services.map((service) => {
 			return {
-				id: service.services_names.id,
+				service_id: service.id,
+				service_name_id: service.services_names.id,
 				name: service.services_names.name,
 				price: service.price,
 			};

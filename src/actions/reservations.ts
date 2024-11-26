@@ -18,46 +18,31 @@ export async function getReservationsByPhone(
   limit: number = 10,
 ) {
   const supabase = await createServerSupabaseClient();
+
+  // 경고: !inner를 안하면 버그 발생함 user를 못 읽어옴
   const reservationWithPetQuery = supabase
     .from("reservations")
     .select(
       `
-			uuid,
-			reservation_date,
-			memo,
-			status,
-			additional_service_name,
-			price,
-			service_name,
-      pet_id,
-			pets: pets(
-				name,
-				birth,
-				weight,
-				memo,
-				neutering,
-				sex,
-				reg_number,
-				bite,
-				heart_disease,
-				underlying_disease,
-				user(
-					name,
-					phone,
-					address,
-					detail_address
-				),
-				breeds(
-					name,
-					type,
-					line_cut
+				*,
+				pets!inner(
+					*,
+					user!inner(
+						name,
+						phone,
+						address,
+						detail_address
+					),
+					breeds(
+						name,
+						type,
+						line_cut
+					)
 				)
-			)
-   `,
+		`,
     )
     .eq("pets.user.phone", phone)
     .limit(limit);
-
   type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
   const { data, error } = await reservationWithPetQuery;
   if (error) {
@@ -72,28 +57,13 @@ export async function getReservationsByPhone(
 
 export async function getReservationId(reservationId: string) {
   const supabase = await createServerSupabaseClient();
-  const { data: reservationData, error: reservationError } = await supabase
+  const reservationWithPetQuery = supabase
     .from("reservations")
     .select(
       `
-			uuid,
-			reservation_date,
-			memo,
-			status,
-			additional_service_name,
-			price,
-			service_name,
+			*,
 			pets(
-				name,
-				birth,
-				weight,
-				memo,
-				neutering,
-				sex,
-				reg_number,
-				bite,
-				heart_disease,
-				underlying_disease,
+				*,
 				user(
 					name,
 					phone,
@@ -106,7 +76,7 @@ export async function getReservationId(reservationId: string) {
 					line_cut
 				)
 			)
-		`,
+	`,
     )
     .eq("uuid", reservationId)
     .single();
@@ -194,22 +164,12 @@ export async function getScopeReservations(scope: number) {
   return formattedReservations;
 }
 
-// TODO: 예약 정보 추가해서 정리하기
 export async function addReservation(reservationInfo: ReservationInsert) {
   const supabase = await createServerSupabaseClient();
 
-  // Insert reservation data
   const { data: insertData, error: insertError } = await supabase
     .from("reservations")
-    .insert({
-      pet_id: reservationInfo.pet_id,
-      reservation_date: reservationInfo.reservation_date,
-      memo: reservationInfo.memo,
-      status: reservationInfo.status,
-      service_name: reservationInfo.service_name,
-      additional_service_name: reservationInfo.additional_service_name,
-      price: reservationInfo.price,
-    })
+    .insert(reservationInfo)
     .select()
     .single();
 
@@ -233,27 +193,14 @@ export async function getReservationsByDateRange(
     .from("reservations")
     .select(
       `
-		uuid,
-		reservation_date,
-		memo,
-		status,
-		additional_service_name,
-		price,
-		service_name,
+		*,
 		pets(
-			name,
-			birth,
-			weight,
-			memo,
-			neutering,
-			sex,
-			reg_number,
-			bite,
-			heart_disease,
-			underlying_disease,
+			*,
 			user(
 				name,
-				phone
+				phone,
+				address,
+				detail_address
 			),
 			breeds(
 				name,
