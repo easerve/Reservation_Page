@@ -1,45 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServiceOptionById } from "@/actions/services";
-import { ca } from 'date-fns/locale';
-
-
-type ServiceOption = {
-	service_options: {
-		name: string;
-		price: number;
-		service_option_category: {
-			id: number;
-			name: string;
-		}
-	}
-}
-
-type Option = {
-	name: string;
-	price: number;
-};
-
-function categorizeServiceOptions(serviceOptions: ServiceOption[]) {
-	const categorizedOptions: Record<string, Option[]> = {};
-
-	serviceOptions.forEach((option) => {
-		const category = option.service_options.service_option_category.name;
-		const optionData = {
-			name: option.service_options.name,
-			price: option.service_options.price,
-		}
-		if (!categorizedOptions[category]) {
-			categorizedOptions[category] = [];
-		}
-		categorizedOptions[category].push(optionData);
-	});
-
-	return categorizedOptions;
-}
 
 export async function GET(request: NextRequest) {
 	const { searchParams } = new URL(request.url);
-	const serviceId = searchParams.get("serviceId");
+	const serviceId = searchParams.get("serviceNameId");
 
 	if (!serviceId) {
 		return NextResponse.json(
@@ -52,9 +16,34 @@ export async function GET(request: NextRequest) {
 	if (!serviceOptions) {
 		return NextResponse.json({ error: "No service options found" }, { status: 404 });
 	}
-	const categorizedOptions = categorizeServiceOptions(serviceOptions);
+
+	const groupedMap = new Map();
+
+	serviceOptions.forEach((item) => {
+		const category = item.service_options.service_option_category;
+		const category_id = category.id;
+		const category_name = category.name;
+
+		if (!groupedMap.has(category_id)) {
+			groupedMap.set(category_id, {
+				category_id,
+				category_name,
+				options: [],
+			});
+		}
+
+		const group = groupedMap.get(category_id);
+		group.options.push({
+			option_id: item.service_options.id,
+			option_name: item.service_options.name,
+			option_price: item.service_options.price,
+		});
+	});
+
+	const groupedOptions = Array.from(groupedMap.values());
+
 	return NextResponse.json({
 		status: 'success',
-		data: categorizedOptions,
+		data: groupedOptions,
 	});
 }
