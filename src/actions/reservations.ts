@@ -114,7 +114,7 @@ export async function getReservationId(reservationId: string) {
 
 export async function deleteReservation(reservationId: string) {
 	const supabase = await createServerSupabaseClient();
-	const {data: deleteData, error: reservationError} = await supabase
+	const { error: reservationError} = await supabase
 		.from('reservations')
 		.delete()
 		.eq('uuid', reservationId);

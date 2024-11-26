@@ -2,15 +2,6 @@
 import { QueryData } from '@supabase/supabase-js';
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 
-type MainService = {
-	id: number;
-	price: number;
-	service_name_id: {
-		id: number;
-		name: string;
-	};
-}
-
 function handleError(error: Error) {
 	console.log('Error in /services:', error);
 	throw new Error('Internal server error');
@@ -19,6 +10,9 @@ function handleError(error: Error) {
 export async function getServicesByWeightAndType(weightRageId: number, typeId: number) {
 	const supabase = await createServerSupabaseClient();
 
+	// 대형견 로직은 프론트에서 처리함
+	if (typeId == 4)
+		typeId = 3;
 	const targetService = supabase
 		.from("services")
 		.select(`
