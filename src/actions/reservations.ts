@@ -8,14 +8,15 @@ import { QueryData } from '@supabase/supabase-js';
 type ReservationUpdate = TablesUpdate<'reservations'>;
 type ReservationInsert = TablesInsert<'reservations'>;
 
+
 function handleError(error: PostgrestError) {
-  console.error('Error in /reservations:', error);
-  throw new Error('Internal server error', error);
+  console.error("Error in /reservations:", error);
+  throw new Error("Internal server error", error);
 }
 
 export async function getReservationsByPhone(
-	phone: string,
-	limit: number = 10
+  phone: string,
+  limit: number = 10,
 ) {
 	const supabase = await createServerSupabaseClient();
 	const reservationWithPetQuery = supabase
@@ -29,7 +30,8 @@ export async function getReservationsByPhone(
 			additional_price,
 			total_price,
 			service_name,
-			pets(
+      pet_id,
+			pets: pets(
 				name,
 				birth,
 				weight,
@@ -52,10 +54,9 @@ export async function getReservationsByPhone(
 					line_cut
 				)
 			)
-		`)
-		.eq('pets.user.phone', phone)
-		.limit(limit);
-
+   `)
+    .eq("pets.user.phone", phone)
+    .limit(limit);
 
 	type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
 	const { data, error } = await reservationWithPetQuery;
@@ -69,11 +70,12 @@ export async function getReservationsByPhone(
 	return result;
 }
 
+
 export async function getReservationId(reservationId: string) {
-	const supabase = await createServerSupabaseClient();
-	const reservationWithPetQuery = supabase
-		.from('reservations')
-		.select(`
+  const supabase = await createServerSupabaseClient();
+  const { data: reservationData, error: reservationError } = await supabase
+    .from("reservations")
+    .select(`
 			uuid,
 			reservation_date,
 			memo,
@@ -106,8 +108,8 @@ export async function getReservationId(reservationId: string) {
 				)
 			)
 		`)
-		.eq('uuid', reservationId)
-		.single();
+    .eq("uuid", reservationId)
+    .single();
 
 	type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
 	const { data, error } = await reservationWithPetQuery;
@@ -122,76 +124,78 @@ export async function getReservationId(reservationId: string) {
 }
 
 export async function deleteReservation(reservationId: string) {
-	const supabase = await createServerSupabaseClient();
-	const { error: reservationError} = await supabase
-		.from('reservations')
-		.delete()
-		.eq('uuid', reservationId);
+  const supabase = await createServerSupabaseClient();
+  const { error: reservationError } = await supabase
+    .from("reservations")
+    .delete()
+    .eq("uuid", reservationId);
 
-	if (reservationError) {
-		if (reservationError.code === 'PGRST116') {
-			throw new Error('Reservation not found');
-		}
-		handleError(reservationError);
-	}
+  if (reservationError) {
+    if (reservationError.code === "PGRST116") {
+      throw new Error("Reservation not found");
+    }
+    handleError(reservationError);
+  }
 }
 
 export async function updateReservation(
-	reservationId: string,
-	reservationInfo: ReservationUpdate
+  reservationId: string,
+  reservationInfo: ReservationUpdate,
 ) {
-	const supabase = await createServerSupabaseClient();
-	const { error: reservationError} = await supabase
-		.from('reservations')
-		.update(reservationInfo)
-		.eq('uuid', reservationId);
+  const supabase = await createServerSupabaseClient();
+  const { error: reservationError } = await supabase
+    .from("reservations")
+    .update(reservationInfo)
+    .eq("uuid", reservationId);
 
-	if (reservationError) {
-		if (reservationError.code === 'PGRST116') {
-			throw new Error('Reservation not found');
-		}
-		handleError(reservationError);
-	}
+  if (reservationError) {
+    if (reservationError.code === "PGRST116") {
+      throw new Error("Reservation not found");
+    }
+    handleError(reservationError);
+  }
 }
 
 export async function getScopeReservations(scope: number) {
-	const supabase = await createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
-	const today = new Date();
-	const endDate = new Date();
-	endDate.setMonth(today.getMonth() + scope);
+  const today = new Date();
+  const endDate = new Date();
+  endDate.setMonth(today.getMonth() + scope);
 
-	const { data: reservationsData, error: reservationsError } = await supabase
-		.from('reservations')
-		.select('*')
-		.gte('reservation_date', today.toISOString())
-		.lte('reservation_date', endDate.toISOString());
+  const { data: reservationsData, error: reservationsError } = await supabase
+    .from("reservations")
+    .select("*")
+    .gte("reservation_date", today.toISOString())
+    .lte("reservation_date", endDate.toISOString());
 
-	if (reservationsError) {
-		handleError(reservationsError);
-	}
+  if (reservationsError) {
+    handleError(reservationsError);
+  }
 
-	const reservationsMap: { [key: string]: string[] } = {};
+  const reservationsMap: { [key: string]: string[] } = {};
 
-	reservationsData?.forEach((reservation) => {
-		const [date, time] = reservation.reservation_date!.split('T');
-		const formattedTime = time.slice(0, 5);
+  reservationsData?.forEach((reservation) => {
+    const [date, time] = reservation.reservation_date!.split("T");
+    const formattedTime = time.slice(0, 5);
 
-		if (!reservationsMap[date]) {
-			reservationsMap[date] = [];
-		}
-		reservationsMap[date].push(formattedTime);
-	});
+    if (!reservationsMap[date]) {
+      reservationsMap[date] = [];
+    }
+    reservationsMap[date].push(formattedTime);
+  });
 
-	const formattedReservations = Object.entries(reservationsMap).map(([date, times]) => ({
-		date,
-		times,
-	}));
-	return formattedReservations;
+  const formattedReservations = Object.entries(reservationsMap).map(
+    ([date, times]) => ({
+      date,
+      times,
+    }),
+  );
+  return formattedReservations;
 }
 
 // TODO: 예약 정보 추가해서 정리하기
-export async function addReservation(reservationInfo : ReservationInsert) {
+export async function addReservation(reservationInfo: ReservationInsert) {
   const supabase = await createServerSupabaseClient();
 
   // Insert reservation data

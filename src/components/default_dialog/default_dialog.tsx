@@ -12,7 +12,7 @@ import { IDefaultDialog } from "@/types/interface";
 export default function DefaultDialog(props: IDefaultDialog) {
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto scrollbar-hide">
+      <DialogContent className="sm:max-w-md h-[80vh] overflow-y-auto scrollbar-hide">
         <DialogHeader>
           <DialogTitle>{props.title}</DialogTitle>
         </DialogHeader>

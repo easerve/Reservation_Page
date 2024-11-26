@@ -80,7 +80,7 @@ export async function getDogsByUserPhone(phone: string) {
 			  type,
         line_cut
 			)
-		`
+		`,
     )
     .eq("user_id", userData.uuid);
 

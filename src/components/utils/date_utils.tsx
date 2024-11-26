@@ -1,4 +1,3 @@
-
 export function getTimeString2(date: Date) {
   let hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, "0");
@@ -12,7 +11,6 @@ export function getTimeString2(date: Date) {
 
   const timeString = `${period} ${formattedHours}:${minutes}`;
 
-  console.log(timeString);
   return timeString;
 }
 

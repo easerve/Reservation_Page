@@ -9,3 +9,7 @@ export function getFirstDayOfNextMonth(year, month) {
 export function getTrimmedStr(str, length) {
   return str.length <= length ? str : `${str.slice(0, length)}...`;
 }
+
+export function getFullAddress(user) {
+  return `${user.address ?? "주소가 없습니다."} ${user.detail_address ?? ""}`;
+}
