@@ -1,7 +1,6 @@
 import {
   BookingData,
   MainService,
-  AdditionalService,
   Dog,
 } from "../types/booking";
 
@@ -24,7 +23,6 @@ export const INITIAL_BOOKING_STATE: BookingData = {
   } as Dog,
   phoneNumber: "" as string,
   mainService: undefined as MainService | undefined,
-  additionalServices: [] as AdditionalService[],
   inquiry: "",
   price: [0, 0] as number[],
 };

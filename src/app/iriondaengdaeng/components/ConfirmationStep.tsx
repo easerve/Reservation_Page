@@ -41,9 +41,6 @@ export default function ConfirmationStep({
                 .flat()
                 .join(", ") +
               ")",
-            additional_services: bookingData.additionalServices
-              .map((service) => service.service_name)
-              .join(", "),
             total_price: bookingData.price[0],
             additional_price: bookingData.price[1] - bookingData.price[0],
           },
@@ -78,14 +75,9 @@ export default function ConfirmationStep({
     if (bookingData.mainService) {
       names.push(bookingData.mainService.name);
       names.push(
-        ...bookingData.mainService.options.map((option) => option.name)
+        ...bookingData.mainService.options.map((option) => option.name),
       );
     }
-
-    if (bookingData.additionalServices.length > 0)
-      names.push(
-        ...bookingData.additionalServices.map((service) => service.service_name)
-      );
 
     return names.join(", ");
   };
