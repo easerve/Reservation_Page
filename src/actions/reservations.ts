@@ -1,12 +1,13 @@
 "use server";
 
-import { TablesUpdate, TablesInsert } from "@/types/definitions";
-import { createServerSupabaseClient } from "@/utils/supabase/server";
-import { PostgrestError } from "@supabase/supabase-js";
-import { QueryData } from "@supabase/supabase-js";
+import { TablesUpdate, TablesInsert } from '@/types/definitions';
+import { createServerSupabaseClient } from '@/utils/supabase/server';
+import { PostgrestError } from '@supabase/supabase-js';
+import { QueryData } from '@supabase/supabase-js';
 
-type ReservationUpdate = TablesUpdate<"reservations">;
-type ReservationInsert = TablesInsert<"reservations">;
+type ReservationUpdate = TablesUpdate<'reservations'>;
+type ReservationInsert = TablesInsert<'reservations'>;
+
 
 function handleError(error: PostgrestError) {
   console.error("Error in /reservations:", error);
@@ -17,11 +18,10 @@ export async function getReservationsByPhone(
   phone: string,
   limit: number = 10,
 ) {
-  const supabase = await createServerSupabaseClient();
-  const reservationData = supabase
-    .from("reservations")
-    .select(
-      `
+	const supabase = await createServerSupabaseClient();
+	const reservationWithPetQuery = supabase
+		.from('reservations')
+		.select(`
 			uuid,
 			reservation_date,
 			memo,
@@ -44,35 +44,38 @@ export async function getReservationsByPhone(
 				underlying_disease,
 				user(
 					name,
-					phone
+					phone,
+					address,
+					detail_address
 				),
 				breeds(
-					name
+					name,
+					type,
+					line_cut
 				)
 			)
-		`,
-    )
+   `)
     .eq("pets.user.phone", phone)
     .limit(limit);
 
-  type ReservationData = QueryData<typeof reservationData>;
-  const { data, error } = await reservationData;
-  if (error) {
-    if (error.code === "PGRST116") {
-      throw new Error("Reservation not found");
-    }
-    handleError(error);
-  }
-  const result: ReservationData = data;
-  return result;
+	type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
+	const { data, error } = await reservationWithPetQuery;
+	if (error) {
+		if (error.code === 'PGRST116') {
+			throw new Error('Reservation not found');
+		}
+		handleError(error);
+	}
+	const result : ReservationWithPet = data;
+	return result;
 }
+
 
 export async function getReservationId(reservationId: string) {
   const supabase = await createServerSupabaseClient();
   const { data: reservationData, error: reservationError } = await supabase
     .from("reservations")
-    .select(
-      `
+    .select(`
 			uuid,
 			reservation_date,
 			memo,
@@ -95,26 +98,29 @@ export async function getReservationId(reservationId: string) {
 				user(
 					name,
 					phone,
-          address,
-          detail_address
+					address,
+					detail_address
 				),
 				breeds(
-					name
+					name,
+					type,
+					line_cut
 				)
 			)
-		`,
-    )
+		`)
     .eq("uuid", reservationId)
     .single();
 
-  if (reservationError) {
-    if (reservationError.code === "PGRST116") {
-      throw new Error("Reservation not found");
-    }
-    handleError(reservationError);
-  }
-
-  return reservationData;
+	type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
+	const { data, error } = await reservationWithPetQuery;
+	if (error) {
+		if (error.code === 'PGRST116') {
+			throw new Error('Reservation not found');
+		}
+		handleError(error);
+	}
+	const result : ReservationWithPet = data;
+	return result;
 }
 
 export async function deleteReservation(reservationId: string) {
@@ -220,14 +226,13 @@ export async function addReservation(reservationInfo: ReservationInsert) {
 
 export async function getReservationsByDateRange(
   start_date: string,
-  end_date: string,
+  end_date: string
 ) {
   const supabase = await createServerSupabaseClient();
 
   const { data: reservationData, error: reservationError } = await supabase
     .from("reservations")
-    .select(
-      `
+    .select(`
 		uuid,
 		reservation_date,
 		memo,
@@ -236,8 +241,7 @@ export async function getReservationsByDateRange(
 		additional_price,
 		total_price,
 		service_name,
-    pet_id,
-		pets: pets(
+		pets(
 			name,
 			birth,
 			weight,
@@ -250,22 +254,21 @@ export async function getReservationsByDateRange(
 			underlying_disease,
 			user(
 				name,
-				phone,
-        address,
-        detail_address
+				phone
 			),
 			breeds(
-				name
+				name,
+				type,
+				line_cut
 			)
 		)
-	`,
-    )
-    .gte("reservation_date", start_date)
-    .lte("reservation_date", end_date);
+	`)
+	.gte("reservation_date", start_date)
+	.lte("reservation_date", end_date);
 
-  if (reservationError) {
-    handleError(reservationError);
-  }
+	if (reservationError) {
+		handleError(reservationError);
+	}
 
-  return reservationData;
+	return reservationData;
 }

@@ -1,13 +1,7 @@
 "use server";
-
-import { Database } from "@/types/definitions";
 import { createServerSupabaseClient } from "@/utils/supabase/server";
 
-export type UserRow = Database["public"]["Tables"]["user"]["Row"];
-export type PetRow = Database["public"]["Tables"]["pets"]["Row"];
-export type BreedRow = Database["public"]["Tables"]["breeds"]["Row"];
-
-function handleError(error: any) {
+function handleError(error) {
   console.error(error);
   throw new Error(error.message);
 }
@@ -23,7 +17,7 @@ export async function updateUser(request: Request) {
     }
 
     const supabase = await createServerSupabaseClient();
-    const { data: userData, error: userError } = await supabase
+    const { error: userError } = await supabase
       .from("user")
       .update({
         name,
@@ -48,7 +42,7 @@ export async function updateUser(request: Request) {
   }
 }
 
-export async function getDogsByUserPhone(phone: String) {
+export async function getDogsByUserPhone(phone: string) {
   const supabase = await createServerSupabaseClient();
 
   // Fetch user data
@@ -83,7 +77,8 @@ export async function getDogsByUserPhone(phone: String) {
 			*,
 			breeds (
 			  name,
-			  type
+			  type,
+        line_cut
 			)
 		`,
     )
@@ -96,8 +91,8 @@ export async function getDogsByUserPhone(phone: String) {
   const dogs = petsData?.map((pet) => ({
     id: pet.uuid,
     petName: pet.name,
-    breed: pet.breeds?.name,
-    type: pet.breeds?.type,
+    breed: pet.breeds.name,
+    type: pet.breeds.type,
     birth: pet.birth,
     weight: pet.weight,
     neutering: pet.neutering,
@@ -106,6 +101,7 @@ export async function getDogsByUserPhone(phone: String) {
     bite: pet.bite,
     heart_disease: pet.heart_disease,
     underlying_disease: pet.underlying_disease,
+    line_cut: pet.breeds.line_cut,
   }));
 
   return {
