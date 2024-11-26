@@ -30,7 +30,8 @@ export async function getReservationsByPhone(
 			additional_price,
 			total_price,
 			service_name,
-			pets(
+      pet_id,
+			pets: pets(
 				name,
 				birth,
 				weight,
@@ -235,7 +236,8 @@ export async function getReservationsByDateRange(
 		additional_price,
 		total_price,
 		service_name,
-		pets(
+    pet_id,
+		pets: pets(
 			name,
 			birth,
 			weight,
@@ -248,7 +250,9 @@ export async function getReservationsByDateRange(
 			underlying_disease,
 			user(
 				name,
-				phone
+				phone,
+        address,
+        detail_address
 			),
 			breeds(
 				name

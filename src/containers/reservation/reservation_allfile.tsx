@@ -26,7 +26,6 @@ import OuterReservationForm, {
 } from "@/containers/reservation/components/outer_reservation_form";
 import App from "next/app";
 
-import { Reservation } from "@/types/interface";
 import { getDate2 } from "@/components/utils/date_utils";
 import { getDate, set } from "date-fns";
 import CalendarBar from "./components/calendar_bar";
@@ -34,13 +33,13 @@ import {
   getReservationsByPhoneNumber,
   getReservationsOfOneMonth,
 } from "@/services/admin/get";
-import { ReservationUpdate } from "@/actions/reservations";
 import { PetInfo } from "@/actions/pets";
+import { ReservationInfo } from "@/types/api";
 
 export default function ReservationPage() {
   const [view, setView] = useState("list");
   const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservations, setReservations] = useState<ReservationInfo[]>([]);
   const [currentMonth, setCurrentMonth] = useState<{
     year: number;
     month: number;
@@ -103,12 +102,13 @@ export default function ReservationPage() {
           currentMonth.year,
           currentMonth.month,
         );
+        console.log(reservations);
         setReservations(reservations);
       }
     })();
   }, [currentMonth, phoneNumber]);
 
-  function updateReservation(id: string, data: Partial<Reservation>) {
+  function updateReservation(id: string, data: Partial<ReservationInfo>) {
     const newReservations = reservations.map((reservation) => {
       return reservation.id === id ? { ...reservation, ...data } : reservation;
     });
