@@ -16,6 +16,7 @@ export default function DateTimeSelectionStep({
   setCurrentStep,
   setBookingData,
 }: DateTimeSelectionStepProps) {
+  const [isLoading, setIsLoading] = useState(true);
   const [bookedDates, setBookedDates] = useState<
     {
       date: string;
@@ -24,11 +25,14 @@ export default function DateTimeSelectionStep({
   >([]);
   async function fetchBookedDate() {
     try {
+      setIsLoading(true);
       const res = await fetch("/api/reservations?scope=6");
       const data = await res.json();
       setBookedDates(data.data);
     } catch (error) {
       console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -39,7 +43,8 @@ export default function DateTimeSelectionStep({
   const getBookedTimesForDate = (date: Date | undefined): string[] => {
     if (!bookedDates.length || !date) return [];
     const booking = bookedDates.find(
-      (booking) => new Date(booking.date).toDateString() === date.toDateString()
+      (booking) =>
+        new Date(booking.date).toDateString() === date.toDateString(),
     );
     return booking ? booking.times : [];
   };
@@ -48,7 +53,7 @@ export default function DateTimeSelectionStep({
     if (bookedDates.length === 0) return [];
     return bookedDates
       .filter(
-        (booking) => (booking.times ?? []).length >= ALL_TIME_SLOTS.length
+        (booking) => (booking.times ?? []).length >= ALL_TIME_SLOTS.length,
       )
       .map((booking) => new Date(booking.date));
   }, [bookedDates]);
@@ -91,19 +96,23 @@ export default function DateTimeSelectionStep({
               const today = new Date();
               today.setHours(0, 0, 0, 0);
               const fiveMonthsFromNow = new Date(
-                new Date().setMonth(new Date().getMonth() + 6)
+                new Date().setMonth(new Date().getMonth() + 6),
               );
               return (
                 date < today ||
                 date > fiveMonthsFromNow ||
                 fullyBookedDates.some(
                   (bookedDate) =>
-                    bookedDate.toDateString() === date.toDateString()
+                    bookedDate.toDateString() === date.toDateString(),
                 )
               );
             }}
           />
-          {bookingData.dateTime.date && (
+          {isLoading ? (
+            <div className="flex justify-center mt-4">
+              <div className="loader animate-spin rounded-full border-4 border-t-transparent border-gray-500 w-8 h-8"></div>
+            </div>
+          ) : (
             <div className="grid grid-cols-3 gap-2 mt-4">
               {ALL_TIME_SLOTS.map((time) => {
                 const now = new Date();
@@ -115,7 +124,7 @@ export default function DateTimeSelectionStep({
                 const isDisabled =
                   selectedDateTime < now ||
                   getBookedTimesForDate(bookingData.dateTime.date).includes(
-                    time
+                    time,
                   );
 
                 return (

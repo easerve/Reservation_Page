@@ -130,7 +130,9 @@ export default function ServiceSelectionStep({
 
   async function fetchOptions(service_name_id: number) {
     if (optionsCache[service_name_id]) return optionsCache[service_name_id];
-    const response = await fetch(`api/services/option?serviceNameId=${service_name_id}`);
+    const response = await fetch(
+      `api/services/option?serviceNameId=${service_name_id}`,
+    );
     if (!response.ok) throw new Error("Failed to fetch options");
     const data = await response.json();
     console.log(data);
@@ -215,14 +217,17 @@ export default function ServiceSelectionStep({
         </CardHeader>
         <CardContent className="space-y-2">
           {isLoadingPrices ? (
-            <div>가격 정보를 불러오는 중...</div>
+            <div className="flex justify-center">
+              <div className="loader animate-spin rounded-full border-4 border-t-transparent border-gray-500 w-8 h-8"></div>
+            </div>
           ) : (
             servicesPricing.map((service) => (
               <div key={service.service_name_id} className="space-y-2">
                 <Button
                   variant="outline"
                   className={`w-full justify-between h-auto py-4 ${
-                    bookingData.mainService?.service_name_id === service.service_name_id
+                    bookingData.mainService?.service_name_id ===
+                    service.service_name_id
                       ? "border-primary bg-primary/10"
                       : ""
                   }`}
