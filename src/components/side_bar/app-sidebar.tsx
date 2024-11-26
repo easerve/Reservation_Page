@@ -41,10 +41,10 @@ export function AppSidebar({ open, onOpenChange }: IAppSidebar) {
       variant="sidebar"
       collapsible="icon"
     >
-      <SidebarHeader className="h-16">
+      <SidebarHeader>
         <Link
           href="/admin"
-          className="flex items-center justify-start gap-2 overflow-hidden"
+          className="flex h-16 items-center justify-start gap-2 overflow-hidden"
         >
           <Image
             src="/logo.jpeg"

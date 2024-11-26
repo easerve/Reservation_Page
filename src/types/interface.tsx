@@ -18,8 +18,8 @@ export interface Reservation {
   additional_price: number; // 추가 가격
   price: number; // 기본 가격
   status: string;
-  consent_form: boolean; // 동의서
   memo: string; // 특이사항 Ex. "털엉킴, 사나움"
+  address: string; // 주소
 }
 
 export interface AdminReservationInfo {
@@ -38,6 +38,8 @@ export interface AdminReservationInfo {
     user_id: {
       name: string;
       phone: string;
+      address: string;
+      detail_address: string;
     };
     breed_id: {
       name: string;

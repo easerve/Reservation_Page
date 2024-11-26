@@ -35,6 +35,7 @@ import {
   getReservationsOfOneMonth,
 } from "@/services/admin/get";
 import { ReservationUpdate } from "@/actions/reservations";
+import { PetInfo } from "@/actions/pets";
 
 export default function ReservationPage() {
   const [view, setView] = useState("list");
@@ -60,22 +61,38 @@ export default function ReservationPage() {
   const monthlyRevenue = useRef<string>("0");
 
   const handleAddEvent = (data: z.infer<typeof outerFormSchema>) => {
-    const newData = {
-      ...data,
-      id: `Uuid-${reservations.length + 1}`,
-      status: "예약 대기",
-      time: new Date(data.time),
-      birth: getDate2(data.birth),
+    const petData = {
+      petName: data.name,
+      weight: data.weight,
+      birth: "", // null
+      phoneNumber: data.phone,
+      breed: 0, // idontknow
+      neutering: false, // null
+      sex: null,
+      regNumber: null,
+      bite: null,
+      heart_disease: null,
+      underlying_disease: null,
+    } as PetInfo;
+
+    // if 이미 등록된 강아지라서 pet_id가 있을 때
+    const reservationData = {
+      // pet_id: data.pet_id,
+      reservation_date: data.time,
+      memo: data.memo,
+      status: "예약확정",
       service_name: data.service_name,
-      price: 0,
-    } as Reservation;
-    // console.log("submit done: ", newData);
-    setReservations([...reservations, newData]);
-    handleCloseDialog();
+      additional_services: data.additional_services,
+      total_price: 0,
+      additional_price: data.additional_price,
+    };
+    // setReservations([...reservations, newData]);
+    // handleCloseDialog();
   };
 
   const handleCloseDialog = () => {
     // console.log("close dialog");
+    return;
     setIsDialogOpen(false);
   };
 
@@ -84,7 +101,7 @@ export default function ReservationPage() {
       if (phoneNumber === "") {
         const reservations = await getReservationsOfOneMonth(
           currentMonth.year,
-          currentMonth.month
+          currentMonth.month,
         );
         setReservations(reservations);
       }
@@ -100,7 +117,7 @@ export default function ReservationPage() {
 
   function deleteReservation(id: string) {
     const newReservations = reservations.filter(
-      (reservation) => reservation.id !== id
+      (reservation) => reservation.id !== id,
     );
     setReservations(newReservations);
   }
@@ -120,7 +137,7 @@ export default function ReservationPage() {
       (acc, cur) =>
         acc +
         (cur.status === "미용완료" ? cur.price + cur.additional_price : 0),
-      0
+      0,
     )
     .toLocaleString();
   return (
@@ -193,7 +210,7 @@ export default function ReservationPage() {
                 deleteReservation={deleteReservation}
               />
               <div className="bg-primary/50 flex justify-between p-8 text-primary-foreground">
-                <span className="font-bold text-xl">월 매출</span>
+                <span className="font-bold text-xl">매출</span>
                 <span className="font-extrabold text-xl">
                   {monthlyRevenue.current} 원
                 </span>
