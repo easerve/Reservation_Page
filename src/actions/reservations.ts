@@ -19,7 +19,7 @@ export async function getReservationsByPhone(
 	limit: number = 10
 ) {
 	const supabase = await createServerSupabaseClient();
-	const reservationData = supabase
+	const reservationWithPetQuery = supabase
 		.from('reservations')
 		.select(`
 			uuid,
@@ -54,21 +54,21 @@ export async function getReservationsByPhone(
 		.limit(limit);
 
 
-	type ReservationData = QueryData<typeof reservationData>;
-	const { data, error } = await reservationData;
+	type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
+	const { data, error } = await reservationWithPetQuery;
 	if (error) {
 		if (error.code === 'PGRST116') {
 			throw new Error('Reservation not found');
 		}
 		handleError(error);
 	}
-	const result : ReservationData = data;
+	const result : ReservationWithPet = data;
 	return result;
 }
 
 export async function getReservationId(reservationId: string) {
 	const supabase = await createServerSupabaseClient();
-	const {data: reservationData, error: reservationError} = await supabase
+	const reservationWithPetQuery = supabase
 		.from('reservations')
 		.select(`
 			uuid,
@@ -102,14 +102,16 @@ export async function getReservationId(reservationId: string) {
 		.eq('uuid', reservationId)
 		.single();
 
-	if (reservationError) {
-		if (reservationError.code === 'PGRST116') {
+	type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
+	const { data, error } = await reservationWithPetQuery;
+	if (error) {
+		if (error.code === 'PGRST116') {
 			throw new Error('Reservation not found');
 		}
-		handleError(reservationError);
+		handleError(error);
 	}
-
-	return reservationData;
+	const result : ReservationWithPet = data;
+	return result;
 }
 
 export async function deleteReservation(reservationId: string) {
