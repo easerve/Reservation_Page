@@ -2,12 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useMemo } from "react";
 import { BIG_DOG_SERVICE_PRICES } from "@/constants/booking";
-import {
-  Option,
-  BookingData,
-  MainService,
-  AdditionalService,
-} from "@/types/booking";
+import { Option, BookingData, MainService } from "@/types/booking";
 import {
   Dialog,
   DialogContent,
@@ -48,7 +43,7 @@ export default function ServiceSelectionStep({
         breeds.find((breed) => breed.name === bookingData.dog.breed)?.type ?? 1;
 
       const response = await fetch(
-        `/api/services?weightRangeId=${weightRangeId}&typeId=${typeId}`
+        `/api/services?weightRangeId=${weightRangeId}&typeId=${typeId}`,
       );
 
       if (!response.ok) throw new Error("Failed to fetch prices");
@@ -67,10 +62,10 @@ export default function ServiceSelectionStep({
       // NOTE: 대형견 가격으로 갱신
       const bigDogServicePrices = typeId === 4 ? BIG_DOG_SERVICE_PRICES : [];
 
-      data.data.mainServices.forEach((service: MainService) => {
+      data.data.forEach((service: MainService) => {
         if (typeId === 4) {
           const bigDogService = bigDogServicePrices.find(
-            (bigDogService) => bigDogService.id === service.id
+            (bigDogService) => bigDogService.id === service.id,
           );
           if (bigDogService) {
             service.price = bigDogService.price_per_kg * bookingData.dog.weight;
@@ -78,25 +73,24 @@ export default function ServiceSelectionStep({
         } else {
           service.price += addPrice;
         }
-        service.options.forEach((option: Option) => {
-          const category = option.category;
-          const existingCategory = newOptionCategories.find(
-            (opt) => opt.category === category
-          );
+        // service.options.forEach((option: Option) => {
+        //   const category = option.category;
+        //   const existingCategory = newOptionCategories.find(
+        //     (opt) => opt.category === category,
+        //   );
 
-          if (existingCategory) {
-            if (!existingCategory.options.some((opt) => opt.id === option.id)) {
-              existingCategory.options.push(option);
-            }
-          } else {
-            newOptionCategories.push({ category, options: [option] });
-          }
-        });
+        //   if (existingCategory) {
+        //     if (!existingCategory.options.some((opt) => opt.id === option.id)) {
+        //       existingCategory.options.push(option);
+        //     }
+        //   } else {
+        //     newOptionCategories.push({ category, options: [option] });
+        //   }
+        // });
       });
 
       setOptionCategories(newOptionCategories);
-      setServicesPricing(data.data.mainServices);
-      setAdditionalServicesPricing(data.data.additional_services);
+      setServicesPricing(data.data);
     } catch (error) {
       console.error("Error fetching service prices:", error);
     } finally {
@@ -119,10 +113,6 @@ export default function ServiceSelectionStep({
     }[]
   >([]);
 
-  const [additionalServicesPricing, setAdditionalServicesPricing] = useState<
-    AdditionalService[]
-  >([]);
-
   const updatePrice = (newPrice: number[]) => {
     setBookingData((prev) => ({
       ...prev,
@@ -131,10 +121,7 @@ export default function ServiceSelectionStep({
   };
 
   const price = useMemo(() => {
-    if (
-      !bookingData.mainService &&
-      bookingData.additionalServices.length === 0
-    ) {
+    if (!bookingData.mainService) {
       return [0, 0];
     }
     let totalPrice = 0;
@@ -146,16 +133,10 @@ export default function ServiceSelectionStep({
       });
     }
 
-    let totalPriceMax = totalPrice;
-
-    bookingData.additionalServices.forEach((service) => {
-      totalPrice += service.price_min;
-      totalPriceMax +=
-        service.price_max === 0 ? service.price_min : service.price_max;
-    });
+    const totalPriceMax = totalPrice;
 
     return [totalPrice, totalPriceMax];
-  }, [bookingData.mainService, bookingData.additionalServices]);
+  }, [bookingData.mainService, bookingData]);
 
   const handleMainServiceSelect = (service: MainService) => {
     if (bookingData.mainService?.id !== service.id) {
@@ -174,13 +155,13 @@ export default function ServiceSelectionStep({
     setTempOptions((prev) => {
       const isSelected = prev.some((opt) => opt.id === option.id);
       const isSameCategory = prev.some(
-        (opt) => opt.category === option.category
+        (opt) => opt.category === option.category,
       );
       if (isSelected) {
         return prev.filter((opt) => opt.id !== option.id);
       } else if (isSameCategory) {
         return prev.map((opt) =>
-          opt.category === option.category ? option : opt
+          opt.category === option.category ? option : opt,
         );
       } else {
         return [...prev, option];
@@ -208,18 +189,6 @@ export default function ServiceSelectionStep({
       mainService: undefined,
     }));
     setIsModalOpen(false);
-  };
-
-  const handleAdditionalServiceToggle = (service: AdditionalService) => {
-    setBookingData((prev) => {
-      const isSelected = prev.additionalServices.some(
-        (s) => s.id === service.id
-      );
-      const newAdditionalServices = isSelected
-        ? prev.additionalServices.filter((s) => s.id !== service.id)
-        : [...prev.additionalServices, service];
-      return { ...prev, additionalServices: newAdditionalServices };
-    });
   };
 
   return (
@@ -299,34 +268,6 @@ export default function ServiceSelectionStep({
             </DialogContent>
           </Dialog>
         )}
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>추가 서비스</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {additionalServicesPricing.map((service) => (
-            <Button
-              key={service.id}
-              variant="outline"
-              className={`w-full justify-between h-auto py-4 ${
-                bookingData.additionalServices.some((s) => s.id === service.id)
-                  ? "border-primary bg-primary/10"
-                  : ""
-              }`}
-              onClick={() => handleAdditionalServiceToggle(service)}
-            >
-              <span>{service.service_name}</span>
-              <span className="text-sm text-muted-foreground">
-                +
-                {service.price_max
-                  ? `${service.price_min.toLocaleString()}~${service.price_max.toLocaleString()}원`
-                  : `${service.price_min.toLocaleString()}원`}
-              </span>
-            </Button>
-          ))}
-        </CardContent>
       </Card>
 
       <Card>

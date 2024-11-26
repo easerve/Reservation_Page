@@ -3,7 +3,6 @@ export interface BookingData {
   dog: Dog;
   dateTime: BookingDateTime;
   mainService?: MainService;
-  additionalServices: AdditionalService[];
   inquiry: string;
   price: number[];
 }
@@ -25,13 +24,6 @@ export interface MainService {
   name: string;
   price: number;
   options: Option[];
-}
-
-export interface AdditionalService {
-  id: number;
-  service_name: string;
-  price_min: number;
-  price_max: number;
 }
 
 export interface Dog {
