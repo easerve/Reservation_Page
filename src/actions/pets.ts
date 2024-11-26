@@ -5,6 +5,7 @@ import { createServerSupabaseClient } from '@/utils/supabase/server';
 import { QueryData } from '@supabase/supabase-js';
 
 type PetInsert = TablesInsert<'pets'>;
+
 interface PetInfo {
 	petName: string;
 	weight: number;
@@ -32,7 +33,8 @@ export async function getPetId(petId: string) {
 			*,
 			breeds(
 				name,
-				type(type)
+				type,
+				line_cut
 			),
 			user(
 				uuid,

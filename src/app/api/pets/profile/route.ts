@@ -1,18 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { addPet, getPetId, PetInfo, PetIdData } from "@/actions/pets";
-import { Database } from "@/types/definitions";
-
-type PetRow = Database["public"]["Tables"]["pets"]["Row"];
-
-
-interface RequestBody {
-  PetInfo: PetInfo;
-}
-
-interface addPetResponse {
-  status: string;
-  petInfo: PetRow;
-}
+import { addPet, getPetId } from "@/actions/pets";
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,13 +8,22 @@ export async function GET(request: NextRequest) {
     if (!petId) {
       return NextResponse.json({ error: "Pet ID is required" }, { status: 400 });
     }
-    const petData: PetIdData = await getPetId(petId);
+    const petData = await getPetId(petId);
     const result = {
       petId: petData.uuid,
       petName: petData.name,
+      birth: petData.birth,
       weight: petData.weight,
+      memo: petData.memo,
       breed_name: petData.breeds.name,
       breed_type: petData.breeds.type,
+      line_cut: petData.breeds.line_cut,
+      neutering: petData.neutering,
+      sex: petData.sex,
+      regNumber: petData.reg_number,
+      bite: petData.bite,
+      heart_disease: petData.heart_disease,
+      underlying_disease: petData.underlying_disease,
       user: petData.user,
     }
     return NextResponse.json({ PetProfile: result }, { status: 200 });
@@ -43,7 +39,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const body: RequestBody = await request.json();
+    const body = await request.json();
 
     if (!body.PetInfo) {
       return NextResponse.json(
@@ -87,7 +83,7 @@ export async function POST(request: NextRequest) {
       underlying_disease,
     };
 
-    const result : addPetResponse = await addPet(petInfo);
+    const result = await addPet(petInfo);
     if (result.status === "success") {
       return NextResponse.json(result, { status: 200 });
     } else {
