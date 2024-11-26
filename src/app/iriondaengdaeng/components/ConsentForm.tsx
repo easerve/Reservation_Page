@@ -13,7 +13,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import SignatureBox, { SignatureBoxRef } from "./signature-box";
-import { create } from "domain";
 import { Database } from "@/types/definitions";
 
 type PetRow = Database["public"]["Tables"]["pets"]["Row"];

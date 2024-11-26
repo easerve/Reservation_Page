@@ -2,12 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useMemo } from "react";
 import { BIG_DOG_SERVICE_PRICES } from "@/constants/booking";
-import {
-  Option,
-  BookingData,
-  MainService,
-  AdditionalService,
-} from "@/types/booking";
+import { Option, OptionsData, BookingData, MainService } from "@/types/booking";
 import {
   Dialog,
   DialogContent,
@@ -30,73 +25,69 @@ export default function ServiceSelectionStep({
   setCurrentStep,
   breeds,
 }: ServiceSelectionStepProps) {
-  // 5번은 프론트에서 처리
+  const [optionsCache, setOptionsCache] = useState<OptionsData[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoadingPrices, setIsLoadingPrices] = useState(false);
+  const [servicesPricing, setServicesPricing] = useState<MainService[]>([]);
+
+  // NOTE: 5번(~10kg)은 프론트에서 처리
   const getWeightRangeId = (weight: number) => {
-    if (weight <= 4) return 1;
-    else if (weight <= 6) return 2;
-    else if (weight <= 8) return 3;
+    if (weight < 4) return 1;
+    else if (weight < 6) return 2;
+    else if (weight < 8) return 3;
     else return 4;
   };
+
+  // NOTE: 없는 견종은 1(A)로 처리
+  const getTypeId = () =>
+    breeds.find((breed) => breed.name === bookingData.dog.breed)?.type ?? 1;
+
   async function fetchServicePrices() {
     if (!bookingData.dog.weight || !bookingData.dog.breed) return;
 
     setIsLoadingPrices(true);
     try {
       const weightRangeId = getWeightRangeId(bookingData.dog.weight);
-      // NOTE: 불필요한 while
-      const typeId =
-        breeds.find((breed) => breed.name === bookingData.dog.breed)?.type ?? 1;
+      const typeId = getTypeId();
 
       const response = await fetch(
-        `/api/services?weightRangeId=${weightRangeId}&typeId=${typeId}`
+        `/api/services?weightRangeId=${weightRangeId}&typeId=${typeId}`,
       );
 
       if (!response.ok) throw new Error("Failed to fetch prices");
 
-      const newOptionCategories: {
-        category: string;
-        options: Option[];
-      }[] = [];
-
       const data = await response.json();
-      // NOTE: kg당 가격 추가
+      // NOTE: kg당 가격 추가 (10kg 초과시 2kg당 5000원) 위생 미용은 따로 처리
       const addPrice =
         bookingData.dog.weight > 10 && typeId !== 4
-          ? Math.floor((bookingData.dog.weight - 10 + 1) / 2) * 5000
+          ? Math.ceil((bookingData.dog.weight - 10) / 2) * 5000
           : 0;
-      // NOTE: 대형견 가격으로 갱신
+      // NOTE: 위생미용: kg당 가격 추가 (10kg 초과시 5kg당 5000원)
+      const groomingAddPrice =
+        bookingData.dog.weight > 10 && typeId === 4
+          ? Math.ceil((bookingData.dog.weight - 10) / 5) * 5000
+          : 0;
+      // NOTE: 대형견 서비스 가격 (kg per price)
       const bigDogServicePrices = typeId === 4 ? BIG_DOG_SERVICE_PRICES : [];
 
-      data.data.mainServices.forEach((service: MainService) => {
-        if (typeId === 4) {
-          const bigDogService = bigDogServicePrices.find(
-            (bigDogService) => bigDogService.id === service.id
-          );
-          if (bigDogService) {
-            service.price = bigDogService.price_per_kg * bookingData.dog.weight;
-          }
+      data.data.forEach((service: MainService) => {
+        console.groupCollapsed(service.name);
+        const bigDogService = bigDogServicePrices.find(
+          (bigDogService) => bigDogService.id === service.id,
+        );
+        console.log("bigDogService", bigDogService);
+        if (bigDogService) {
+          service.price = bigDogService.price_per_kg * bookingData.dog.weight;
+        } else if (service.name === "위생미용") {
+          // NOTE: 대형견의 경우 위생미용도 5kg당 5000원 추가
+          service.price += groomingAddPrice;
         } else {
           service.price += addPrice;
         }
-        service.options.forEach((option: Option) => {
-          const category = option.category;
-          const existingCategory = newOptionCategories.find(
-            (opt) => opt.category === category
-          );
-
-          if (existingCategory) {
-            if (!existingCategory.options.some((opt) => opt.id === option.id)) {
-              existingCategory.options.push(option);
-            }
-          } else {
-            newOptionCategories.push({ category, options: [option] });
-          }
-        });
+        console.groupEnd();
       });
-
-      setOptionCategories(newOptionCategories);
-      setServicesPricing(data.data.mainServices);
-      setAdditionalServicesPricing(data.data.additional_services);
+      console.log(data.data);
+      setServicesPricing(data.data);
     } catch (error) {
       console.error("Error fetching service prices:", error);
     } finally {
@@ -108,21 +99,6 @@ export default function ServiceSelectionStep({
     fetchServicePrices();
   }, []);
 
-  const [tempOptions, setTempOptions] = useState<Option[]>([]); // 임시 옵션 저장
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoadingPrices, setIsLoadingPrices] = useState(false);
-  const [servicesPricing, setServicesPricing] = useState<MainService[]>([]);
-  const [optionCategories, setOptionCategories] = useState<
-    {
-      category: string;
-      options: Option[];
-    }[]
-  >([]);
-
-  const [additionalServicesPricing, setAdditionalServicesPricing] = useState<
-    AdditionalService[]
-  >([]);
-
   const updatePrice = (newPrice: number[]) => {
     setBookingData((prev) => ({
       ...prev,
@@ -131,75 +107,99 @@ export default function ServiceSelectionStep({
   };
 
   const price = useMemo(() => {
-    if (
-      !bookingData.mainService &&
-      bookingData.additionalServices.length === 0
-    ) {
+    if (!bookingData.mainService) {
       return [0, 0];
     }
     let totalPrice = 0;
+    let priceRange = 0;
 
     if (bookingData.mainService) {
       totalPrice += bookingData.mainService.price;
       bookingData.mainService.options.forEach((option) => {
         totalPrice += option.price;
+        // NOTE: 다리 미용은 5000 ~ 15000원 (시가임)
+        if (
+          option.name === "장화" ||
+          option.name === "방울" ||
+          option.name === "나팔" ||
+          option.name === "슬리퍼"
+        ) {
+          priceRange += 10000;
+        }
       });
     }
 
-    let totalPriceMax = totalPrice;
+    return [totalPrice, priceRange];
+  }, [bookingData.mainService]);
 
-    bookingData.additionalServices.forEach((service) => {
-      totalPrice += service.price_min;
-      totalPriceMax +=
-        service.price_max === 0 ? service.price_min : service.price_max;
-    });
+  async function fetchOptions(id: number) {
+    if (optionsCache[id]) return optionsCache[id];
+    const response = await fetch(`api/services/option?serviceId=${id}`);
+    if (!response.ok) throw new Error("Failed to fetch options");
+    const data = await response.json();
+    const newOptions = data.data;
+    // FIXME: 라인컷을 할 수 있는 견종만 라인컷 보여주기
+    setOptionsCache((prev) => ({
+      ...prev,
+      [id]: newOptions,
+    }));
+    return data.data;
+  }
 
-    return [totalPrice, totalPriceMax];
-  }, [bookingData.mainService, bookingData.additionalServices]);
-
-  const handleMainServiceSelect = (service: MainService) => {
+  const handleMainServiceSelect = async (service: MainService) => {
     if (bookingData.mainService?.id !== service.id) {
       setBookingData((prev) => ({
         ...prev,
         mainService: { ...service, options: [] },
       }));
-      setTempOptions([]);
     }
-    if (service.options && service.options.length > 0) {
-      setIsModalOpen(true);
+
+    try {
+      const options = await fetchOptions(service.id);
+      if (Object.keys(options).length > 0) {
+        setIsModalOpen(true);
+      }
+    } catch (error) {
+      console.error("Error fetching options:", error);
     }
   };
 
   const handleModalOptionToggle = (option: Option) => {
-    setTempOptions((prev) => {
-      const isSelected = prev.some((opt) => opt.id === option.id);
-      const isSameCategory = prev.some(
-        (opt) => opt.category === option.category
-      );
-      if (isSelected) {
-        return prev.filter((opt) => opt.id !== option.id);
-      } else if (isSameCategory) {
-        return prev.map((opt) =>
-          opt.category === option.category ? option : opt
-        );
-      } else {
-        return [...prev, option];
-      }
-    });
-  };
+    // 현재 옵션의 카테고리 찾기
+    const currentCategory = Object.entries(
+      optionsCache[bookingData.mainService.id],
+    ).find(([_, options]) =>
+      options.some((opt) => opt.name === option.name),
+    )?.[0];
 
-  const confirmOptionSelection = () => {
     setBookingData((prev) => {
       if (!prev.mainService) return prev;
       return {
         ...prev,
         mainService: {
           ...prev.mainService,
-          options: tempOptions,
+          options: prev.mainService.options.some(
+            (opt) => opt.name === option.name,
+          )
+            ? prev.mainService.options.filter((opt) => opt.name !== option.name)
+            : [
+                ...prev.mainService.options.filter((opt) => {
+                  const optionCategory = Object.entries(
+                    optionsCache[bookingData.mainService.id],
+                  ).find(([_, options]) =>
+                    options.some((o) => o.name === opt.name),
+                  )?.[0];
+
+                  // NOTE: 스파케어는 중복 선택 가능
+                  if (currentCategory === "스파케어") return true;
+
+                  return optionCategory !== currentCategory;
+                }),
+                option,
+              ],
         },
       };
     });
-    setIsModalOpen(false);
   };
 
   const cancelOptionSelection = () => {
@@ -208,18 +208,6 @@ export default function ServiceSelectionStep({
       mainService: undefined,
     }));
     setIsModalOpen(false);
-  };
-
-  const handleAdditionalServiceToggle = (service: AdditionalService) => {
-    setBookingData((prev) => {
-      const isSelected = prev.additionalServices.some(
-        (s) => s.id === service.id
-      );
-      const newAdditionalServices = isSelected
-        ? prev.additionalServices.filter((s) => s.id !== service.id)
-        : [...prev.additionalServices, service];
-      return { ...prev, additionalServices: newAdditionalServices };
-    });
   };
 
   return (
@@ -265,36 +253,41 @@ export default function ServiceSelectionStep({
                 <DialogClose onClick={cancelOptionSelection} />
               </DialogHeader>
               <div className="h-[50vh] overflow-y-auto pr-2 space-y-4">
-                {optionCategories.map(({ category, options }) => (
-                  <div key={category} className="space-y-2">
-                    <h3 className="font-bold mb-2">{category}</h3>
-                    {options.map((option) => (
-                      <Button
-                        key={option.id}
-                        variant="outline"
-                        onClick={() => handleModalOptionToggle(option)}
-                        className={`w-full justify-between ${
-                          tempOptions.some((opt) => opt.id === option.id)
-                            ? "border-primary bg-primary/10"
-                            : ""
-                        }`}
-                      >
-                        <div className="flex justify-between w-full">
-                          <span>{option.name}</span>
-                          <span className="text-sm text-muted-foreground">
-                            +{option.price.toLocaleString()}원
-                          </span>
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                ))}
+                {optionsCache[bookingData.mainService.id] &&
+                  Object.entries(optionsCache[bookingData.mainService.id]).map(
+                    ([category, options]) => (
+                      <div key={category} className="space-y-2">
+                        <h3 className="font-bold mb-2">{category}</h3>
+                        {options.map((option) => (
+                          <Button
+                            key={option.name}
+                            variant="outline"
+                            onClick={() => handleModalOptionToggle(option)}
+                            className={`w-full justify-between ${
+                              bookingData.mainService.options.some(
+                                (opt) => opt.name === option.name,
+                              )
+                                ? "border-primary bg-primary/10"
+                                : ""
+                            }`}
+                          >
+                            <div className="flex justify-between w-full">
+                              <span>{option.name}</span>
+                              <span className="text-sm text-muted-foreground">
+                                +{option.price.toLocaleString()}원
+                              </span>
+                            </div>
+                          </Button>
+                        ))}
+                      </div>
+                    ),
+                  )}
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={cancelOptionSelection}>
                   취소
                 </Button>
-                <Button onClick={confirmOptionSelection}>선택 완료</Button>
+                <Button onClick={() => setIsModalOpen(false)}>선택 완료</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -303,41 +296,13 @@ export default function ServiceSelectionStep({
 
       <Card>
         <CardHeader>
-          <CardTitle>추가 서비스</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {additionalServicesPricing.map((service) => (
-            <Button
-              key={service.id}
-              variant="outline"
-              className={`w-full justify-between h-auto py-4 ${
-                bookingData.additionalServices.some((s) => s.id === service.id)
-                  ? "border-primary bg-primary/10"
-                  : ""
-              }`}
-              onClick={() => handleAdditionalServiceToggle(service)}
-            >
-              <span>{service.service_name}</span>
-              <span className="text-sm text-muted-foreground">
-                +
-                {service.price_max
-                  ? `${service.price_min.toLocaleString()}~${service.price_max.toLocaleString()}원`
-                  : `${service.price_min.toLocaleString()}원`}
-              </span>
-            </Button>
-          ))}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle>결제 금액</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-primary text-right">
-            {price[0] === price[1]
+            {price[1] === 0
               ? `${price[0].toLocaleString()}원`
-              : `${price[0].toLocaleString()}~${price[1].toLocaleString()}원`}
+              : `${price[0].toLocaleString()}~${(price[0] + price[1]).toLocaleString()}원`}
           </div>
         </CardContent>
       </Card>

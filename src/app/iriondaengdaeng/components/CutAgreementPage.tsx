@@ -240,7 +240,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                 </FormControl>
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 mb-2">무게</label>
+                <label className="block text-gray-700 mb-2">무게 <span className="text-gray-500 text-xs">(0.1kg 단위로 입력해주세요.)</span></label>
                 <input
                   type="number"
                   name="weight"
