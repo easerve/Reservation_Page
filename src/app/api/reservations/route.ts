@@ -93,6 +93,13 @@ export async function GET(request: NextRequest) {
 				name: reservation.pets.name,
 				weight: reservation.pets.weight,
 				birth: reservation.pets.birth,
+				pet_memo: reservation.pets.memo,
+				neutering: reservation.pets.neutering,
+				sex: reservation.pets.sex,
+				reg_number: reservation.pets.reg_number,
+				bite: reservation.pets.bite,
+				heart_disease: reservation.pets.heart_disease,
+				underlying_disease: reservation.pets.underlying_disease,
 				phone: reservation.pets.user.phone,
 				service_name: reservation.service_name,
 				additional_services: reservation.additional_services,
@@ -105,6 +112,7 @@ export async function GET(request: NextRequest) {
 		}
 		else if (phone) {
 			const reservations = await getReservationsByPhone(phone);
+			console.log(reservations);
 			if (!reservations) {
 				return NextResponse.json({ data: [] }, { status: 200 });
 			}
@@ -116,7 +124,12 @@ export async function GET(request: NextRequest) {
 					name: reservation.pets.name,
 					weight: reservation.pets.weight,
 					birth: reservation.pets.birth,
-					phone: reservation.pets.user.phone,
+					pet_memo: reservation.pets.memo,
+					neutering: reservation.pets.neutering,
+					sex: reservation.pets.sex,
+					reg_number: reservation.pets.reg_number,
+					bite: reservation.pets.bite,
+					heart_disease: reservation.pets.heart_disease,
 					service_name: reservation.service_name,
 					additional_services: reservation.additional_services,
 					additional_price: reservation.additional_price,

@@ -1,6 +1,5 @@
 "use server";
 
-
 import { TablesUpdate, TablesInsert } from '@/types/definitions';
 import { createServerSupabaseClient } from '@/utils/supabase/server';
 import { PostgrestError } from '@supabase/supabase-js';
@@ -18,6 +17,7 @@ export async function getReservationsByPhone(
 	phone: string,
 	limit: number = 10
 ) {
+	console.log('phone:', phone);
 	const supabase = await createServerSupabaseClient();
 	const reservationWithPetQuery = supabase
 		.from('reservations')
@@ -43,10 +43,14 @@ export async function getReservationsByPhone(
 				underlying_disease,
 				user(
 					name,
-					phone
+					phone,
+					address,
+					detail_address
 				),
 				breeds(
-					name
+					name,
+					type,
+					line_cut
 				)
 			)
 		`)
@@ -92,10 +96,14 @@ export async function getReservationId(reservationId: string) {
 				underlying_disease,
 				user(
 					name,
-					phone
+					phone,
+					address,
+					detail_address
 				),
 				breeds(
-					name
+					name,
+					type,
+					line_cut
 				)
 			)
 		`)
