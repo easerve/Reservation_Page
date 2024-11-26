@@ -19,45 +19,29 @@ export async function getReservationsByPhone(
   limit: number = 10,
 ) {
 	const supabase = await createServerSupabaseClient();
-	const reservationWithPetQuery = supabase
-		.from('reservations')
-		.select(`
-			uuid,
-			reservation_date,
-			memo,
-			status,
-			additional_services,
-			additional_price,
-			total_price,
-			service_name,
-      pet_id,
-			pets: pets(
-				name,
-				birth,
-				weight,
-				memo,
-				neutering,
-				sex,
-				reg_number,
-				bite,
-				heart_disease,
-				underlying_disease,
-				user(
-					name,
-					phone,
-					address,
-					detail_address
-				),
-				breeds(
-					name,
-					type,
-					line_cut
-				)
-			)
-   `)
-    .eq("pets.user.phone", phone)
-    .limit(limit);
 
+	// 경고: !inner를 안하면 버그 발생함 user를 못 읽어옴
+	const reservationWithPetQuery = supabase
+		.from("reservations")
+		.select(`
+				*,
+				pets!inner(
+					*,
+					user!inner(
+						name,
+						phone,
+						address,
+						detail_address
+					),
+					breeds(
+						name,
+						type,
+						line_cut
+					)
+				)
+		`)
+		.eq("pets.user.phone", phone)
+		.limit(limit);
 	type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
 	const { data, error } = await reservationWithPetQuery;
 	if (error) {
@@ -77,7 +61,7 @@ export async function getReservationId(reservationId: string) {
 	.from("reservations")
 	.select(`
 			*,
-			pets:pets(
+			pets(
 				*,
 				user(
 					name,
@@ -104,6 +88,7 @@ export async function getReservationId(reservationId: string) {
 		handleError(error);
 	}
 	const result : ReservationWithPet = data;
+	console.log(result);
 	return result;
 }
 
