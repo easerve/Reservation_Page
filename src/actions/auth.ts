@@ -77,7 +77,8 @@ export async function getDogsByUserPhone(phone: string) {
 			*,
 			breeds (
 			  name,
-			  type
+			  type,
+        line_cut
 			)
 		`
     )
@@ -90,8 +91,8 @@ export async function getDogsByUserPhone(phone: string) {
   const dogs = petsData?.map((pet) => ({
     id: pet.uuid,
     petName: pet.name,
-    breed: pet.breeds?.name,
-    type: pet.breeds?.type,
+    breed: pet.breeds.name,
+    type: pet.breeds.type,
     birth: pet.birth,
     weight: pet.weight,
     neutering: pet.neutering,
@@ -100,6 +101,7 @@ export async function getDogsByUserPhone(phone: string) {
     bite: pet.bite,
     heart_disease: pet.heart_disease,
     underlying_disease: pet.underlying_disease,
+    line_cut: pet.breeds.line_cut,
   }));
 
   return {
