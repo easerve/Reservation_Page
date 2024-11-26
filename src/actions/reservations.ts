@@ -1,13 +1,12 @@
 "use server";
 
-import { TablesUpdate, TablesInsert } from '@/types/definitions';
-import { createServerSupabaseClient } from '@/utils/supabase/server';
-import { PostgrestError } from '@supabase/supabase-js';
-import { QueryData } from '@supabase/supabase-js';
+import { TablesUpdate, TablesInsert } from "@/types/definitions";
+import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { PostgrestError } from "@supabase/supabase-js";
+import { QueryData } from "@supabase/supabase-js";
 
-type ReservationUpdate = TablesUpdate<'reservations'>;
-type ReservationInsert = TablesInsert<'reservations'>;
-
+type ReservationUpdate = TablesUpdate<"reservations">;
+type ReservationInsert = TablesInsert<"reservations">;
 
 function handleError(error: PostgrestError) {
   console.error("Error in /reservations:", error);
@@ -18,12 +17,13 @@ export async function getReservationsByPhone(
   phone: string,
   limit: number = 10,
 ) {
-	const supabase = await createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
-	// 경고: !inner를 안하면 버그 발생함 user를 못 읽어옴
-	const reservationWithPetQuery = supabase
-		.from("reservations")
-		.select(`
+  // 경고: !inner를 안하면 버그 발생함 user를 못 읽어옴
+  const reservationWithPetQuery = supabase
+    .from("reservations")
+    .select(
+      `
 				*,
 				pets!inner(
 					*,
@@ -39,27 +39,28 @@ export async function getReservationsByPhone(
 						line_cut
 					)
 				)
-		`)
-		.eq("pets.user.phone", phone)
-		.limit(limit);
-	type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
-	const { data, error } = await reservationWithPetQuery;
-	if (error) {
-		if (error.code === 'PGRST116') {
-			throw new Error('Reservation not found');
-		}
-		handleError(error);
-	}
-	const result : ReservationWithPet = data;
-	return result;
+		`,
+    )
+    .eq("pets.user.phone", phone)
+    .limit(limit);
+  type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
+  const { data, error } = await reservationWithPetQuery;
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new Error("Reservation not found");
+    }
+    handleError(error);
+  }
+  const result: ReservationWithPet = data;
+  return result;
 }
-
 
 export async function getReservationId(reservationId: string) {
   const supabase = await createServerSupabaseClient();
-  const reservationWithPetQuery =  supabase
-	.from("reservations")
-	.select(`
+  const reservationWithPetQuery = supabase
+    .from("reservations")
+    .select(
+      `
 			*,
 			pets(
 				*,
@@ -75,20 +76,21 @@ export async function getReservationId(reservationId: string) {
 					line_cut
 				)
 			)
-	`)
+	`,
+    )
     .eq("uuid", reservationId)
     .single();
 
-	type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
-	const { data, error } = await reservationWithPetQuery;
-	if (error) {
-		if (error.code === 'PGRST116') {
-			throw new Error('Reservation not found');
-		}
-		handleError(error);
-	}
-	const result : ReservationWithPet = data;
-	return result;
+  type ReservationWithPet = QueryData<typeof reservationWithPetQuery>;
+  const { data, error } = await reservationWithPetQuery;
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new Error("Reservation not found");
+    }
+    handleError(error);
+  }
+  const result: ReservationWithPet = data;
+  return result;
 }
 
 export async function deleteReservation(reservationId: string) {
@@ -183,13 +185,14 @@ export async function addReservation(reservationInfo: ReservationInsert) {
 
 export async function getReservationsByDateRange(
   start_date: string,
-  end_date: string
+  end_date: string,
 ) {
   const supabase = await createServerSupabaseClient();
 
   const { data: reservationData, error: reservationError } = await supabase
     .from("reservations")
-    .select(`
+    .select(
+      `
 		*,
 		pets(
 			*,
@@ -205,13 +208,14 @@ export async function getReservationsByDateRange(
 				line_cut
 			)
 		)
-	`)
-	.gte("reservation_date", start_date)
-	.lte("reservation_date", end_date);
+	`,
+    )
+    .gte("reservation_date", start_date)
+    .lte("reservation_date", end_date);
 
-	if (reservationError) {
-		handleError(reservationError);
-	}
+  if (reservationError) {
+    handleError(reservationError);
+  }
 
-	return reservationData;
+  return reservationData;
 }
