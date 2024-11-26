@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { addReservation } from "@/actions/reservations";
-
+import { TablesInsert } from '@/types/definitions';
 import {
 	getScopeReservations,
 	getReservationId,
@@ -9,17 +9,10 @@ import {
 	getReservationsByPhone,
 } from "@/actions/reservations";
 
+type ReservationInsert = TablesInsert<'reservations'>;
+
 interface RequestBody {
-	ReservationInfo: {
-	  pet_id: string;
-	  reservation_date: string;
-	  memo: string;
-	  status: string;
-	  service_name: string;
-	  additional_services: string;
-	  total_price: number;
-	  additional_price: number;
-	}
+	ReservationInfo: ReservationInsert;
 }
 
 
@@ -87,26 +80,34 @@ export async function GET(request: NextRequest) {
 				return NextResponse.json({ error: "No reservation found" }, { status: 404 });
 			}
 			const result = {
-				id: reservation.uuid,
-				time: reservation.reservation_date,
-				breed: reservation.pets.breeds.name,
-				name: reservation.pets.name,
-				weight: reservation.pets.weight,
-				birth: reservation.pets.birth,
-				pet_memo: reservation.pets.memo,
-				neutering: reservation.pets.neutering,
-				sex: reservation.pets.sex,
-				reg_number: reservation.pets.reg_number,
-				bite: reservation.pets.bite,
-				heart_disease: reservation.pets.heart_disease,
-				underlying_disease: reservation.pets.underlying_disease,
-				phone: reservation.pets.user.phone,
-				service_name: reservation.service_name,
-				additional_services: reservation.additional_services,
-				additional_price: reservation.additional_price,
-				total_price: reservation.total_price,
-				status: reservation.status,
-				memo: reservation.memo,
+				reservation: {
+					id: reservation.uuid,
+					time: reservation.reservation_date,
+					service_name: reservation.service_name,
+					additional_service_name: reservation.additional_service_name,
+					service_id: reservation.service_id,
+					service_option_ids: reservation.service_option_ids,
+					inquiry: reservation.inquiry,
+					memo: reservation.memo,
+					status: reservation.status,
+					price: reservation.price,
+				},
+				pet: {
+					name: reservation.pets.name,
+					breed: reservation.pets.breeds.name,
+					weight: reservation.weight,
+					birth: reservation.pets.birth,
+					pet_memo: reservation.pets.memo,
+					neutering: reservation.pets.neutering,
+					sex: reservation.pets.sex,
+					reg_number: reservation.pets.reg_number,
+					bite: reservation.pets.bite,
+					heart_disease: reservation.pets.heart_disease,
+					underlying_disease: reservation.pets.underlying_disease,
+					disk: reservation.pets.disk,
+					phone: reservation.pets.user.phone,
+				}
+
 			}
 			return NextResponse.json({ status: 'success', data: result });
 		}
@@ -117,24 +118,33 @@ export async function GET(request: NextRequest) {
 			}
 			const result = reservations.map(reservation => {
 				return {
-					id: reservation.uuid,
-					time: reservation.reservation_date,
-					breed: reservation.pets.breeds.name,
-					name: reservation.pets.name,
-					weight: reservation.pets.weight,
-					birth: reservation.pets.birth,
-					pet_memo: reservation.pets.memo,
-					neutering: reservation.pets.neutering,
-					sex: reservation.pets.sex,
-					reg_number: reservation.pets.reg_number,
-					bite: reservation.pets.bite,
-					heart_disease: reservation.pets.heart_disease,
-					service_name: reservation.service_name,
-					additional_services: reservation.additional_services,
-					additional_price: reservation.additional_price,
-					total_price: reservation.total_price,
-					status: reservation.status,
-					memo: reservation.memo,
+					reservation: {
+						id: reservation.uuid,
+						time: reservation.reservation_date,
+						service_name: reservation.service_name,
+						additional_service_name: reservation.additional_service_name,
+						service_id: reservation.service_id,
+						service_option_ids: reservation.service_option_ids,
+						inquiry: reservation.inquiry,
+						memo: reservation.memo,
+						status: reservation.status,
+						price: reservation.price,
+					},
+					pet: {
+						name: reservation.pets.name,
+						breed: reservation.pets.breeds.name,
+						weight: reservation.weight,
+						birth: reservation.pets.birth,
+						pet_memo: reservation.pets.memo,
+						neutering: reservation.pets.neutering,
+						sex: reservation.pets.sex,
+						reg_number: reservation.pets.reg_number,
+						bite: reservation.pets.bite,
+						heart_disease: reservation.pets.heart_disease,
+						underlying_disease: reservation.pets.underlying_disease,
+						disk: reservation.pets.disk,
+						phone: reservation.pets.user.phone,
+					}
 				};
 			});
 			return NextResponse.json({ status: 'success', data: result });
@@ -157,9 +167,21 @@ export async function POST(request: NextRequest) {
 				{ status: 400 }
 			);
 		}
-		const { pet_id, reservation_date, memo, status, service_name, additional_services, total_price, additional_price } = body.ReservationInfo;
+		const {
+			pet_id,
+			weight,
+			reservation_date,
+			service_name,
+			additional_service_name,
+			service_id,
+			service_option_ids,
+			inquiry,
+			memo,
+			status,
+			price
+		} = body.ReservationInfo;
 
-		if (!pet_id || !reservation_date || !status || !service_name || !total_price) {
+		if (!pet_id || !reservation_date || !service_name || !service_id || !status  || !price) {
 			console.log(body.ReservationInfo);
 			return NextResponse.json(
 				{ error: "Missing required fields in ReservationInfo" },
@@ -167,15 +189,18 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const reservationInfo = {
+		const reservationInfo: ReservationInsert = {
 			pet_id,
+			weight,
 			reservation_date,
+			service_name,
+			additional_service_name,
+			service_id,
+			service_option_ids,
+			inquiry,
 			memo,
 			status,
-			service_name,
-			additional_services,
-			total_price,
-			additional_price
+			price,
 		};
 
 		const result = await addReservation(reservationInfo);

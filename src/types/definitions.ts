@@ -89,6 +89,7 @@ export type Database = {
           bite: boolean | null
           breed_id: number | null
           created_at: string | null
+          disk: boolean | null
           heart_disease: boolean | null
           memo: string | null
           name: string
@@ -105,6 +106,7 @@ export type Database = {
           bite?: boolean | null
           breed_id?: number | null
           created_at?: string | null
+          disk?: boolean | null
           heart_disease?: boolean | null
           memo?: string | null
           name: string
@@ -121,6 +123,7 @@ export type Database = {
           bite?: boolean | null
           breed_id?: number | null
           created_at?: string | null
+          disk?: boolean | null
           heart_disease?: boolean | null
           memo?: string | null
           name?: string
@@ -151,40 +154,49 @@ export type Database = {
       }
       reservations: {
         Row: {
-          additional_price: number | null
-          additional_services: string | null
+          additional_service_name: string | null
           created_at: string | null
+          inquiry: string | null
           memo: string | null
           pet_id: string
+          price: number
           reservation_date: string
+          service_id: number | null
           service_name: string
+          service_option_ids: string | null
           status: string
-          total_price: number
           uuid: string
+          weight: number | null
         }
         Insert: {
-          additional_price?: number | null
-          additional_services?: string | null
+          additional_service_name?: string | null
           created_at?: string | null
+          inquiry?: string | null
           memo?: string | null
           pet_id: string
+          price: number
           reservation_date: string
+          service_id?: number | null
           service_name: string
+          service_option_ids?: string | null
           status: string
-          total_price: number
           uuid?: string
+          weight?: number | null
         }
         Update: {
-          additional_price?: number | null
-          additional_services?: string | null
+          additional_service_name?: string | null
           created_at?: string | null
+          inquiry?: string | null
           memo?: string | null
           pet_id?: string
+          price?: number
           reservation_date?: string
+          service_id?: number | null
           service_name?: string
+          service_option_ids?: string | null
           status?: string
-          total_price?: number
           uuid?: string
+          weight?: number | null
         }
         Relationships: [
           {
