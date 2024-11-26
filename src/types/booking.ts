@@ -13,10 +13,12 @@ export interface BookingDateTime {
 }
 
 export interface Option {
-  id: number;
   name: string;
   price: number;
-  category: string;
+}
+
+export interface OptionsData {
+  [category: string]: Option[];
 }
 
 export interface MainService {
