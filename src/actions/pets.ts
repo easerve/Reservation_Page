@@ -1,14 +1,11 @@
 "use server";
 
-import { Database } from '@/types/definitions';
+import { TablesInsert } from '@/types/definitions';
 import { createServerSupabaseClient } from '@/utils/supabase/server';
+import { QueryData } from '@supabase/supabase-js';
 
-export type BreedRow = Database["public"]["Tables"]["breeds"]["Row"];
-export type PetInsert = Database["public"]["Tables"]["pets"]["Insert"];
-export type PetRow = Database["public"]["Tables"]["pets"]["Row"];
-export type UserRow = Database["public"]["Tables"]["user"]["Row"];
-
-export interface PetInfo {
+type PetInsert = TablesInsert<'pets'>;
+interface PetInfo {
 	petName: string;
 	weight: number;
 	birth: string;
@@ -22,49 +19,14 @@ export interface PetInfo {
 	underlying_disease: string;
 }
 
-export interface PetIdData {
-	birth: string | null
-	bite: boolean | null
-	breed_id: number | null
-	created_at: string | null
-	heart_disease: boolean | null
-	memo: string | null
-	name: string | null
-	neutering: boolean | null
-	reg_number: string | null
-	sex: string | null
-	underlying_disease: string | null
-	user_id: string | null
-	uuid: string
-	weight: number | null
-	user: {
-		uuid: string
-		name: string | null
-		phone: string
-		address: string | null
-		detail_address: string | null
-	};
-	breeds: {
-	 	name: string
-		type: string
-	};
-}
-
-interface addPetResponse {
-	status: string;
-	petInfo: PetRow;
-}
-
-
 function handleError(error: Error) {
   console.error('Error in pets action:', error);
   throw new Error('Internal server error');
 }
 
-export async function getPetId(petId: string): Promise<PetIdData> {
+export async function getPetId(petId: string) {
 	const supabase = await createServerSupabaseClient();
-
-	const { data: petData, error: petError } = await supabase
+	const petWithUserQuery = supabase
 		.from('pets')
 		.select(`
 			*,
@@ -82,22 +44,28 @@ export async function getPetId(petId: string): Promise<PetIdData> {
 		`)
 		.eq('uuid', petId)
 		.single();
-	if (petError) {
-		if (petError.code === 'PGRST116') {
-			throw new Error('Reservation not found');
+
+	type PetWithUser = QueryData<typeof petWithUserQuery>;
+
+	const { data, error } = await petWithUserQuery;
+	if (error) {
+		if (error.code === 'PGRST116') {
+			throw new Error('Pet not found');
 		}
-		handleError(petError);
+		handleError(error);
 	}
-	return petData as unknown as PetIdData;
+
+	const petWithUser: PetWithUser = data;
+	return petWithUser;
 }
 
 
 
-export async function addPet(petInfo: PetInfo) : Promise<addPetResponse> {
+export async function addPet(petInfo: PetInfo) {
 	const supabase = await createServerSupabaseClient();
 
 	// Fetch user data
-	let { data: userData, error: userError } = await supabase
+	let { data: userData } = await supabase
 		.from('user')
 		.select('*')
 		.eq('phone', petInfo.phoneNumber)
@@ -116,26 +84,26 @@ export async function addPet(petInfo: PetInfo) : Promise<addPetResponse> {
 		userData = newUserData;
 	}
 
-
+	const petInsertData: PetInsert = {
+		name : petInfo.petName,
+		birth : petInfo.birth,
+		weight : petInfo.weight,
+		user_id : userData.uuid,
+		breed_id : petInfo.breed,
+		neutering : petInfo.neutering,
+		sex : petInfo.sex,
+		reg_number : petInfo.regNumber,
+		bite : petInfo.bite,
+		heart_disease : petInfo.heart_disease,
+		underlying_disease : petInfo.underlying_disease
+	}
 	// Insert pet data
 	const { data: insertData, error: insertError } = await supabase
 		.from('pets')
-		.insert({
-			name: petInfo.petName,
-			birth: petInfo.birth,
-			weight: petInfo.weight,
-			user_id: userData!.uuid,
-			breed_id: petInfo.breed,
-			neutering: petInfo.neutering,
-			sex: petInfo.sex,
-			reg_number: petInfo.regNumber,
-      bite: petInfo.bite,
-			heart_disease: petInfo.heart_disease,
-			underlying_disease: petInfo.underlying_disease,
-		})
+		.insert(petInsertData)
 		.select()
 		.single();
-		
+
 	if (insertError) {
 		handleError(insertError);
 	}
