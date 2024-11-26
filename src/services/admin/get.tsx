@@ -25,13 +25,12 @@ export async function getReservationsOfOneMonth(
         ({
           id: reservation.uuid,
           time: new Date(reservation.reservation_date),
+          memo: reservation.memo,
           services: reservation.service_name,
-          price: reservation.total_price,
-          additional_services: reservation.additional_services,
-          additional_price: reservation.additional_price,
+          price: reservation.price,
+          additional_service_name: reservation.additional_service_name,
           status: reservation.status,
           pet_id: reservation.pet_id,
-          memo: reservation.memo,
           pets: reservation.pets,
         }) as ReservationInfo,
     );

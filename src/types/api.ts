@@ -24,9 +24,8 @@ export interface ReservationDBInfo {
   reservation_date: string;
   memo: string | null;
   status: string;
-  additional_services: string | null;
-  additional_price: number | null;
-  total_price: number;
+  additional_service_name: string | null;
+  price: number;
   service_name: string;
   pet_id: string;
   pets: PetInfo;
@@ -38,8 +37,7 @@ export interface ReservationInfo {
   memo: string | null;
   services: string;
   price: number;
-  additional_services: string | null;
-  additional_price: number | null;
+  additional_service_name: string | null;
   status: string;
   pet_id: string;
   pets: PetInfo;

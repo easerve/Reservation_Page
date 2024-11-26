@@ -133,8 +133,6 @@ export default function ReservationList(props: {
     "추가 미용",
     "특이사항",
     "예약 상태",
-    "기본 가격",
-    "추가 가격",
     "총계",
     "관리",
   ];
@@ -173,12 +171,18 @@ export default function ReservationList(props: {
                     }개월`}</TableCell>
                     <TableCell>{reservation.pets.user.phone}</TableCell>
                     <TableCell>
-                      {getTrimmedStr(reservation.services, 20)}
+                      {getTrimmedStr(
+                        reservation.services && reservation.services,
+                        20,
+                      )}
                     </TableCell>
                     <TableCell>
-                      {getTrimmedStr(reservation.additional_services, 20)}
+                      {reservation.additional_service_name &&
+                        getTrimmedStr(reservation.additional_service_name, 20)}
                     </TableCell>
-                    <TableCell>{getTrimmedStr(reservation.memo, 10)}</TableCell>
+                    <TableCell>
+                      {getTrimmedStr(reservation.memo && reservation.memo, 10)}
+                    </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -233,14 +237,6 @@ export default function ReservationList(props: {
                       {reservation.price?.toLocaleString()}원
                     </TableCell>
                     <TableCell>
-                      {reservation.additional_price?.toLocaleString()}원
-                    </TableCell>
-                    <TableCell>
-                      {`${(
-                        reservation.price + reservation.additional_price
-                      ).toLocaleString()}원`}
-                    </TableCell>
-                    <TableCell>
                       <div className="flex justify-center items-center gap-2">
                         <Button
                           variant="outline"
@@ -283,7 +279,7 @@ export default function ReservationList(props: {
                             {`기본 미용: ${reservation.services}`}
                           </h4>
                           <h4 className="text-sm font-semibold mb-2">
-                            {`추가 미용: ${reservation.additional_services}`}
+                            {`추가 미용: ${reservation.additional_service_name ? reservation.additional_service_name : "없음"}`}
                           </h4>
                           <h4 className="text-sm font-semibold mb-2">
                             {`주소: ${getFullAddress(reservation.pets.user)}`}
