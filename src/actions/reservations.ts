@@ -246,7 +246,9 @@ export async function getReservationsByDateRange(
 				phone
 			),
 			breeds(
-				name
+				name,
+				type,
+				line_cut
 			)
 		)
 	`)
