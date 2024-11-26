@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
 			);
 		}
 
+
 		const services = await getServicesByWeightAndType(parseInt(weightRangeId, 10), parseInt(typeId, 10));
 		if (!services) {
 			return NextResponse.json({ error: "No services found" }, { status: 404 });

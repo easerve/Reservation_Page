@@ -27,7 +27,6 @@ export async function DELETE(request: NextRequest) {
 	try {
 		const { searchParams } = new URL(request.url);
 		const reservationId = searchParams.get("id");
-		const body: RequestBody = await request.json();
 
 		if (!reservationId) {
 			return NextResponse.json(
