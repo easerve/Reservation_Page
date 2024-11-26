@@ -71,22 +71,18 @@ export default function ServiceSelectionStep({
       const bigDogServicePrices = typeId === 4 ? BIG_DOG_SERVICE_PRICES : [];
 
       data.data.forEach((service: MainService) => {
-        console.groupCollapsed(service.name);
         const bigDogService = bigDogServicePrices.find(
-          (bigDogService) => bigDogService.id === service.id,
+          (bigDogService) => bigDogService.id === service.service_name_id,
         );
-        console.log("bigDogService", bigDogService);
         if (bigDogService) {
           service.price = bigDogService.price_per_kg * bookingData.dog.weight;
-        } else if (service.name === "위생미용") {
+        } else if (service.service_name_id === 5) {
           // NOTE: 대형견의 경우 위생미용도 5kg당 5000원 추가
           service.price += groomingAddPrice;
         } else {
           service.price += addPrice;
         }
-        console.groupEnd();
       });
-      console.log(data.data);
       setServicesPricing(data.data);
     } catch (error) {
       console.error("Error fetching service prices:", error);
@@ -106,7 +102,7 @@ export default function ServiceSelectionStep({
     }));
   };
 
-  const price = useMemo(() => {
+  const price: number[] = useMemo(() => {
     if (!bookingData.mainService) {
       return [0, 0];
     }
@@ -132,22 +128,23 @@ export default function ServiceSelectionStep({
     return [totalPrice, priceRange];
   }, [bookingData.mainService]);
 
-  async function fetchOptions(id: number) {
-    if (optionsCache[id]) return optionsCache[id];
-    const response = await fetch(`api/services/option?serviceId=${id}`);
+  async function fetchOptions(service_name_id: number) {
+    if (optionsCache[service_name_id]) return optionsCache[service_name_id];
+    const response = await fetch(`api/services/option?serviceNameId=${service_name_id}`);
     if (!response.ok) throw new Error("Failed to fetch options");
     const data = await response.json();
+    console.log(data);
     const newOptions = data.data;
     // FIXME: 라인컷을 할 수 있는 견종만 라인컷 보여주기
     setOptionsCache((prev) => ({
       ...prev,
-      [id]: newOptions,
+      [service_name_id]: newOptions,
     }));
     return data.data;
   }
 
   const handleMainServiceSelect = async (service: MainService) => {
-    if (bookingData.mainService?.id !== service.id) {
+    if (bookingData.mainService?.service_name_id !== service.service_name_id) {
       setBookingData((prev) => ({
         ...prev,
         mainService: { ...service, options: [] },
@@ -155,7 +152,7 @@ export default function ServiceSelectionStep({
     }
 
     try {
-      const options = await fetchOptions(service.id);
+      const options = await fetchOptions(service.service_name_id);
       if (Object.keys(options).length > 0) {
         setIsModalOpen(true);
       }
@@ -167,7 +164,7 @@ export default function ServiceSelectionStep({
   const handleModalOptionToggle = (option: Option) => {
     // 현재 옵션의 카테고리 찾기
     const currentCategory = Object.entries(
-      optionsCache[bookingData.mainService.id],
+      optionsCache[bookingData.mainService.service_name_id],
     ).find(([_, options]) =>
       options.some((opt) => opt.name === option.name),
     )?.[0];
@@ -185,7 +182,7 @@ export default function ServiceSelectionStep({
             : [
                 ...prev.mainService.options.filter((opt) => {
                   const optionCategory = Object.entries(
-                    optionsCache[bookingData.mainService.id],
+                    optionsCache[bookingData.mainService.service_name_id],
                   ).find(([_, options]) =>
                     options.some((o) => o.name === opt.name),
                   )?.[0];
@@ -221,11 +218,11 @@ export default function ServiceSelectionStep({
             <div>가격 정보를 불러오는 중...</div>
           ) : (
             servicesPricing.map((service) => (
-              <div key={service.id} className="space-y-2">
+              <div key={service.service_name_id} className="space-y-2">
                 <Button
                   variant="outline"
                   className={`w-full justify-between h-auto py-4 ${
-                    bookingData.mainService?.id === service.id
+                    bookingData.mainService?.service_name_id === service.service_name_id
                       ? "border-primary bg-primary/10"
                       : ""
                   }`}
@@ -253,35 +250,35 @@ export default function ServiceSelectionStep({
                 <DialogClose onClick={cancelOptionSelection} />
               </DialogHeader>
               <div className="h-[50vh] overflow-y-auto pr-2 space-y-4">
-                {optionsCache[bookingData.mainService.id] &&
-                  Object.entries(optionsCache[bookingData.mainService.id]).map(
-                    ([category, options]) => (
-                      <div key={category} className="space-y-2">
-                        <h3 className="font-bold mb-2">{category}</h3>
-                        {options.map((option) => (
-                          <Button
-                            key={option.name}
-                            variant="outline"
-                            onClick={() => handleModalOptionToggle(option)}
-                            className={`w-full justify-between ${
-                              bookingData.mainService.options.some(
-                                (opt) => opt.name === option.name,
-                              )
-                                ? "border-primary bg-primary/10"
-                                : ""
-                            }`}
-                          >
-                            <div className="flex justify-between w-full">
-                              <span>{option.name}</span>
-                              <span className="text-sm text-muted-foreground">
-                                +{option.price.toLocaleString()}원
-                              </span>
-                            </div>
-                          </Button>
-                        ))}
-                      </div>
-                    ),
-                  )}
+                {optionsCache[bookingData.mainService.service_name_id] &&
+                  Object.entries(
+                    optionsCache[bookingData.mainService.service_name_id],
+                  ).map(([category, options]) => (
+                    <div key={category} className="space-y-2">
+                      <h3 className="font-bold mb-2">{category}</h3>
+                      {options.map((option) => (
+                        <Button
+                          key={option.name}
+                          variant="outline"
+                          onClick={() => handleModalOptionToggle(option)}
+                          className={`w-full justify-between ${
+                            bookingData.mainService.options.some(
+                              (opt) => opt.name === option.name,
+                            )
+                              ? "border-primary bg-primary/10"
+                              : ""
+                          }`}
+                        >
+                          <div className="flex justify-between w-full">
+                            <span>{option.name}</span>
+                            <span className="text-sm text-muted-foreground">
+                              +{option.price.toLocaleString()}원
+                            </span>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  ))}
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={cancelOptionSelection}>

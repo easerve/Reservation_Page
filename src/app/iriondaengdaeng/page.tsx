@@ -6,13 +6,19 @@ import PetSelectionStep from "./components/PetSelectionStep";
 import DateTimeSelectionStep from "./components/DateTimeSelectionStep";
 import ServiceSelectionStep from "./components/ServiceSelectionStep";
 import ConfirmationStep from "./components/ConfirmationStep";
-import { BookingData, Customer, UserDogsData, Dog } from "@/types/booking";
+import {
+  BookingData,
+  Customer,
+  UserDogsData,
+  Dog,
+  Breed,
+} from "@/types/booking";
 import { INITIAL_BOOKING_STATE } from "@/constants/booking";
 
 export default function Booking() {
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState<BookingData>(
-    INITIAL_BOOKING_STATE
+    INITIAL_BOOKING_STATE,
   );
   const [isPuppyAdd, setIsPuppyAdd] = useState(false);
   const [userDogsData, setUserDogsData] = useState<UserDogsData>({
@@ -24,9 +30,7 @@ export default function Booking() {
       dogs: [] as Dog[],
     } as Customer,
   });
-  const [breeds, setBreeds] = useState<
-    { id: number; name: string; type: number }[]
-  >([]);
+  const [breeds, setBreeds] = useState<Breed[]>([]);
 
   useEffect(() => {
     const loadBreeds = async () => {
@@ -48,7 +52,6 @@ export default function Booking() {
       });
     }
   }, [isPuppyAdd, userDogsData, bookingData.phoneNumber]);
-  
 
   const renderStep = () => {
     switch (currentStep) {

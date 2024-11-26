@@ -121,7 +121,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                 <input
                   type="text"
                   name="name"
-                  value={customer.name}
+                  value={customer.name || ""}
                   onChange={handleUserInfoChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -133,7 +133,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                   disabled={true}
                   type="tel"
                   name="phone"
-                  value={phoneNumber}
+                  value={phoneNumber || ""}
                   onChange={handleUserInfoChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -144,8 +144,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                 <input
                   type="text"
                   name="address"
-                  //
-                  value={customer.address}
+                  value={customer.address || ""}
                   onChange={() => {}}
                   onClick={() => setShowLocationSelect(true)}
                   required
@@ -168,7 +167,7 @@ const CutAgreementPage: React.FC<CutAgreementPageProps> = ({
                 <input
                   type="text"
                   name="detailAddress"
-                  value={customer.detailAddress}
+                  value={customer.detailAddress || ""}
                   onChange={handleUserInfoChange}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"

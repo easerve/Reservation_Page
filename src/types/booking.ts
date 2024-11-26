@@ -12,6 +12,13 @@ export interface BookingDateTime {
   time?: string;
 }
 
+export interface Breed {
+  id: number;
+  name: string;
+  type: number;
+  line_cut: boolean;
+}
+
 export interface Option {
   name: string;
   price: number;
@@ -22,7 +29,8 @@ export interface OptionsData {
 }
 
 export interface MainService {
-  id: number;
+  service_id: number;
+  service_name_id: number;
   name: string;
   price: number;
   options: Option[];
