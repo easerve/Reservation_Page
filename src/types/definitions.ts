@@ -9,49 +9,29 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      breed_types: {
-        Row: {
-          id: number
-          type: string
-        }
-        Insert: {
-          id?: number
-          type: string
-        }
-        Update: {
-          id?: number
-          type?: string
-        }
-        Relationships: []
-      }
       breeds: {
         Row: {
-          created_at: string | null
+          created_at: string
           id: number
+          line_cut: boolean
           name: string
-          type: number | null
+          type: number
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           id?: number
+          line_cut: boolean
           name: string
-          type?: number | null
+          type: number
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           id?: number
+          line_cut?: boolean
           name?: string
-          type?: number | null
+          type?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "breeds_type_fkey"
-            columns: ["type"]
-            isOneToOne: false
-            referencedRelation: "breed_types"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       consent_form: {
         Row: {
@@ -105,52 +85,52 @@ export type Database = {
       }
       pets: {
         Row: {
-          birth: string | null
+          birth: string
           bite: boolean | null
           breed_id: number | null
           created_at: string | null
           heart_disease: boolean | null
           memo: string | null
-          name: string | null
-          neutering: boolean | null
+          name: string
+          neutering: boolean
           reg_number: string | null
-          sex: string | null
+          sex: string
           underlying_disease: string | null
-          user_id: string | null
+          user_id: string
           uuid: string
-          weight: number | null
+          weight: number
         }
         Insert: {
-          birth?: string | null
+          birth: string
           bite?: boolean | null
           breed_id?: number | null
           created_at?: string | null
           heart_disease?: boolean | null
           memo?: string | null
-          name?: string | null
-          neutering?: boolean | null
+          name: string
+          neutering: boolean
           reg_number?: string | null
-          sex?: string | null
+          sex: string
           underlying_disease?: string | null
-          user_id?: string | null
+          user_id: string
           uuid?: string
-          weight?: number | null
+          weight: number
         }
         Update: {
-          birth?: string | null
+          birth?: string
           bite?: boolean | null
           breed_id?: number | null
           created_at?: string | null
           heart_disease?: boolean | null
           memo?: string | null
-          name?: string | null
-          neutering?: boolean | null
+          name?: string
+          neutering?: boolean
           reg_number?: string | null
-          sex?: string | null
+          sex?: string
           underlying_disease?: string | null
-          user_id?: string | null
+          user_id?: string
           uuid?: string
-          weight?: number | null
+          weight?: number
         }
         Relationships: [
           {
@@ -325,13 +305,6 @@ export type Database = {
           weight_range?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "services_breed_type_fkey"
-            columns: ["breed_type"]
-            isOneToOne: false
-            referencedRelation: "breed_types"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "services_service_name_id_fkey"
             columns: ["service_name_id"]
