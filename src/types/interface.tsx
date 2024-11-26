@@ -5,23 +5,6 @@ export interface IDefaultDialog {
   children: React.ReactNode;
 }
 
-export interface Reservation {
-  id: string; // uuid
-  time: Date; // Date
-  breed: string;
-  name: string;
-  weight: number;
-  birth: string;
-  phone: string; // 11자리 숫자
-  service_name: string; // Ex. ["스포팅", "발톱 깎기"]
-  additional_services: string; // 추가 서비스
-  additional_price: number; // 추가 가격
-  price: number; // 기본 가격
-  status: string;
-  consent_form: boolean; // 동의서
-  memo: string; // 특이사항 Ex. "털엉킴, 사나움"
-}
-
 export interface AdminReservationInfo {
   uuid: string;
   reservation_date: string;
@@ -38,6 +21,8 @@ export interface AdminReservationInfo {
     user_id: {
       name: string;
       phone: string;
+      address: string;
+      detail_address: string;
     };
     breed_id: {
       name: string;
