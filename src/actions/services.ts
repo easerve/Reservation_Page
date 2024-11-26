@@ -19,6 +19,8 @@ function handleError(error: Error) {
 export async function getServicesByWeightAndType(weightRageId: number, typeId: number) {
 	const supabase = await createServerSupabaseClient();
 
+	if (typeId == 4)
+		typeId = 3;
 	const targetService = supabase
 		.from("services")
 		.select(`
