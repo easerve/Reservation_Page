@@ -35,9 +35,9 @@ import InnerReservationForm, {
 } from "./inner_reservation_form";
 import { z } from "zod";
 import DefaultDialog from "@/components/default_dialog/default_dialog";
-import { Reservation } from "@/types/interface";
 import InfoDialog from "@/containers/reservation/components/info_dialog";
 import EditReservationForm, { editFormSchema } from "./edit_reservation_form";
+import { ReservationInfo } from "@/types/api";
 
 function updateTimeInDate(date: Date, time: string): Date {
   const [hours, minutes] = time.split(":").map(Number);
@@ -53,12 +53,15 @@ function updateTimeInDate(date: Date, time: string): Date {
 
 interface CalendarProps {
   currentMonth: { year: number; month: number };
-  reservations: Reservation[];
-  setReservations: React.Dispatch<React.SetStateAction<Reservation[]>>;
+  reservations: ReservationInfo[];
+  setReservations: React.Dispatch<React.SetStateAction<ReservationInfo[]>>;
   setCurrentMonth: React.Dispatch<
     React.SetStateAction<{ year: number; month: number }>
   >;
-  updateReservation: (id: string, updatedData: Partial<Reservation>) => void;
+  updateReservation: (
+    id: string,
+    updatedData: Partial<ReservationInfo>,
+  ) => void;
 }
 
 const Calendar: React.FC<CalendarProps> = ({
@@ -73,7 +76,7 @@ const Calendar: React.FC<CalendarProps> = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<DateClickArg | null>(null);
   const [selectedReservation, setSelectedReservation] =
-    useState<Reservation | null>(null);
+    useState<ReservationInfo | null>(null);
   const [monthEvents, setMonthEvents] = useState<EventInput[]>([]);
 
   function handleDateSet(info: DatesSetArg) {
@@ -89,12 +92,12 @@ const Calendar: React.FC<CalendarProps> = ({
     });
 
     const events: EventInput[] = filteredReservations.map(
-      (data: Reservation) => ({
+      (data: ReservationInfo) => ({
         id: data.id,
-        title: `${data.name}(${data.breed})`,
+        title: `${data.pets.name}(${data.pets.breeds.name})`,
         start: data.time,
         extendedProps: data,
-      })
+      }),
     );
 
     setMonthEvents(events);
@@ -110,9 +113,9 @@ const Calendar: React.FC<CalendarProps> = ({
             data.time.getMonth() + 1 === currentMonth.month
           );
         })
-        .map((data: Reservation) => ({
+        .map((data: ReservationInfo) => ({
           id: data.id,
-          title: `${data.name}(${data.breed})`,
+          title: `${data.pets.name}(${data.pets.breeds.name})`,
           start: data.time,
           extendedProps: data,
         }));
@@ -126,7 +129,7 @@ const Calendar: React.FC<CalendarProps> = ({
   };
 
   const handleEventClick = (selected: EventClickArg) => {
-    setSelectedReservation(selected.event.extendedProps as Reservation);
+    setSelectedReservation(selected.event.extendedProps as ReservationInfo);
     setIsInfoDialogOpen(true);
   };
 
@@ -134,14 +137,14 @@ const Calendar: React.FC<CalendarProps> = ({
     setIsDialogOpen(false);
   };
 
-  const handleSave = (id: string, updatedData: Partial<Reservation>) => {
+  const handleSave = (id: string, updatedData: Partial<ReservationInfo>) => {
     if (selectedReservation) {
       setReservations(
         reservations.map((reservation) =>
           reservation.id === selectedReservation.id
             ? { ...reservation, ...updatedData }
-            : reservation
-        )
+            : reservation,
+        ),
       );
       setIsEditDialogOpen(false);
       setSelectedReservation(null);
@@ -160,7 +163,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
       const startTime = updateTimeInDate(
         selectedDate.date,
-        data.reservationTime
+        data.reservationTime,
       );
       const newEvent = {
         id: `${startTime.toISOString()}-${data.phoneNumber}`,
@@ -192,7 +195,7 @@ const Calendar: React.FC<CalendarProps> = ({
           selectable={true} // Allow dates to be selectable.
           selectMirror={true} // Mirror selections visually.
           dayMaxEvents={true} // Limit the number of events displayed per day.
-          dateClick={handleDateClick} 
+          dateClick={handleDateClick}
           eventClick={handleEventClick} // Handle clicking on events (e.g., to delete them).
           events={monthEvents} // Events to display on the calendar.
         />

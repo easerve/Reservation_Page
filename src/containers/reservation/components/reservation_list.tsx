@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { Reservation, ReservationStatus } from "@/types/interface";
+import { ReservationStatus } from "@/types/interface";
 
 import { getTimeString2, getAge2 } from "@/components/utils/date_utils";
 import DefaultDialog from "@/components/default_dialog/default_dialog";
@@ -53,23 +53,23 @@ import {
 import { DropdownMenuGroup } from "@/components/ui/dropdown-menu";
 import exp from "constants";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { getTrimmedStr } from "@/utils/functions";
+import { getFullAddress, getTrimmedStr } from "@/utils/functions";
 import { updateReservationState } from "@/services/admin/put";
-import { ReservationUpdate } from "@/actions/reservations";
 import { deleteReservation } from "@/services/admin/delete";
+import { ReservationInfo } from "@/types/api";
 
 type GroupedReservations = {
-  [key: string]: Reservation[];
+  [key: string]: ReservationInfo[];
 };
 
 export default function ReservationList(props: {
-  reservations: Reservation[];
-  updateReservation: (id: string, data: Partial<Reservation>) => void;
+  reservations: ReservationInfo[];
+  updateReservation: (id: string, data: Partial<ReservationInfo>) => void;
   deleteReservation: (id: string) => void;
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReservation, setEditingReservation] =
-    useState<Reservation | null>(null);
+    useState<ReservationInfo | null>(null);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   const groupedReservations = props.reservations.reduce<GroupedReservations>(
@@ -82,11 +82,11 @@ export default function ReservationList(props: {
       groups[dateStr].push(reservation);
       return groups;
     },
-    {}
+    {},
   );
 
   const groupedReservationsArray = Object.entries(groupedReservations).sort(
-    ([a], [b]) => new Date(a).getTime() - new Date(b).getTime()
+    ([a], [b]) => new Date(a).getTime() - new Date(b).getTime(),
   );
 
   groupedReservationsArray.forEach(([date, reservations]) => {
@@ -98,13 +98,13 @@ export default function ReservationList(props: {
     setExpandedRow((prev) => (prev === id ? null : id));
   };
 
-  const handleEdit = (reservation: Reservation) => {
+  const handleEdit = (reservation: ReservationInfo) => {
     setEditingReservation(reservation);
     console.log("editing reservation: ", reservation);
     setIsDialogOpen(true);
   };
 
-  const handleSave = (id: string, updatedData: Partial<Reservation>) => {
+  const handleSave = (id: string, updatedData: Partial<ReservationInfo>) => {
     if (editingReservation) {
       props.updateReservation(id, updatedData);
       setIsDialogOpen(false);
@@ -165,15 +165,15 @@ export default function ReservationList(props: {
                     onClick={() => handleRowClick(reservation.id)}
                   >
                     <TableCell>{getTimeString2(reservation.time)}</TableCell>
-                    <TableCell>{reservation.breed}</TableCell>
-                    <TableCell>{reservation.name}</TableCell>
-                    <TableCell>{`${reservation.weight}kg`}</TableCell>
-                    <TableCell>{`${getAge2(reservation.birth).years}년 ${
-                      getAge2(reservation.birth).months
+                    <TableCell>{reservation.pets.breeds.name}</TableCell>
+                    <TableCell>{reservation.pets.name}</TableCell>
+                    <TableCell>{`${reservation.pets.weight}kg`}</TableCell>
+                    <TableCell>{`${getAge2(reservation.pets.birth).years}년 ${
+                      getAge2(reservation.pets.birth).months
                     }개월`}</TableCell>
-                    <TableCell>{reservation.phone}</TableCell>
+                    <TableCell>{reservation.pets.user.phone}</TableCell>
                     <TableCell>
-                      {getTrimmedStr(reservation.service_name, 20)}
+                      {getTrimmedStr(reservation.services, 20)}
                     </TableCell>
                     <TableCell>
                       {getTrimmedStr(reservation.additional_services, 20)}
@@ -187,7 +187,7 @@ export default function ReservationList(props: {
                             size="sm"
                             className={`rounded-full ${
                               ReservationStatus.find(
-                                (status) => status.value === reservation.status
+                                (status) => status.value === reservation.status,
                               )?.css
                             } font-extrabold`}
                           >
@@ -269,19 +269,24 @@ export default function ReservationList(props: {
                     <TableCell colSpan={headers.length}>
                       <CardHeader>
                         <CardTitle className="text-2xl font-bold">
-                          {reservation.name}
+                          {reservation.pets.name}
                         </CardTitle>
                         <CardDescription>
-                          {reservation.breed} • {reservation.weight}kg
+                          {reservation.pets.breeds.name} •{" "}
+                          {reservation.pets.weight}
+                          kg
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="grid gap-4">
                         <div>
                           <h4 className="text-sm font-semibold mb-2">
-                            {`기본 미용: ${reservation.service_name}`}
+                            {`기본 미용: ${reservation.services}`}
                           </h4>
                           <h4 className="text-sm font-semibold mb-2">
                             {`추가 미용: ${reservation.additional_services}`}
+                          </h4>
+                          <h4 className="text-sm font-semibold mb-2">
+                            {`주소: ${getFullAddress(reservation.pets.user)}`}
                           </h4>
                           <h4 className="text-sm font-semibold mb-2">
                             특이사항
