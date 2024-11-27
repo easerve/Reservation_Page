@@ -37,7 +37,11 @@ export default function ConfirmationStep({
             consent_form: true,
             service_name:
               `${bookingData.mainService?.name}(` +
-              [bookingData.mainService?.options.map((option) => option.name), ,]
+              [
+                bookingData.mainService.optionCategories.map((category) =>
+                  category.options.map((option) => option.option_name),
+                ),
+              ]
                 .flat()
                 .join(", ") +
               ")",
@@ -69,58 +73,60 @@ export default function ConfirmationStep({
     });
   };
 
-  const getServiceNames = () => {
-    const names = [];
-
-    if (bookingData.mainService) {
-      names.push(bookingData.mainService.name);
-      names.push(
-        ...bookingData.mainService.options.map((option) => option.name),
-      );
-    }
-
-    return names.join(", ");
-  };
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>예약 정보 확인</CardTitle>
+      <Card className="border border-gray-200 shadow-md">
+        <CardHeader className="bg-gray-100 p-4 rounded-t-lg">
+          <CardTitle className="text-xl font-bold text-gray-800">
+            예약 정보 확인
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="font-medium text-gray-600">날짜 및 시간</h3>
-            <p>
+        <CardContent className="space-y-6 p-6">
+          <div className="border-b pb-4">
+            <h3 className="font-medium text-lg text-gray-900">날짜 및 시간</h3>
+            <p className="text-gray-700 mt-2">
               {formatDate(bookingData.dateTime.date)}{" "}
               {bookingData.dateTime.time}
             </p>
           </div>
 
-          <div>
-            <h3 className="font-medium text-gray-600">반려견 정보</h3>
-            <p>이름: {bookingData.dog.petName}</p>
-            <p>체중: {bookingData.dog.weight}kg</p>
-            <p>연락처: {bookingData.phoneNumber}</p>
+          <div className="border-b pb-4">
+            <h3 className="font-medium text-lg text-gray-900">반려견 정보</h3>
+            <p className="text-gray-700 mt-2">
+              이름: {bookingData.dog.petName}
+            </p>
+            <p className="text-gray-700">체중: {bookingData.dog.weight}kg</p>
+            <p className="text-gray-700">연락처: {bookingData.phoneNumber}</p>
           </div>
 
-          <div>
-            <h3 className="font-medium text-gray-600">선택한 서비스</h3>
-            <p>{getServiceNames()}</p>
-          </div>
-
-          <div>
-            <h3 className="font-medium text-gray-600">결제 금액</h3>
-            <p>
-              {bookingData.price[0] === bookingData.price[1]
-                ? `${bookingData.price[0]}원`
-                : `${bookingData.price[0]}~${bookingData.price[1]}원`}
+          <div className="border-b pb-4">
+            <h3 className="font-medium text-lg text-gray-900">선택한 서비스</h3>
+            <p className="text-primary font-medium mt-2">
+              {bookingData.mainService?.name}
+            </p>
+            <p className="text-gray-500 text-sm">
+              {bookingData.mainService.optionCategories
+                .map((category) =>
+                  category.options.map((option) => option.option_name),
+                )
+                .join(", ")}
             </p>
           </div>
+
+          <div className="border-b pb-4">
+            <h3 className="font-medium text-lg text-gray-900">예상 금액</h3>
+            <p className="text-gray-700 mt-2">
+              {bookingData.price[1] === 0
+                ? `${bookingData.price[0].toLocaleString()}원`
+                : `${bookingData.price[0].toLocaleString()}~${(bookingData.price[0] + bookingData.price[1]).toLocaleString()}원`}
+            </p>
+          </div>
+
           <div>
-            <h3 className="font-medium text-gray-600">추가 문의사항</h3>
+            <h3 className="font-medium text-lg text-gray-900">추가 문의사항</h3>
             <Textarea
               placeholder="문의사항이 있으시다면 입력해주세요"
-              className="min-h-[100px] mt-2"
+              className="min-h-[120px] mt-2 border-gray-300 focus:border-primary focus:ring-primary"
               value={bookingData.inquiry}
               onChange={(e) => updateInquiry(e.target.value)}
             />
@@ -128,11 +134,18 @@ export default function ConfirmationStep({
         </CardContent>
       </Card>
 
-      <div className="flex gap-2">
-        <Button variant="outline" onClick={() => setCurrentStep(4)}>
+      <div className="flex gap-4">
+        <Button
+          variant="outline"
+          className="px-6 py-3 border-gray-300 text-gray-700"
+          onClick={() => setCurrentStep(4)}
+        >
           이전
         </Button>
-        <Button className="flex-1 bg-primary" onClick={reservations}>
+        <Button
+          className="flex-1 px-6 py-3 bg-primary text-white hover:bg-primary-dark transition-all"
+          onClick={reservations}
+        >
           예약 완료
         </Button>
       </div>

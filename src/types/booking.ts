@@ -20,12 +20,16 @@ export interface Breed {
 }
 
 export interface Option {
-  name: string;
-  price: number;
+  category_id: number;
+  option_id: number;
+  option_name: string;
+  option_price: number;
 }
 
-export interface OptionsData {
-  [category: string]: Option[];
+export interface OptionCategory {
+  category_id: number;
+  category_name: string;
+  options: Option[];
 }
 
 export interface MainService {
@@ -33,7 +37,7 @@ export interface MainService {
   service_name_id: number;
   name: string;
   price: number;
-  options: Option[];
+  optionCategories: OptionCategory[];
 }
 
 export interface Dog {

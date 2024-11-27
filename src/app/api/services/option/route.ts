@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
 			option_id: item.service_options.id,
 			option_name: item.service_options.name,
 			option_price: item.service_options.price,
+      category_id: category_id,
 		});
 	});
 

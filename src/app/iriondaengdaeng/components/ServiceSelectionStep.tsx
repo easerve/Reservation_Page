@@ -2,7 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, useMemo } from "react";
 import { BIG_DOG_SERVICE_PRICES } from "@/constants/booking";
-import { Option, OptionsData, BookingData, MainService } from "@/types/booking";
+import {
+  Option,
+  OptionCategory,
+  BookingData,
+  MainService,
+} from "@/types/booking";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +30,9 @@ export default function ServiceSelectionStep({
   setCurrentStep,
   breeds,
 }: ServiceSelectionStepProps) {
-  const [optionsCache, setOptionsCache] = useState<OptionsData[]>([]);
+  const [optionsCache, setOptionsCache] = useState<{
+    [key: number]: OptionCategory;
+  }>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoadingPrices, setIsLoadingPrices] = useState(false);
   const [servicesPricing, setServicesPricing] = useState<MainService[]>([]);
@@ -111,15 +118,12 @@ export default function ServiceSelectionStep({
 
     if (bookingData.mainService) {
       totalPrice += bookingData.mainService.price;
-      bookingData.mainService.options.forEach((option) => {
-        totalPrice += option.price;
+      bookingData.mainService.optionCategories.forEach((optionCategory) => {
+        optionCategory.options.forEach((option) => {
+          totalPrice += option.option_price;
+        });
         // NOTE: 다리 미용은 5000 ~ 15000원 (시가임)
-        if (
-          option.name === "장화" ||
-          option.name === "방울" ||
-          option.name === "나팔" ||
-          option.name === "슬리퍼"
-        ) {
+        if (optionCategory.category_name === "다리 미용") {
           priceRange += 10000;
         }
       });
@@ -135,7 +139,6 @@ export default function ServiceSelectionStep({
     );
     if (!response.ok) throw new Error("Failed to fetch options");
     const data = await response.json();
-    console.log(data);
     const newOptions = data.data;
     // FIXME: 라인컷을 할 수 있는 견종만 라인컷 보여주기
     setOptionsCache((prev) => ({
@@ -149,7 +152,7 @@ export default function ServiceSelectionStep({
     if (bookingData.mainService?.service_name_id !== service.service_name_id) {
       setBookingData((prev) => ({
         ...prev,
-        mainService: { ...service, options: [] },
+        mainService: { ...service, optionCategories: [] },
       }));
     }
 
@@ -164,38 +167,78 @@ export default function ServiceSelectionStep({
   };
 
   const handleModalOptionToggle = (option: Option) => {
-    // 현재 옵션의 카테고리 찾기
-    const currentCategory = Object.entries(
-      optionsCache[bookingData.mainService.service_name_id],
-    ).find(([_, options]) =>
-      options.some((opt) => opt.name === option.name),
-    )?.[0];
-
     setBookingData((prev) => {
       if (!prev.mainService) return prev;
+
+      const isCategory4 = option.category_id === 4;
+      const mainService = { ...prev.mainService };
+      let optionCategories = [...mainService.optionCategories];
+
+      // 1. 이미 선택되어 있는 옵션인지 확인
+      const isOptionAlreadySelected = optionCategories.some((optionCategory) =>
+        optionCategory.options.some(
+          (opt) => opt.option_id === option.option_id,
+        ),
+      );
+
+      if (isOptionAlreadySelected) {
+        // 현재 옵션을 선택 해제
+        optionCategories = optionCategories
+          .map((optionCategory) => {
+            if (optionCategory.category_id === option.category_id) {
+              const filteredOptions = optionCategory.options.filter(
+                (opt) => opt.option_id !== option.option_id,
+              );
+              return { ...optionCategory, options: filteredOptions };
+            }
+            return optionCategory;
+          })
+          .filter((optionCategory) => optionCategory.options.length > 0);
+
+        return {
+          ...prev,
+          mainService: {
+            ...mainService,
+            optionCategories,
+          },
+        };
+      }
+
+      const categoryIndex = optionCategories.findIndex(
+        (optionCategory) => optionCategory.category_id === option.category_id,
+      );
+
+      if (categoryIndex >= 0) {
+        const optionCategory = { ...optionCategories[categoryIndex] };
+
+        if (isCategory4) {
+          // 2. 카테고리 4번(스파케어)는 중복 선택 가능
+          optionCategory.options = [...optionCategory.options, option];
+        } else {
+          // 3. 이미 선택된 카테고리라면 카테고리의 옵션을 지우고 새로운 옵션으로 대체
+          optionCategory.options = [option];
+        }
+
+        optionCategories[categoryIndex] = optionCategory;
+      } else {
+        // 4. 다른 카테고리라면 mainService에 추가
+        const category_name =
+          optionsCache[option.category_id]?.category_name || "";
+
+        const newOptionCategory: OptionCategory = {
+          category_id: option.category_id,
+          category_name,
+          options: [option],
+        };
+
+        optionCategories.push(newOptionCategory);
+      }
+
       return {
         ...prev,
         mainService: {
-          ...prev.mainService,
-          options: prev.mainService.options.some(
-            (opt) => opt.name === option.name,
-          )
-            ? prev.mainService.options.filter((opt) => opt.name !== option.name)
-            : [
-                ...prev.mainService.options.filter((opt) => {
-                  const optionCategory = Object.entries(
-                    optionsCache[bookingData.mainService.service_name_id],
-                  ).find(([_, options]) =>
-                    options.some((o) => o.name === opt.name),
-                  )?.[0];
-
-                  // NOTE: 스파케어는 중복 선택 가능
-                  if (currentCategory === "스파케어") return true;
-
-                  return optionCategory !== currentCategory;
-                }),
-                option,
-              ],
+          ...mainService,
+          optionCategories,
         },
       };
     });
@@ -258,32 +301,48 @@ export default function ServiceSelectionStep({
                 {optionsCache[bookingData.mainService.service_name_id] &&
                   Object.entries(
                     optionsCache[bookingData.mainService.service_name_id],
-                  ).map(([category, options]) => (
-                    <div key={category} className="space-y-2">
-                      <h3 className="font-bold mb-2">{category}</h3>
-                      {options.map((option) => (
-                        <Button
-                          key={option.name}
-                          variant="outline"
-                          onClick={() => handleModalOptionToggle(option)}
-                          className={`w-full justify-between ${
-                            bookingData.mainService.options.some(
-                              (opt) => opt.name === option.name,
-                            )
-                              ? "border-primary bg-primary/10"
-                              : ""
-                          }`}
-                        >
-                          <div className="flex justify-between w-full">
-                            <span>{option.name}</span>
-                            <span className="text-sm text-muted-foreground">
-                              +{option.price.toLocaleString()}원
-                            </span>
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  ))}
+                  ).map(([category_id, OptionCategory]) => {
+                    console.groupCollapsed("옵션 선택");
+                    console.log(
+                      optionsCache[bookingData.mainService.service_name_id],
+                    );
+                    console.log(category_id);
+                    console.log(OptionCategory);
+                    console.groupEnd();
+                    return (
+                      <div key={category_id} className="space-y-2">
+                        <h3 className="font-bold mb-2">
+                          {OptionCategory.category_name}
+                        </h3>
+                        {OptionCategory.options.map((option) => {
+                          return (
+                            <Button
+                              key={option.option_id}
+                              variant="outline"
+                              onClick={() => handleModalOptionToggle(option)}
+                              className={`w-full justify-between ${
+                                bookingData.mainService.optionCategories.some(
+                                  (optionCategory) =>
+                                    optionCategory.options.some(
+                                      (opt) => opt.option_id === option.option_id,
+                                    ),
+                                )
+                                  ? "border-primary bg-primary/10"
+                                  : ""
+                              }`}
+                            >
+                              <div className="flex justify-between w-full">
+                                <span>{option.option_name}</span>
+                                <span className="text-sm text-muted-foreground">
+                                  +{option.option_price.toLocaleString()}원
+                                </span>
+                              </div>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={cancelOptionSelection}>
