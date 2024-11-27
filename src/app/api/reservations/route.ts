@@ -8,6 +8,7 @@ import {
 	deleteReservation,
 	getReservationsByPhone,
 } from "@/actions/reservations";
+import { getTimeSlot } from "@/actions/additional_time_slot";
 
 type ReservationInsert = TablesInsert<'reservations'>;
 
@@ -72,7 +73,12 @@ export async function GET(request: NextRequest) {
 				);
 			}
 			const reservations = await getScopeReservations(scope);
-			return NextResponse.json({ status: 'success', data: reservations });
+			const additionalTimeSlot = await getTimeSlot(scope);
+			return NextResponse.json({
+				status: 'success',
+				booked_data: reservations,
+				additional_booked_data: additionalTimeSlot,
+			});
 		}
 		else if (reservationId) {
 			const reservation = await getReservationId(reservationId);
