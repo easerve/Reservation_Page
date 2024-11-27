@@ -78,3 +78,8 @@ export interface ReservationData {
     additional_price: number;
   };
 }
+
+export interface BookedDate {
+  date: string;
+  times: string[];
+}

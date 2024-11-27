@@ -1,8 +1,4 @@
-import {
-  BookingData,
-  MainService,
-  Dog,
-} from "../types/booking";
+import { BookingData, MainService, Dog } from "../types/booking";
 
 export const INITIAL_BOOKING_STATE: BookingData = {
   dateTime: {
