@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      additional_time_slot: {
+        Row: {
+          created_at: string
+          id: number
+          slot_time: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          slot_time?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          slot_time?: string | null
+        }
+        Relationships: []
+      }
       breeds: {
         Row: {
           created_at: string
